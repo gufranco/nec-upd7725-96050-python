@@ -19,6 +19,7 @@ inside it, tells you what to do next.
 import hashlib
 import json
 import os
+import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -44,6 +45,12 @@ TABLE_BYTES_PER_WORD = 2
 
 READABLE_SUFFIXES = (".bin", ".rom")
 
+DIGESTS = ("crc32", "md5", "sha1", "sha256")
+
+DECIDES = "sha256"
+
+DIGEST_WIDTHS = {"crc32": 8, "md5": 32, "sha1": 40, "sha256": 64}
+
 
 class Unrecognised(Exception):
     pass
@@ -51,6 +58,20 @@ class Unrecognised(Exception):
 
 class WrongShape(Exception):
     pass
+
+
+class Corrupt(Exception):
+    pass
+
+
+def digests_of(image):
+    """Every digest the manifest publishes, for one file."""
+    return {
+        "crc32": f"{zlib.crc32(image) & 0xFFFFFFFF:08x}",
+        "md5": hashlib.md5(image).hexdigest(),
+        "sha1": hashlib.sha1(image).hexdigest(),
+        "sha256": hashlib.sha256(image).hexdigest(),
+    }
 
 
 class Identity:
@@ -97,21 +118,43 @@ def directories(environment=None):
 
 def identify(image, catalogue=None):
     """Which part this image is, or why it is not one the manifest knows."""
-    digest = hashlib.sha256(image).hexdigest()
+    found = digests_of(image)
     entries = (catalogue or manifest())["artifacts"]
 
     for entry in entries:
         for accepted in entry["accepted"]:
-            if accepted["sha256"] == digest:
-                return Identity(
-                    part=entry["part"],
-                    processor=entry["processor"],
-                    revision=accepted["revision"],
-                    program_words=entry["programWords"],
-                    data_words=entry["dataWords"],
-                )
+            if accepted[DECIDES] != found[DECIDES]:
+                continue
+            _confirm(entry, accepted, found)
+            return Identity(
+                part=entry["part"],
+                processor=entry["processor"],
+                revision=accepted["revision"],
+                program_words=entry["programWords"],
+                data_words=entry["dataWords"],
+            )
 
-    raise Unrecognised(_diagnosis(image, digest, entries))
+    raise Unrecognised(_diagnosis(image, found[DECIDES], entries))
+
+
+def _confirm(entry, accepted, found):
+    """Every other digest the manifest publishes has to agree as well.
+
+    Reaching here means the deciding digest already matched, so a disagreement is
+    not a different file: it is a manifest that contradicts itself. A manifest
+    that publishes a crc32 beside a sha256 and never looks at the crc32 is
+    publishing decoration.
+    """
+    for name in DIGESTS:
+        if name == DECIDES or name not in accepted:
+            continue
+        if accepted[name].lower() != found[name]:
+            raise Corrupt(
+                f"{entry['part']} matches on {DECIDES} but not on {name}:"
+                f" the manifest says {accepted[name]} and the file gives {found[name]}."
+                " A manifest that disagrees with itself was edited by hand or built"
+                " from two different copies"
+            )
 
 
 def _diagnosis(image, digest, entries):

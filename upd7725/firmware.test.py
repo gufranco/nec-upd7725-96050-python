@@ -36,6 +36,18 @@ class ManifestTest(unittest.TestCase):
         for entry in firmware.manifest()["artifacts"]:
             self.assertTrue(entry["accepted"], entry["part"])
 
+    def test_every_accepted_image_carries_all_four_digests(self):
+        for entry in firmware.manifest()["artifacts"]:
+            for accepted in entry["accepted"]:
+                for name in firmware.DIGESTS:
+                    self.assertIn(name, accepted, (entry["part"], name))
+
+    def test_each_digest_is_the_length_that_kind_of_digest_has(self):
+        for entry in firmware.manifest()["artifacts"]:
+            for accepted in entry["accepted"]:
+                for name, width in firmware.DIGEST_WIDTHS.items():
+                    self.assertEqual(len(accepted[name]), width, (entry["part"], name))
+
     def test_every_digest_is_a_whole_sha256(self):
         for entry in firmware.manifest()["artifacts"]:
             for accepted in entry["accepted"]:
@@ -137,6 +149,57 @@ class IdentifyTest(unittest.TestCase):
             firmware.identify(b"\x00" * 7, {"artifacts": []})
 
         self.assertIn(hashlib.sha256(b"\x00" * 7).hexdigest(), str(raised.exception))
+
+
+class CrossCheckTest(unittest.TestCase):
+    def test_an_image_whose_other_digests_disagree_is_refused(self):
+        image = an_image()
+        catalogue = {
+            "artifacts": [
+                {
+                    "part": "made-up",
+                    "processor": "upd7725",
+                    "bytes": len(image),
+                    "programWords": 2048,
+                    "dataWords": 1024,
+                    "accepted": [
+                        {
+                            "revision": "one",
+                            "sha256": hashlib.sha256(image).hexdigest(),
+                            "crc32": "00000000",
+                            "md5": "0" * 32,
+                            "sha1": "0" * 40,
+                        }
+                    ],
+                }
+            ]
+        }
+
+        with self.assertRaises(firmware.Corrupt) as raised:
+            firmware.identify(image, catalogue)
+
+        self.assertIn("crc32", str(raised.exception))
+
+    def test_an_image_the_manifest_only_partly_describes_is_still_accepted(self):
+        image = an_image()
+        catalogue = {
+            "artifacts": [
+                {
+                    "part": "made-up",
+                    "processor": "upd7725",
+                    "bytes": len(image),
+                    "programWords": 2048,
+                    "dataWords": 1024,
+                    "accepted": [{"revision": "one", "sha256": hashlib.sha256(image).hexdigest()}],
+                }
+            ]
+        }
+
+        self.assertEqual(firmware.identify(image, catalogue).part, "made-up")
+
+    def test_every_image_on_disk_agrees_with_all_four_of_its_digests(self):
+        for identity, path in firmware.search():
+            self.assertTrue(identity.part, path)
 
 
 class IdentityTest(unittest.TestCase):

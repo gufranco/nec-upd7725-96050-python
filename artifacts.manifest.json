@@ -4,7 +4,7 @@
     "layout": "program first, then data",
     "programBytesPerWord": 3,
     "dataBytesPerWord": 2,
-    "digest": "sha256, over the whole file, which is the value that decides"
+    "digest": "sha256 decides. crc32, md5 and sha1 are published beside it so a copy can be cross-checked against a database that keys on one of those, and none of them decides anything on its own: crc32 is a 32-bit error code, and md5 and sha1 are both collision-broken."
   },
   "artifacts": [
     {
@@ -17,7 +17,10 @@
       "accepted": [
         {
           "revision": "DSP-1",
-          "sha256": "5f2e5ed06b362be023b978b5978813ecb9a07c76592454b45c2a1ed17a0de349"
+          "sha256": "5f2e5ed06b362be023b978b5978813ecb9a07c76592454b45c2a1ed17a0de349",
+          "crc32": "27124599",
+          "md5": "4865ac61cd758b0f9383fe3d4d3b8694",
+          "sha1": "4870e3b1636938c85347e20c56a81284fdfaf46e"
         }
       ]
     },
@@ -31,7 +34,10 @@
       "accepted": [
         {
           "revision": "DSP-1B",
-          "sha256": "4d42db0f36faef263d6b93f508e8c1c4ae8fc2605fd35e3390ecc02905cd420c"
+          "sha256": "4d42db0f36faef263d6b93f508e8c1c4ae8fc2605fd35e3390ecc02905cd420c",
+          "crc32": "588279b4",
+          "md5": "c8bfb983703a96e1c3d4683105112bc0",
+          "sha1": "1e0112ba3b130c770dab342f6cfe47ac53b278f0"
         }
       ]
     },
@@ -45,7 +51,10 @@
       "accepted": [
         {
           "revision": "DSP-2",
-          "sha256": "5efbdf96ed0652790855225964f3e90e6a4d466cfa64df25b110933c6cf94ea1"
+          "sha256": "5efbdf96ed0652790855225964f3e90e6a4d466cfa64df25b110933c6cf94ea1",
+          "crc32": "f0221c90",
+          "md5": "e500ec7f6005e78cb935eea5289c8cc4",
+          "sha1": "9179f61b8823b4e9a4130e1fb732424a2f6daa1a"
         }
       ]
     },
@@ -59,7 +68,10 @@
       "accepted": [
         {
           "revision": "DSP-3",
-          "sha256": "2e635f72e4d4681148bc35429421c9b946e4f407590e74e31b93b8987b63ba90"
+          "sha256": "2e635f72e4d4681148bc35429421c9b946e4f407590e74e31b93b8987b63ba90",
+          "crc32": "e3b54e6a",
+          "md5": "c037185c8bbef6313226200dbe5fd07f",
+          "sha1": "0386ffaa041a5798c4568c5f5dc17fe66bb09d24"
         }
       ]
     },
@@ -73,7 +85,10 @@
       "accepted": [
         {
           "revision": "DSP-4",
-          "sha256": "63ede17322541c191ed1fdf683872554a0a57306496afc43c59de7c01a6e764a"
+          "sha256": "63ede17322541c191ed1fdf683872554a0a57306496afc43c59de7c01a6e764a",
+          "crc32": "ca09e176",
+          "md5": "fe85065a7023551b0d84941a094435ba",
+          "sha1": "9a5392879cee4bac7907159f281d9e5681dfa66a"
         }
       ]
     },
@@ -87,7 +102,10 @@
       "accepted": [
         {
           "revision": "ST010",
-          "sha256": "55c697e864562445621cdf8a7bf6e84ae91361e393d382a3704e9aa55559041e"
+          "sha256": "55c697e864562445621cdf8a7bf6e84ae91361e393d382a3704e9aa55559041e",
+          "crc32": "8d136190",
+          "md5": "a1728c31df22b93e4bdae73718ba27a2",
+          "sha1": "75a3e5b5564ea251060dd35bff3dc468d4429e77"
         }
       ]
     },
@@ -101,7 +119,10 @@
       "accepted": [
         {
           "revision": "ST011",
-          "sha256": "651b82a1e26c4fa8dd549e91e7f923012ed2ca54c1d9fd858655ab30679c2f0e"
+          "sha256": "651b82a1e26c4fa8dd549e91e7f923012ed2ca54c1d9fd858655ab30679c2f0e",
+          "crc32": "750c6012",
+          "md5": "2c56baddba22c6649c95c4c3b13adce3",
+          "sha1": "b2fdfa3edf08f76dbd30a0a4d3d0ef1e3d3f6905"
         }
       ]
     }
