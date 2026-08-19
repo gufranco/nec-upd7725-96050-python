@@ -42,6 +42,22 @@ class FetchTest(unittest.TestCase):
         self.assertEqual(found.registers.pc, 0)
 
 
+class RunTest(unittest.TestCase):
+    def test_running_takes_as_many_instructions_as_it_was_asked_for(self):
+        found = a_processor()
+
+        found.run(5)
+
+        self.assertEqual(found.registers.pc, 5)
+
+    def test_running_none_takes_none(self):
+        found = a_processor()
+
+        found.run(0)
+
+        self.assertEqual(found.registers.pc, 0)
+
+
 class MoveTest(unittest.TestCase):
     def test_a_load_puts_its_word_where_it_was_told(self):
         found = a_processor()
