@@ -180,6 +180,44 @@ class CrossCheckTest(unittest.TestCase):
 
         self.assertIn("crc32", str(raised.exception))
 
+    def test_a_cross_check_that_passes_every_digest_accepts_the_image(self):
+        image = an_image()
+        catalogue = {
+            "artifacts": [
+                {
+                    "part": "made-up",
+                    "processor": "upd7725",
+                    "bytes": len(image),
+                    "programWords": 2048,
+                    "dataWords": 1024,
+                    "accepted": [{"revision": "one", **firmware.digests_of(image)}],
+                }
+            ]
+        }
+
+        self.assertEqual(firmware.identify(image, catalogue).revision, "one")
+
+    def test_every_kind_of_disagreement_is_caught(self):
+        image = an_image()
+        for name, wrong in (("crc32", "0" * 8), ("md5", "0" * 32), ("sha1", "0" * 40)):
+            catalogue = {
+                "artifacts": [
+                    {
+                        "part": "made-up",
+                        "processor": "upd7725",
+                        "bytes": len(image),
+                        "programWords": 2048,
+                        "dataWords": 1024,
+                        "accepted": [
+                            {"revision": "one", **firmware.digests_of(image), name: wrong}
+                        ],
+                    }
+                ]
+            }
+
+            with self.assertRaises(firmware.Corrupt):
+                firmware.identify(image, catalogue)
+
     def test_an_image_the_manifest_only_partly_describes_is_still_accepted(self):
         image = an_image()
         catalogue = {
@@ -196,10 +234,6 @@ class CrossCheckTest(unittest.TestCase):
         }
 
         self.assertEqual(firmware.identify(image, catalogue).part, "made-up")
-
-    def test_every_image_on_disk_agrees_with_all_four_of_its_digests(self):
-        for identity, path in firmware.search():
-            self.assertTrue(identity.part, path)
 
 
 class IdentityTest(unittest.TestCase):
@@ -262,6 +296,13 @@ class FoundTest(unittest.TestCase):
         found = list(firmware.found(where, catalogue))
 
         self.assertEqual(found[0][0].part, "made-up")
+
+    def test_a_file_that_is_not_an_image_at_all_is_passed_over(self):
+        where = Path(tempfile.mkdtemp())
+        (where / "README.md").write_text("notes, not an image")
+        (where / "notes.txt").write_text("also not one")
+
+        self.assertEqual(list(firmware.found(where, {"artifacts": []})), [])
 
     def test_a_file_the_manifest_does_not_know_is_passed_over(self):
         where = Path(tempfile.mkdtemp())
