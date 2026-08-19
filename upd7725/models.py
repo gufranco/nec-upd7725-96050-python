@@ -1,0 +1,142 @@
+"""Which processors this package covers, and which cartridge parts run on each.
+
+NEC built a family of digital signal processors around one instruction set, and
+the members differ in how far three registers can reach rather than in what the
+instructions do. That is the whole difference between the two parts here: the
+counter, the table pointer and the scratch pointer are wider on the larger one,
+and every store is exactly as long as the register that addresses it.
+
+A cartridge part is not a processor. The DSP-1 and the ST011 are both this
+silicon carrying somebody's program, and the program is what makes them
+different from each other. So the parts are named here as what runs on each
+processor, and the programs themselves belong to whoever wrote them and are
+never carried here.
+"""
+
+
+class UnknownModelError(Exception):
+    pass
+
+
+class Model:
+    """One processor: how far it reaches, and what shipped running on it."""
+
+    def __init__(
+        self,
+        name,
+        summary,
+        counter_bits,
+        table_bits,
+        pointer_bits,
+        parts,
+        aliases=(),
+    ):
+        self.name = name
+        self.summary = summary
+        self.counter_bits = counter_bits
+        self.table_bits = table_bits
+        self.pointer_bits = pointer_bits
+        self.parts = tuple(parts)
+        self.aliases = tuple(aliases)
+
+    @property
+    def program_words(self):
+        return 1 << self.counter_bits
+
+    @property
+    def table_words(self):
+        return 1 << self.table_bits
+
+    @property
+    def scratch_words(self):
+        return 1 << self.pointer_bits
+
+    def build(self, **options):
+        from .core import Core
+
+        return Core(self, **options)
+
+    def __repr__(self):
+        return (
+            f"<Model {self.name}, counter {self.counter_bits} bits, "
+            f"table {self.table_bits}, pointer {self.pointer_bits}>"
+        )
+
+
+_CATALOGUE = (
+    Model(
+        name="upd7725",
+        summary=(
+            "The NEC uPD7725, the part Nintendo shipped under the DSP name. Two "
+            "thousand and forty eight instructions, a table of a thousand and "
+            "twenty four constants, and two hundred and fifty six words of scratch "
+            "shared with the console a byte at a time."
+        ),
+        counter_bits=11,
+        table_bits=10,
+        pointer_bits=8,
+        parts=("dsp1", "dsp1a", "dsp1b", "dsp2", "dsp3", "dsp4"),
+        aliases=("7725", "upd77c25", "77c25", "necupd7725"),
+    ),
+    Model(
+        name="upd96050",
+        summary=(
+            "The NEC uPD96050, the part Seta shipped under the ST name. Eight times "
+            "the program store of the smaller one, twice the table, and eight times "
+            "the scratch, which is where the console leaves its questions."
+        ),
+        counter_bits=14,
+        table_bits=11,
+        pointer_bits=11,
+        parts=("st010", "st011"),
+        aliases=("96050", "upd96050gf", "necupd96050"),
+    ),
+)
+
+MODELS = {model.name: model for model in _CATALOGUE}
+
+NOT_MODELLED = {
+    "upd7720": (
+        "the uPD7720 is the earlier part of the same family, and the reference this "
+        "package is measured against does not implement it; a model of it here would "
+        "have nothing behind it"
+    ),
+    "upd77p25": (
+        "the uPD77P25 is the same processor with its program in erasable storage "
+        "rather than masked, which changes how it is made rather than what it does; "
+        "ask for upd7725 and load the program yourself"
+    ),
+}
+"""Names that belong to a real part the package deliberately does not answer to."""
+
+_BY_ALIAS = {}
+for _model in _CATALOGUE:
+    _BY_ALIAS[_model.name] = _model
+    for _alias in _model.aliases:
+        _BY_ALIAS[_alias] = _model
+
+
+def _normalise(name):
+    return str(name).strip().lower().replace("-", "").replace("_", "")
+
+
+def describe(name):
+    """The processor of that name, however it happens to be written."""
+    wanted = _normalise(name)
+    found = _BY_ALIAS.get(wanted)
+    if found is not None:
+        return found
+    if wanted in NOT_MODELLED:
+        raise UnknownModelError(f"{name} is not modelled here: {NOT_MODELLED[wanted]}")
+    raise UnknownModelError(
+        f"{name} is not a processor this package covers; it has {', '.join(sorted(MODELS))}"
+    )
+
+
+def carrying(part):
+    """The processor a named cartridge part runs on."""
+    wanted = _normalise(part)
+    for found in _CATALOGUE:
+        if wanted in found.parts:
+            return found
+    raise UnknownModelError(f"{part} is not a part this package knows how to run")

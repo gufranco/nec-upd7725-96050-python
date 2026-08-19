@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.coverage
+node_modules/
+conformance/ref/driver
+
+# Firmware images belong to whoever wrote them. This is where a copy you
+# already own goes, and nothing in it is ever committed. The manifest at
+# artifacts.manifest.json says what belongs here; it never carries any of it.
+firmware/*
+!firmware/README.md
+*.rom
+*.bin
+*.sfc
+*.smc

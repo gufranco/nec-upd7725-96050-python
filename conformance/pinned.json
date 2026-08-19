@@ -1,0 +1,9 @@
+{
+  "reference": {
+    "name": "ares",
+    "url": "https://github.com/ares-emulator/ares",
+    "license": "ISC",
+    "commit": "b80f67d38312648d197762121c3a27b02c0887db",
+    "note": "The behaviour of this processor was studied against the implementation that project carries, and corpus.json was recorded from it at the commit above. No part of it is present in this repository: the implementation in conformance/reference.py is an independent one, and it is held to those recordings rather than to anything fetched."
+  }
+}

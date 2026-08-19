@@ -1,0 +1,109 @@
+{
+  "note": "What a firmware image for each part is, so a copy you already own can be confirmed before it is run. Nothing here is any part of one: a digest identifies a file, and no set of digests reconstructs anything.",
+  "canonical": {
+    "layout": "program first, then data",
+    "programBytesPerWord": 3,
+    "dataBytesPerWord": 2,
+    "digest": "sha256, over the whole file, which is the value that decides"
+  },
+  "artifacts": [
+    {
+      "part": "dsp1",
+      "processor": "upd7725",
+      "summary": "The first mask of the DSP-1, before the revisions that followed it.",
+      "bytes": 8192,
+      "programWords": 2048,
+      "dataWords": 1024,
+      "accepted": [
+        {
+          "revision": "DSP-1",
+          "sha256": "5f2e5ed06b362be023b978b5978813ecb9a07c76592454b45c2a1ed17a0de349"
+        }
+      ]
+    },
+    {
+      "part": "dsp1b",
+      "processor": "upd7725",
+      "summary": "The last mask of the DSP-1, which corrected the earlier ones.",
+      "bytes": 8192,
+      "programWords": 2048,
+      "dataWords": 1024,
+      "accepted": [
+        {
+          "revision": "DSP-1B",
+          "sha256": "4d42db0f36faef263d6b93f508e8c1c4ae8fc2605fd35e3390ecc02905cd420c"
+        }
+      ]
+    },
+    {
+      "part": "dsp2",
+      "processor": "upd7725",
+      "summary": "The DSP-2, which converts tiles.",
+      "bytes": 8192,
+      "programWords": 2048,
+      "dataWords": 1024,
+      "accepted": [
+        {
+          "revision": "DSP-2",
+          "sha256": "5efbdf96ed0652790855225964f3e90e6a4d466cfa64df25b110933c6cf94ea1"
+        }
+      ]
+    },
+    {
+      "part": "dsp3",
+      "processor": "upd7725",
+      "summary": "The DSP-3, which decompresses and searches a hex grid.",
+      "bytes": 8192,
+      "programWords": 2048,
+      "dataWords": 1024,
+      "accepted": [
+        {
+          "revision": "DSP-3",
+          "sha256": "2e635f72e4d4681148bc35429421c9b946e4f407590e74e31b93b8987b63ba90"
+        }
+      ]
+    },
+    {
+      "part": "dsp4",
+      "processor": "upd7725",
+      "summary": "The DSP-4, which draws a road.",
+      "bytes": 8192,
+      "programWords": 2048,
+      "dataWords": 1024,
+      "accepted": [
+        {
+          "revision": "DSP-4",
+          "sha256": "63ede17322541c191ed1fdf683872554a0a57306496afc43c59de7c01a6e764a"
+        }
+      ]
+    },
+    {
+      "part": "st010",
+      "processor": "upd96050",
+      "summary": "The ST010, which does navigation maths for a racing cartridge.",
+      "bytes": 53248,
+      "programWords": 16384,
+      "dataWords": 2048,
+      "accepted": [
+        {
+          "revision": "ST010",
+          "sha256": "55c697e864562445621cdf8a7bf6e84ae91361e393d382a3704e9aa55559041e"
+        }
+      ]
+    },
+    {
+      "part": "st011",
+      "processor": "upd96050",
+      "summary": "The ST011, which plays shogi.",
+      "bytes": 53248,
+      "programWords": 16384,
+      "dataWords": 2048,
+      "accepted": [
+        {
+          "revision": "ST011",
+          "sha256": "651b82a1e26c4fa8dd549e91e7f923012ed2ca54c1d9fd858655ab30679c2f0e"
+        }
+      ]
+    }
+  ]
+}

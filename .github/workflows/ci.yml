@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint:
+    name: Format and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install ruff
+        run: pipx install ruff==0.16.3
+
+      - name: Check formatting
+        run: ruff format --check .
+
+      - name: Lint
+        run: ruff check --output-format=github .
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install the formatter
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Check that every JSON file is formatted
+        run: pnpm run format:check
+
+  test:
+    name: Tests on Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install coverage
+        run: python -m pip install --disable-pip-version-check coverage==7.6.10
+
+      - name: Run every test file, under coverage
+        run: |
+          python -m coverage erase
+          status=0
+          while IFS= read -r file; do
+            echo "::group::${file}"
+            python -m coverage run -a "${file}" -v || status=1
+            echo "::endgroup::"
+          done < <(find upd7725 conformance -name '*.test.py' | sort)
+          exit "${status}"
+        shell: bash
+
+      - name: Coverage must be total
+        run: python -m coverage report
+
+  conformance:
+    name: Conformance against the reference
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # Every field of every instruction form, against states recorded from the
+      # reference. This needs no firmware at all, and it is the gate.
+      - name: Settle every instruction
+        run: python conformance/instructions.py
+
+  firmware:
+    name: Against firmware, when any is present
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # These checks exist and are meant to be seen. They run the parts
+      # themselves, from images nobody may distribute, so on a machine without
+      # them every one reports as skipped rather than as quietly passed.
+      - name: Run the parts themselves
+        run: |
+          python conformance/against_firmware.py | tee report.txt
+          python conformance/against_firmware.test.py -v 2>&1 | tee -a report.txt
+        shell: bash
+
+      - name: Say what ran and what could not
+        run: |
+          if grep -q "skipped" report.txt; then
+            echo "::notice title=Firmware checks skipped::No firmware image was present, so the checks that run the parts themselves did not run. They are not failures; they had nothing to run against."
+          fi
+        shell: bash
