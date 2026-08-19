@@ -79,7 +79,8 @@ REVISION_READS = 12
 WHY_NOT = (
     "no firmware image was found: this checks the parts themselves, and their"
     " programs belong to whoever wrote them, so a copy you already own goes in the"
-    " firmware directory of this repository or wherever UPD7725_FIRMWARE_DIR points"
+    " firmware directory of this repository, in the one beside it when this is a"
+    " submodule, or wherever UPD7725_FIRMWARE_DIR points"
 )
 
 
@@ -93,8 +94,16 @@ class Options:
 
 
 def available(where=None):
-    """Every image on disk that the manifest recognises."""
-    return tuple(firmware.found(where))
+    """Every image the manifest recognises, wherever it is looked for.
+
+    A directory can be named outright, which is what a test does. Otherwise every
+    place in the search path is looked at, so this works the same whether the
+    package is checked out on its own or sits inside a project that keeps its own
+    images beside it.
+    """
+    if where is not None:
+        return tuple(firmware.found(where))
+    return tuple(firmware.search())
 
 
 def booted(identity, path):

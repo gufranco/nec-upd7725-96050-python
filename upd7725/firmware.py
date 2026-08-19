@@ -29,6 +29,15 @@ DIRECTORY_VARIABLE = "UPD7725_FIRMWARE_DIR"
 
 DEFAULT_DIRECTORY = ROOT / "firmware"
 
+ALONGSIDE = ROOT.parent / "firmware"
+"""Where a project that carries this package as a submodule keeps its own images.
+
+A submodule that only looks inside itself makes every project that uses it keep a
+second copy of files it may not distribute. So the directory beside this one is
+searched first: a project checks this package out under its own tree, puts its
+images in its own firmware directory, and neither side has to be told about the
+other."""
+
 PROGRAM_BYTES_PER_WORD = 3
 
 TABLE_BYTES_PER_WORD = 2
@@ -64,9 +73,26 @@ def manifest(path=None):
 
 
 def directory(environment=None):
-    """Where images are looked for: what was named, or the ignored folder here."""
-    named = (environment if environment is not None else os.environ).get(DIRECTORY_VARIABLE)
-    return Path(named) if named else DEFAULT_DIRECTORY
+    """The first place images are looked for."""
+    return directories(environment)[0]
+
+
+def directories(environment=None):
+    """Every place images are looked for, in the order they are looked at.
+
+    Whatever was named comes first, then the project this package sits inside if
+    it is a submodule of one, then this package itself. More than one can be
+    named at once, separated the way the operating system separates a path.
+    """
+    named = (environment if environment is not None else os.environ).get(DIRECTORY_VARIABLE, "")
+    wanted = [Path(where) for where in named.split(os.pathsep) if where]
+    wanted += [ALONGSIDE, DEFAULT_DIRECTORY]
+
+    seen = []
+    for where in wanted:
+        if where not in seen:
+            seen.append(where)
+    return tuple(seen)
 
 
 def identify(image, catalogue=None):
@@ -127,7 +153,7 @@ def load(chip, image, identity=None):
 
 
 def found(where=None, catalogue=None):
-    """Every image on disk the manifest recognises, with the file it came from."""
+    """Every image the manifest recognises in one directory, with its file."""
     where = Path(where) if where is not None else directory()
     if not where.is_dir():
         return
@@ -139,3 +165,14 @@ def found(where=None, catalogue=None):
             yield identify(path.read_bytes(), catalogue), path
         except Unrecognised:
             continue
+
+
+def search(places=None, catalogue=None):
+    """The same across every place that is searched, the first copy of each part winning."""
+    seen = set()
+    for where in places if places is not None else directories():
+        for identity, path in found(where, catalogue):
+            if identity.part in seen:
+                continue
+            seen.add(identity.part)
+            yield identity, path

@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -210,6 +211,85 @@ class FoundTest(unittest.TestCase):
 
     def test_and_from_the_repository_when_none_is(self):
         self.assertEqual(firmware.directory({}).name, "firmware")
+
+
+class SearchPathTest(unittest.TestCase):
+    def test_the_package_always_looks_in_its_own_directory(self):
+        self.assertIn(firmware.DEFAULT_DIRECTORY, firmware.directories({}))
+
+    def test_and_in_the_project_that_carries_it_as_a_submodule(self):
+        self.assertIn(firmware.ALONGSIDE, firmware.directories({}))
+
+    def test_the_project_above_is_looked_at_before_the_package_itself(self):
+        found = firmware.directories({})
+
+        self.assertLess(found.index(firmware.ALONGSIDE), found.index(firmware.DEFAULT_DIRECTORY))
+
+    def test_a_named_directory_is_looked_at_before_either(self):
+        found = firmware.directories({"UPD7725_FIRMWARE_DIR": "/x"})
+
+        self.assertEqual(found[0], Path("/x"))
+
+    def test_more_than_one_can_be_named_at_once(self):
+        found = firmware.directories({"UPD7725_FIRMWARE_DIR": f"/x{os.pathsep}/y"})
+
+        self.assertEqual(found[:2], (Path("/x"), Path("/y")))
+
+    def test_an_empty_entry_between_two_names_is_passed_over(self):
+        found = firmware.directories({"UPD7725_FIRMWARE_DIR": f"/x{os.pathsep}{os.pathsep}/y"})
+
+        self.assertEqual(found[:2], (Path("/x"), Path("/y")))
+
+    def test_no_directory_appears_twice(self):
+        found = firmware.directories({"UPD7725_FIRMWARE_DIR": str(firmware.DEFAULT_DIRECTORY)})
+
+        self.assertEqual(len(found), len(set(found)))
+
+    def test_searching_finds_an_image_in_any_of_them(self):
+        first = Path(tempfile.mkdtemp())
+        second = Path(tempfile.mkdtemp())
+        image = an_image()
+        (second / "made-up.bin").write_bytes(image)
+        catalogue = {
+            "artifacts": [
+                {
+                    "part": "made-up",
+                    "processor": "upd7725",
+                    "bytes": len(image),
+                    "programWords": 2048,
+                    "dataWords": 1024,
+                    "accepted": [{"revision": "one", "sha256": hashlib.sha256(image).hexdigest()}],
+                }
+            ]
+        }
+
+        found = list(firmware.search((first, second), catalogue))
+
+        self.assertEqual(found[0][0].part, "made-up")
+
+    def test_the_first_directory_holding_a_part_is_the_one_that_answers(self):
+        first = Path(tempfile.mkdtemp())
+        second = Path(tempfile.mkdtemp())
+        image = an_image()
+        (first / "from-first.bin").write_bytes(image)
+        (second / "from-second.bin").write_bytes(image)
+        catalogue = {
+            "artifacts": [
+                {
+                    "part": "made-up",
+                    "processor": "upd7725",
+                    "bytes": len(image),
+                    "programWords": 2048,
+                    "dataWords": 1024,
+                    "accepted": [{"revision": "one", "sha256": hashlib.sha256(image).hexdigest()}],
+                }
+            ]
+        }
+
+        found = list(firmware.search((first, second), catalogue))
+
+        self.assertEqual(len(found), 1)
+        self.assertEqual(found[0][1].name, "from-first.bin")
 
 
 if __name__ == "__main__":
