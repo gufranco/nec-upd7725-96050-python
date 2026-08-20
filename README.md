@@ -360,6 +360,7 @@ Coverage is enforced at 100% of statements and branches by [`pyproject.toml`](py
 | `python3 conformance/instructions.py --record --retake` | Retake the corpus, which only a corrected hardware fact justifies |
 | `python3 conformance/instructions.py` | Replay the recorded states |
 | `python3 conformance/differential.py` | Run the two implementations against each other |
+| `python3 conformance/speed.py` | Measure throughput against the floor, uninstrumented |
 | `python3 conformance/against_firmware.py` | Run whatever images are on your disk |
 | `pnpm run format` | Format every JSON file |
 
@@ -374,6 +375,7 @@ Coverage is enforced at 100% of statements and branches by [`pyproject.toml`](py
 | Test layout | `<module>.test.py` beside the module it covers |
 | Types | [mypy](https://mypy.readthedocs.io/) at strict, configured in [`pyproject.toml`](pyproject.toml) |
 | Agent instructions | [`AGENTS.md`](AGENTS.md) |
+| Current behaviour | [`specs/current/`](specs/current/), one requirement per observable behaviour with checkable scenarios |
 
 ## Versioning
 
