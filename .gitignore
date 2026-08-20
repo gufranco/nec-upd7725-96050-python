@@ -13,3 +13,5 @@ firmware/*
 *.bin
 *.sfc
 *.smc
+
+.DS_Store
