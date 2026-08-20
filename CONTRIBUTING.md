@@ -12,6 +12,7 @@ Run every gate, and read the output rather than the exit code:
 ```bash
 uvx ruff@0.16.3 format --check .
 uvx ruff@0.16.3 check .
+uvx mypy@1.14.1
 pnpm install --frozen-lockfile && pnpm run format:check
 python3 -m coverage erase
 for f in $(find . -name '*.test.py' -not -path './packages/*' | sort); do
@@ -21,7 +22,19 @@ python3 -m coverage report
 ```
 
 Coverage is a hard gate at 100% statement and branch. A branch with no test
-fails the build rather than lowering the number.
+fails the build rather than lowering the number. Types are a hard gate too: strict,
+with every optional error class the checker version offers.
+
+Run the suite on the oldest Python supported as well as the newest. Annotations
+are evaluated eagerly before 3.14 and lazily from 3.14 on, so a file naming a
+type imported only for checking passes on one and fails to import on the other:
+
+```bash
+uvx --python 3.12 python upd7725/core.test.py
+```
+
+If you are working through a coding agent, the same ground is in
+[AGENTS.md](AGENTS.md) in the shape an agent reads.
 
 ## The workflows
 

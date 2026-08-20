@@ -10,6 +10,7 @@
 [![CI](https://github.com/gufranco/nec-upd7725-python/actions/workflows/ci.yml/badge.svg)](https://github.com/gufranco/nec-upd7725-python/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-100%25%20statement%20%2B%20branch-brightgreen)](#tests)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue)](pyproject.toml)
+[![Types](https://img.shields.io/badge/mypy-strict-blue)](pyproject.toml)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 </div>
@@ -22,7 +23,7 @@
   <a href="https://github.com/gufranco/nec-upd7725-python/issues">Issues</a>
 </p>
 
-**2** parts · **4** instruction forms · **1,120** encodings walked field by field · **1,002,240** instructions compared against the reference, **0** disagreements · **279** tests · **100%** statement and branch coverage · **zero** firmware, ever
+**2** parts · **4** instruction forms · **1,120** encodings walked field by field · **1,002,240** instructions compared against the reference, **0** disagreements · **378** tests · **100%** statement and branch coverage · **strict** types throughout · **zero** firmware, ever
 
 ```python
 from upd7725 import Processor
@@ -158,6 +159,8 @@ which is what a fixed-point routine does constantly.
 | The starting state | Filled from the seed, never cleared | Adversarial |
 | The scratch memory | Any word that changed is reported with its address | Total, not spot-checked |
 | The parts themselves | Seven firmware images run 200,000 instructions each | Opt-in, on your own copy |
+| Ground the corpus never covered | The two implementations run live against each other, as far as you give it time for | Differential, unbounded |
+| Every annotation | `mypy` at strict, plus every optional error class the version has | Static, whole register file |
 
 The corpus was recorded from an independent implementation and the two Python
 implementations here are both held to it. That is what keeps the comparison from
@@ -168,6 +171,31 @@ answer is.
 python3 conformance/instructions.py --record   # regenerate from the reference
 python3 conformance/instructions.py            # replay the recorded states
 ```
+
+The corpus is a fixed size, because a recording has to be stored. Past its last
+case it says nothing, and there is no more of it without recording more. So the
+two implementations are also run against each other live, on cases nobody wrote
+down:
+
+```bash
+python3 conformance/differential.py                              # 5,000 cases
+python3 conformance/differential.py --from 90000000 --cases 40000  # far past the corpus
+python3 conformance/differential.py --seconds 60                 # for a minute, then stop
+```
+
+A case is derived from its number rather than drawn from a generator that has to
+be walked, so case ninety million is as reachable as case one and just as
+repeatable. A disagreement prints the case number, the seed, the part, the
+instruction word, the full state each side was left holding, and the two arguments
+that re-run that one case and nothing else. Every run so far has printed none of
+that, so there is no real example of it to show here.
+
+This is worth less than the corpus, and it is worth saying so. Agreement between
+two implementations in one repository is not evidence about hardware. The useful
+direction is disagreement: it names a case, and the case is then settled against
+the recordings, which is where the authority lives. CI runs a slice of it on every
+push and the schedule runs up to two million cases a week, starting somewhere
+different each time, so over a year it walks ground the gate never sees.
 
 ## Firmware
 
@@ -252,6 +280,7 @@ conformance/
   reference.py        an independent implementation, built to a different shape
   oracle.py           one case through it, in the shape the recordings are in
   instructions.py     the runner that settles every instruction
+  differential.py     the two implementations against each other, unbounded
   against_firmware.py the opt-in runner that needs an image you already own
   corpus.json         22,240 recorded states
 firmware/         where your own copies go, and nothing is ever committed
@@ -294,6 +323,7 @@ for f in upd7725/*.test.py conformance/*.test.py; do python3 "$f"; done
 | Reference | [`conformance/reference.test.py`](conformance/reference.test.py) | The independent implementation, on its own |
 | Oracle | [`conformance/oracle.test.py`](conformance/oracle.test.py) | That it reproduces every recorded state |
 | Corpus | [`conformance/instructions.test.py`](conformance/instructions.test.py) | Case generation, coverage of the encoding, replay |
+| Differential | [`conformance/differential.test.py`](conformance/differential.test.py) | The unbounded sweep: case derivation, time budget, reporting, and both implementations live |
 | Firmware run | [`conformance/against_firmware.test.py`](conformance/against_firmware.test.py) | Booting each image, and the comparison between masks |
 
 Coverage is enforced at 100% of statements and branches by [`pyproject.toml`](pyproject.toml), so a new branch without a test fails the build rather than quietly lowering the number.
@@ -306,7 +336,9 @@ Coverage is enforced at 100% of statements and branches by [`pyproject.toml`](py
 | `ruff check .` | Lint |
 | `python3 -m coverage run -a <file>` | Run one test file under coverage |
 | `python3 -m coverage report` | Coverage, which fails below 100% |
+| `mypy` | Types, at strict, with every optional error class on |
 | `python3 conformance/instructions.py` | Replay the recorded states |
+| `python3 conformance/differential.py` | Run the two implementations against each other |
 | `python3 conformance/against_firmware.py` | Run whatever images are on your disk |
 | `pnpm run format` | Format every JSON file |
 
@@ -319,6 +351,8 @@ Coverage is enforced at 100% of statements and branches by [`pyproject.toml`](py
 | Lint and format | [Ruff](https://docs.astral.sh/ruff/), configured in [`pyproject.toml`](pyproject.toml) |
 | JSON formatting | [Prettier](https://prettier.io/), configured in [`.prettierrc.json`](.prettierrc.json) |
 | Test layout | `<module>.test.py` beside the module it covers |
+| Types | [mypy](https://mypy.readthedocs.io/) at strict, configured in [`pyproject.toml`](pyproject.toml) |
+| Agent instructions | [`AGENTS.md`](AGENTS.md) |
 
 ## Versioning
 
