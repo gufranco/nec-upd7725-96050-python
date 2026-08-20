@@ -1,0 +1,63 @@
+name: An instruction behaves differently from the reference
+description: The core runs, but one instruction leaves a state the hardware would not
+labels: ["bug", "fidelity"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every encoding here is walked field by field and compared against an
+        independent implementation, so a report of a difference is worth a lot.
+        These fields are what makes one actionable.
+
+  - type: textarea
+    id: doctor
+    attributes:
+      label: What the doctor says
+      description: Run `python3 -m upd7725.doctor` and paste all of it.
+      render: text
+    validations:
+      required: true
+
+  - type: input
+    id: encoding
+    attributes:
+      label: The instruction word, in hex
+      placeholder: "0x97c004"
+    validations:
+      required: true
+
+  - type: input
+    id: model
+    attributes:
+      label: Which processor
+      description: The two differ in three field widths, so which one it was changes the answer.
+      placeholder: "upd96050"
+    validations:
+      required: true
+
+  - type: textarea
+    id: before
+    attributes:
+      label: The state before it ran
+      description: |
+        Registers and any memory the instruction reads. Silicon powers up holding
+        whatever it holds, so a report that starts from a clean machine is
+        describing something the hardware never does.
+      render: text
+    validations:
+      required: true
+
+  - type: input
+    id: got
+    attributes:
+      label: The state it left
+      validations:
+        required: true
+
+  - type: input
+    id: wanted
+    attributes:
+      label: The state it should have left, and how you know
+      description: Name what you compared against. Hardware, another implementation, or a datasheet all mean different things.
+    validations:
+      required: true

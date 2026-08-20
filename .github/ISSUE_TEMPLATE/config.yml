@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Where do I get the microcode?
+    url: https://github.com/gufranco/nec-upd7725-python#the-images-you-supply
+    about: Not from here, and nobody here will tell you. Dump it from hardware you own.
+  - name: The coprocessors built on this
+    url: https://github.com/gufranco/snes-dsp-python
+    about: The SNES DSP family is this processor with different programs masked into it.

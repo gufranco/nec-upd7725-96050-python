@@ -259,6 +259,24 @@ firmware/         where your own copies go, and nothing is ever committed
 
 Each module has its tests beside it as `<module>.test.py`, so a module and the cases that pin its behaviour are read together.
 
+## When something is wrong
+
+```bash
+python3 -m upd7725.doctor
+```
+
+It looks at this machine and prints what is actually there: the Python it is
+running on, both processors and the shape of each, where images are looked for,
+what the manifest declares, and every image present with its SHA-256.
+
+That last part settles most reports on its own. Two people running the same part
+and getting different answers are almost always running different files, and this
+shows it in one glance rather than after a round trip.
+
+Nothing is hidden. A check that fails says what it saw, and a check that itself
+throws is reported as what it threw rather than taking the report down with it.
+Paste all of it into an issue.
+
 ## Tests
 
 ```bash
