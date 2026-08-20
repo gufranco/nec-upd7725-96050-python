@@ -329,6 +329,19 @@ CONDITIONS: "dict[int, Callable[[Upd96050], int]]" = {
     0x0BE: lambda chip: chip.regs.sr.rqm,
 }
 
+ACC_A = 1
+"""The destination code for accumulator A, from the manufacturer's DST table."""
+
+ACC_B = 2
+"""And for accumulator B.
+
+Both are here because of one sentence: "if the accumulator specified in the ASL
+field is also specified as the destination of the data move, the ALU operation
+becomes a NOP, as the data move supersedes the ALU operation." A NOP leaves the
+flags alone, so running the arithmetic and overwriting the result afterwards is
+not the same thing.
+"""
+
 THROUGH_OUTPUT = 0x000
 JUMP_NEAR = 0x100
 JUMP_FAR = 0x101
@@ -393,7 +406,7 @@ class Upd96050:
 
         moving = SOURCES[source](self)
 
-        if alu:
+        if alu and destination != (ACC_B if asl else ACC_A):
             self._arithmetic(alu, OPERANDS[pselect](self, moving), asl)
 
         self._move(moving << 6 | destination)

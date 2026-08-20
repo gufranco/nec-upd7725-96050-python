@@ -196,6 +196,23 @@ BRANCHES: dict[int, Callable[[Core], bool]] = {
 }
 
 
+def _superseded(asl: int, destination: int) -> bool:
+    """Whether the move overwrites the very accumulator the arithmetic would write.
+
+    When it does, the arithmetic does not happen at all. The manufacturer is
+    explicit: "if the accumulator specified in the ASL field is also specified as
+    the destination of the data move, the ALU operation becomes a NOP, as the data
+    move supersedes the ALU operation."
+
+    Discarding the result is not enough, because a NOP is the one operation that
+    leaves the flags alone: the document says they are "updated at the end of each
+    arithmetic instruction (except NOP)". A model that runs the arithmetic and then
+    overwrites the accumulator holds the right value and the wrong flags, and the
+    next conditional branch reads those flags.
+    """
+    return destination == (TO_B if asl else TO_A)
+
+
 class Core:
     """One processor, its registers, its flags and its three stores."""
 
@@ -277,7 +294,7 @@ class Core:
 
         moving = self._read(source)
 
-        if alu:
+        if alu and not _superseded(asl, destination):
             self._compute(alu, pselect, asl, moving)
 
         self._load(moving << 6 | destination)

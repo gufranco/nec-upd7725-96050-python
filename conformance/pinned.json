@@ -21,6 +21,14 @@
       "whatDidNotChange": "Nothing about the arithmetic, the flags, the pointers or the branches. After the retake the two implementations still agree on every one of the 22,240 recorded cases, and on 40,000 further cases derived past the end of the corpus.",
       "evidenceItRestsOn": "conformance/hardware.json, the stackLevels entry for upd7725, quoting the datasheet and corroborated by its block diagram.",
       "corroboration": "The sibling project drove every recorded cartridge exchange for the DSP-1, DSP-2, DSP-3 and DSP-4 under all 256 command bytes, 31,541 stack movements in total, and the deepest slot any shipped microcode reached was 3. Nothing a real cartridge does needs a fifth level, so the correction changes no real exchange."
+    },
+    {
+      "date": "2026-08-20",
+      "why": "The manufacturer states that when the accumulator the arithmetic names is also the destination of the data move, the arithmetic becomes a NOP. Both implementations here ran it and let the move overwrite the result, which holds the right accumulator and the wrong flags, and a conditional branch reads those flags. The emulator the corpus was recorded from does the same, so the recording carried it.",
+      "whatChanged": "The arithmetic is skipped entirely when its own accumulator is the destination, so no flags are updated. Nothing else.",
+      "howMuch": "581 of the 22,240 recorded cases, which is 2.6%, and every one of them is a case where that collision occurs.",
+      "evidenceItRestsOn": "conformance/hardware.json, upd7725.facts.arithmeticSupersededByItsOwnDestination, quoting the instruction-timing section, with the flag consequence quoted from the accumulator section and the ALU table.",
+      "corroboration": "None available. No cartridge exchange in the sibling project changed, so nothing a shipped game does distinguishes the two behaviours, which is presumably why it survived in the field."
     }
   ],
   "howToRetake": "python3 conformance/instructions.py --record --retake. The second flag is required because the first alone would replace recorded evidence with what this repository answers today, and a recording taken from the thing it is meant to check is worth nothing. Retake only to carry a corrected hardware fact, and add an entry above saying which."

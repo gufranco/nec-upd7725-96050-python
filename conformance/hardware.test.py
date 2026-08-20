@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import reference
 
 from upd7725 import models
+from upd7725.flags import Flags
 
 HARDWARE = Path(__file__).resolve().parent / "hardware.json"
 
@@ -175,6 +176,61 @@ class CycleTest(unittest.TestCase):
                 continue
             earlier = one["predecessorForContrast"]
             self.assertEqual(earlier["clocksPerInstruction"], 2)
+
+
+class SupersededArithmeticTest(unittest.TestCase):
+    """The rule that a move over its own accumulator cancels the arithmetic.
+
+    Discarding the result is not the same as not computing it, because the
+    difference is the flags, and the next conditional branch reads them. Both
+    implementations here ran the arithmetic and overwrote it, and so did the
+    emulator the corpus was recorded from.
+    """
+
+    def _run(self, destination: int, asl: int = 0) -> Any:
+        chip = models.describe("upd7725").build(fill=0)
+        registers = chip.registers
+        registers.a = 0x7FFF
+        registers.b = 0x7FFF
+        chip.flags_a = Flags()
+        chip.flags_b = Flags()
+        registers.pc = 0
+        chip.stores.program[0] = 1 << 20 | 5 << 16 | asl << 15 | 2 << 4 | destination
+        chip.step()
+        return chip
+
+    def test_the_document_says_the_arithmetic_becomes_a_nop(self) -> None:
+        self.assertTrue(facts_for("upd7725")["arithmeticSupersededByItsOwnDestination"]["value"])
+
+    def test_arithmetic_into_nowhere_still_sets_the_flags(self) -> None:
+        chip = self._run(destination=0)
+
+        self.assertNotEqual(int(chip.flags_a), 0)
+
+    def test_arithmetic_over_its_own_accumulator_sets_no_flags(self) -> None:
+        chip = self._run(destination=1)
+
+        self.assertEqual(int(chip.flags_a), 0)
+
+    def test_and_the_moved_value_is_what_lands(self) -> None:
+        chip = self._run(destination=1)
+
+        self.assertEqual(chip.registers.word("a"), 0x7FFF)
+
+    def test_arithmetic_over_the_other_accumulator_still_sets_the_flags(self) -> None:
+        chip = self._run(destination=2)
+
+        self.assertNotEqual(int(chip.flags_a), 0)
+
+    def test_the_rule_follows_the_accumulator_the_arithmetic_names(self) -> None:
+        chip = self._run(destination=2, asl=1)
+
+        self.assertEqual(int(chip.flags_b), 0)
+
+    def test_and_not_the_other_one(self) -> None:
+        chip = self._run(destination=1, asl=1)
+
+        self.assertNotEqual(int(chip.flags_b), 0)
 
 
 class MultiplierTest(unittest.TestCase):

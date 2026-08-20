@@ -108,6 +108,52 @@
           "value": 244,
           "quote": "Serial: 8- or 16-bit (244 ns/bit)",
           "note": "Two instruction cycles per serial bit at 8.192 MHz. Nothing in a cartridge uses the serial port."
+        },
+        "instructionElementOrder": {
+          "value": ["multiply", "data move", "arithmetic", "pointer modification", "return"],
+          "quote": "To control the execution of instructions, the external 8 MHz clock is divided into phases for internal execution. The various elements of the 24-bit instruction word are executed in a set order. Multiplication automatically begins first. Also, data moves from source to destination before other elements of the instruction. Data being moved on the internal data bus (IDB) is available for use in ALU operations (if P-select of the instruction specifies IDB).",
+          "andAlso": "Pointer modifications occur at the end of the instruction cycle after their values have been used for data moves. The result of multiplication is available at the end of the instruction cycle for possible use in the next instruction. If a return is specified as part of an OP instruction, it is executed last."
+        },
+        "arithmeticSupersededByItsOwnDestination": {
+          "value": true,
+          "quote": "However, if the accumulator specified in the ASL field is also specified as the destination of the data move, the ALU operation becomes a NOP, as the data move supersedes the ALU operation.",
+          "consequence": "A NOP is the one operation that leaves the flags alone: \"These flags ... are updated at the end of each arithmetic instruction (except NOP)\", and the ALU table gives NOP no flag effects at all. So the arithmetic must not run, rather than run and be overwritten. A model that overwrites holds the right accumulator and the wrong flags, and the next conditional branch reads those flags.",
+          "foundBy": "Reading this page. Both implementations here ran the arithmetic and let the move overwrite it, and so does the emulator the corpus was recorded from: 581 of the 22,240 recorded cases changed when it was fixed."
+        },
+        "statusRegisterBits": {
+          "value": {
+            "RQM": 15,
+            "USF1": 14,
+            "USF0": 13,
+            "DRS": 12,
+            "DMA": 11,
+            "DRC": 10,
+            "SOC": 9,
+            "SIC": 8,
+            "EI": 7,
+            "P1": 1,
+            "P0": 0
+          },
+          "quote": "Figure 3. Status Register (SR): bit 15 RQM, 14 USF1, 13 USF0, 12 DRS, 11 DMA, 10 DRC, 9 SOC, 8 SIC, 7 EI, bits 6 to 2 zero, 1 P1, 0 P0",
+          "note": "Checked against both implementations here and they already matched, bit for bit."
+        },
+        "requestBitSemantics": {
+          "quote": "RQM (Request for Master): A read or write form DR to IDB sets RQM = 1, An external read (write) resets RQM = 0.",
+          "note": "The part raises it when its own program touches the data register; the console clears it by reading or writing. Checked against the implementation here and it already matched."
+        },
+        "transferHalfSemantics": {
+          "quote": "DRS (DR Status): For 16-bit DR transfers (DRC = 0), DRS = 1 after first 8 bits have been transferred. DRS = 0 after all 16 bits have been transferred.",
+          "note": "Already matched."
+        },
+        "statusReadWidth": {
+          "value": 8,
+          "quote": "Eight MSBs of SR are output to D0-D7",
+          "andWriting": "Illegal (SR is read only)",
+          "note": "The read width already matched. A write to the status port does nothing here, which is the least surprising reading of illegal."
+        },
+        "parallelInterfaceIsEightBit": {
+          "quote": "Host CPU Interface   8-bit bus",
+          "note": "So a sixteen-bit data register is moved a byte at a time, which is what DRS tracks."
         }
       },
       "predecessorForContrast": {
