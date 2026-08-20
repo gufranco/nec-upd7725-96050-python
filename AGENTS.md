@@ -74,6 +74,21 @@ zero passes tests and fails on hardware, because hardware does not start at zero
 Never add a test that assumes a cleared state, and never "fix" a failure by
 clearing one.
 
+**Run the suite as a machine that holds nothing.** A test that reaches a default
+which opens a real file passes on a workstation holding that file and fails on a
+runner that does not, and the local run gives no hint. Point the firmware
+directory somewhere empty and run everything before pushing:
+
+```bash
+EMPTY=$(mktemp -d)
+for f in upd7725/*.test.py conformance/*.test.py; do
+  UPD7725_FIRMWARE_DIR="$EMPTY" python3 "$f" || echo "FAILED $f"
+done
+```
+
+Every test that could reach a real image supplies its own path or its own stand-in.
+A default is for a person at a command line, never for a test.
+
 **Coverage that depends on what the machine holds is not coverage.** A test that
 only runs where a firmware image happens to be present is a test that reports a
 pass on a machine that ran nothing. Tests that need a file supply their own.
