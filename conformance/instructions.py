@@ -44,21 +44,39 @@ TABLE_WORDS = 2048
 
 SCRATCH_WORDS = 2048
 
-STACK_DEPTH = 16
+STACK_SLOTS_RESERVED = 16
+"""How much room the seed layout leaves for stack slots, not how deep any stack is.
+
+Deliberately larger than the deepest stack in the family, and deliberately fixed.
+Every seed address after it is derived from it, so shrinking it to a part's real
+depth would move the address of every register and change every recorded case for
+a reason that has nothing to do with the part. How many of these slots a given
+part actually has comes from its model.
+"""
 
 AT_PROGRAM = 0
 AT_TABLE = AT_PROGRAM + PROGRAM_WORDS
 AT_SCRATCH = AT_TABLE + TABLE_WORDS
 AT_STACK = AT_SCRATCH + SCRATCH_WORDS
-AT_REGISTERS = AT_STACK + STACK_DEPTH
+AT_REGISTERS = AT_STACK + STACK_SLOTS_RESERVED
 
 REPORTED_CHANGES = 2
 
 TOO_MANY_CHANGES = 0xFF
 
-WIDTH = 146
+RECORDED_STACK_SLOTS = 8
+"""How many stack words each recorded state carries.
 
-PACKED = 73
+The deepest stack in the family, so the record has one fixed width whichever part
+produced it and a case can still be found by multiplying its number by that
+width. A part with fewer slots than this pads with zeroes, and both sides of a
+comparison pad the same way, so padding cannot hide a difference. It is not a
+claim that any part holds this many: models.py says how many each holds.
+"""
+
+WIDTH = 114
+
+PACKED = 57
 
 REPORT_LIMIT = 5
 
@@ -116,11 +134,16 @@ class Usage(Exception):
 
 class Options:
     def __init__(
-        self, corpus: str | None = None, cases: int | None = None, record: bool = False
+        self,
+        corpus: str | None = None,
+        cases: int | None = None,
+        record: bool = False,
+        retake: bool = False,
     ) -> None:
         self.corpus = corpus
         self.cases = cases
         self.record = record
+        self.retake = retake
 
 
 def word_at(seed: int, index: int) -> int:
@@ -204,8 +227,17 @@ def _sources(seed: int) -> dict[str, Callable[[int], int]]:
     }
 
 
-def _start(seed: int, name: str, place: int) -> int:
+def _start(seed: int, name: str, place: int, stack_mask: int) -> int:
+    """What that seed puts in one register, narrowed to what the part can hold.
+
+    The stack pointer is the one width that differs between the two parts, so it
+    arrives rather than being looked up. Seeding it past the last slot would put
+    the case in a state the silicon cannot be in, and a comparison there measures
+    an implementation's masking rather than the part.
+    """
     value = word_at(seed, AT_REGISTERS + place)
+    if name == "sp":
+        return value & stack_mask
     return value & REGISTER_MASKS.get(name, 0xFFFF)
 
 
@@ -216,7 +248,7 @@ def prepared(seed: int, part: int) -> core.Core:
 
     registers = chip.registers
     for place, name in enumerate(REGISTER_ORDER):
-        value = _start(seed, name, place)
+        value = _start(seed, name, place, model.stack_levels - 1)
         if name == "sr":
             registers.sr.assign(value)
         elif name in ("siack", "soack"):
@@ -228,7 +260,7 @@ def prepared(seed: int, part: int) -> core.Core:
         else:
             setattr(registers, name, value)
 
-    for at in range(STACK_DEPTH):
+    for at in range(model.stack_levels):
         registers.stack[at] = word_at(seed, AT_STACK + at) & 0xFFFF
 
     return chip
@@ -262,7 +294,10 @@ def state_of(chip: core.Core) -> str:
             f"{int(chip.flags_a):02x}",
             f"{int(chip.flags_b):02x}",
             f"{int(registers.sr.siack) << 1 | int(registers.sr.soack):01x}",
-            "".join(f"{word:04x}" for word in registers.stack),
+            "".join(
+                f"{registers.stack[at] if at < len(registers.stack) else 0:04x}"
+                for at in range(RECORDED_STACK_SLOTS)
+            ),
             f"{min(len(changed), TOO_MANY_CHANGES):02x}",
             "".join(f"{at:03x}{word:04x}" for at, word in slots),
         )
@@ -325,6 +360,9 @@ def options(argv: Sequence[str]) -> "Options":
         if item == "--record":
             chosen.record = True
             continue
+        if item == "--retake":
+            chosen.retake = True
+            continue
         if item not in ("--corpus", "--cases"):
             raise Usage(f"unknown option {item}")
         if not rest:
@@ -341,6 +379,17 @@ def run(argv: Sequence[str]) -> int:
     chosen = options(argv)
 
     if chosen.record:
+        where = Path(chosen.corpus or CORPUS)
+        if where.exists() and not chosen.retake:
+            raise Usage(
+                f"{where.name} already holds recorded states, and recording again would"
+                " replace them with what the implementation in this repository answers"
+                " today. That is a change to what this project claims is true, not a"
+                " refresh: the value of a recording is that it was taken from somewhere"
+                " else, and a recording taken from the thing it is meant to check is"
+                " worth nothing. Retake it only to carry a corrected hardware fact, and"
+                " say so with --retake"
+            )
         found = record(chosen.cases)
         Path(chosen.corpus or CORPUS).write_text(json.dumps(found, indent=2) + "\n")
         print(f"recorded {found['cases']} cases")

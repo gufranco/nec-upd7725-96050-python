@@ -16,9 +16,25 @@ WORD = 0x10000
 
 SIGN = 0x8000
 
-STACK_DEPTH = 16
+STACK_DEPTH = 4
+"""How many return addresses the smaller part holds.
+
+Four, because NEC says four: "The SPI+ contains a four-level program stack for
+efficient program usage and interrupt handling", and the block diagram beside it
+draws the slots labelled 0 to 3. Every implementation of this family in the field
+carries sixteen, which is where this started too, and none of them is the part.
+
+What a fifth consecutive call does is not in the document. A two-bit pointer
+wrapping to slot zero is what the width implies, and that is what happens below,
+but it is an inference from the width rather than a figure anybody printed.
+
+The larger part of the family holds more, and that number has no manufacturer's
+document behind it. Both live in models.py so the part decides, and
+conformance/hardware.json records which of the two is verified.
+"""
 
 STACK_MASK = STACK_DEPTH - 1
+"""The default when a caller does not say, which is the smaller part's."""
 
 SIGNED = ("k", "l", "m", "n", "a", "b")
 
@@ -146,11 +162,18 @@ class Registers:
     the part until the first negative multiply.
     """
 
-    def __init__(self, counter_bits: int, table_bits: int, pointer_bits: int) -> None:
+    def __init__(
+        self,
+        counter_bits: int,
+        table_bits: int,
+        pointer_bits: int,
+        stack_levels: int = STACK_DEPTH,
+    ) -> None:
         self.counter_mask = (1 << counter_bits) - 1
         self.table_mask = (1 << table_bits) - 1
         self.pointer_mask = (1 << pointer_bits) - 1
-        self.stack = [0] * STACK_DEPTH
+        self.stack_mask = stack_levels - 1
+        self.stack = [0] * stack_levels
         self._pc = 0
         self._rp = 0
         self._dp = 0
@@ -198,7 +221,7 @@ class Registers:
 
     @sp.setter
     def sp(self, value: int) -> None:
-        self._sp = value & STACK_MASK
+        self._sp = value & self.stack_mask
 
     @property
     def k(self) -> int:

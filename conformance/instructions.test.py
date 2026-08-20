@@ -228,6 +228,32 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(answered, 0)
         self.assertEqual(json.loads(where.read_text())["cases"], 2)
 
+    def test_recording_over_states_that_already_exist_is_refused(self) -> None:
+        where = Path(tempfile.mkdtemp()) / "recorded.json"
+        instructions.run(["--record", "--corpus", str(where), "--cases", "1"])
+
+        with self.assertRaises(instructions.Usage) as raised:
+            instructions.run(["--record", "--corpus", str(where), "--cases", "1"])
+
+        self.assertIn("--retake", str(raised.exception))
+
+    def test_and_allowed_when_the_retake_is_deliberate(self) -> None:
+        where = Path(tempfile.mkdtemp()) / "recorded.json"
+        instructions.run(["--record", "--corpus", str(where), "--cases", "1"])
+
+        answered = instructions.run(
+            ["--record", "--retake", "--corpus", str(where), "--cases", "2"]
+        )
+
+        self.assertEqual(answered, 0)
+        self.assertEqual(json.loads(where.read_text())["cases"], 2)
+
+    def test_the_retake_flag_is_read_from_the_command_line(self) -> None:
+        self.assertTrue(instructions.options(["--retake"]).retake)
+
+    def test_and_is_off_when_it_is_not_given(self) -> None:
+        self.assertFalse(instructions.options([]).retake)
+
 
 class EncodingTest(unittest.TestCase):
     def test_a_state_survives_being_written_down_and_read_back(self) -> None:

@@ -1,0 +1,144 @@
+{
+  "note": "What the manufacturer's own documentation says this silicon is. Every figure here was read out of the document named below rather than taken from an implementation of it, and each one carries the sentence or table row it came from so a later reader can check the reading rather than trusting it. This file is the authority on what the part IS. corpus.json is the authority on what the part DOES where the document is silent. When an implementation disagrees with this file, the implementation is wrong, no matter how widely used it is.",
+  "authority": {
+    "order": [
+      "hardware.json, for anything the manufacturer states: widths, stack depth, cycles per instruction, memory sizes",
+      "corpus.json, for instruction-level behaviour the document does not specify: exact flag rules, undefined encodings, the result of every field combination",
+      "neither overrides the other, because they answer different questions"
+    ],
+    "why": "corpus.json was recorded from an emulator, named in pinned.json. An emulator is a good source for behaviour nobody documented and a poor one for facts the manufacturer printed. Where the two disagree the document wins, and the recording is retaken."
+  },
+  "parts": [
+    {
+      "part": "upd7725",
+      "verified": true,
+      "document": {
+        "publisher": "NEC Electronics Inc.",
+        "title": "uPD77C25/uPD77P25 Digital Signal Processor Data Sheet",
+        "kind": "Advance Product Information",
+        "date": "1987-08",
+        "readOn": "2026-08-20",
+        "note": "Covers the uPD77C25 mask-ROM part and the uPD77P25 UVEPROM part, described in the document as functionally identical. This is the part Nintendo shipped as the DSP-1, DSP-2, DSP-3 and DSP-4."
+      },
+      "facts": {
+        "clocksPerInstruction": {
+          "value": 1,
+          "quote": "Since the 77C25 executes an instruction in one external clock cycle (versus two cycles of the same 8.192 MHz clock for 77C20A), the 77C25 may be substituted for a 77C20A (or 7720A or 77P20) in a circuit without modification of that circuit."
+        },
+        "everyInstructionSameLength": {
+          "value": true,
+          "quote": "All instructions execute in one instruction cycle"
+        },
+        "instructionCycleNanoseconds": {
+          "value": 122,
+          "atClockHz": 8192000,
+          "quote": "Fast instruction execution: 122 ns with 8.192 MHz clock."
+        },
+        "maximumClockHz": {
+          "value": 8300000,
+          "quote": "The external clock frequency (8.3 MHz maximum) remains the same as for 7720/77C20 while the internal instruction execution speed is doubled."
+        },
+        "programWords": {
+          "value": 2048,
+          "wordBits": 24,
+          "quote": "Program ROM (2048 x 24 bits)"
+        },
+        "programCounterBits": {
+          "value": 11,
+          "quote": "The 2048 x 24-bit words of instruction ROM are addressed by the 11-bit program counter that can be modified by an external reset, interrupt, call, jump, or return instruction."
+        },
+        "dataRomWords": {
+          "value": 1024,
+          "wordBits": 16,
+          "quote": "The data ROM is organized in 1024 x 16-bit words that are addressed through a 10-bit ROM pointer (RP register)."
+        },
+        "romPointerBits": {
+          "value": 10,
+          "quote": "addressed through a 10-bit ROM pointer (RP register)"
+        },
+        "dataRamWords": {
+          "value": 256,
+          "wordBits": 16,
+          "quote": "The data RAM is 256 x 16-bit words and is addressed through an 8-bit data pointer (DP register)."
+        },
+        "dataPointerBits": {
+          "value": 8,
+          "quote": "addressed through an 8-bit data pointer (DP register)"
+        },
+        "stackLevels": {
+          "value": 4,
+          "quote": "The SPI+ contains a four-level program stack for efficient program usage and interrupt handling.",
+          "corroboration": "The block diagram on page 7 draws the stack as four slots, labelled 0, 1, 2 and 3.",
+          "notStated": "What happens on a fifth consecutive call is not stated in this document. A two-bit pointer wrapping to slot zero is the consequence of the width the document gives, and the model takes that, but it is an inference from the width rather than a figure the document prints."
+        },
+        "accumulators": {
+          "value": 2,
+          "bits": 16,
+          "quote": "Dual 16-bit accumulators"
+        },
+        "flagsPerAccumulator": {
+          "value": ["SA1", "SA0", "CA", "ZA", "OVA1", "OVA0"],
+          "quote": "In addition to zero result, sign, carry, and overflow flags, the SPI+ incorporates auxiliary overflow and sign flags (SA1, SB1, OVA1, OVB1). These flags enable the detection of an overflow condition and maintain the correct sign after as many as three successive additions or subtractions."
+        },
+        "multiplier": {
+          "inputBits": 16,
+          "productBits": 31,
+          "quote": "Thirty-one-bit results are developed by a 16 x 16-bit two's complement multiplier in 122 ns. The result is automatically latched to two 16-bit registers, M and N, at the end of each instruction cycle. The sign bit and 15 higher bits are in M and the 16 lower bits are in N; the LSB in N is zero. A new product is available for use after every instruction cycle"
+        },
+        "aluOperations": {
+          "value": 16,
+          "quote": "The ALU is a 16-bit two's complement unit capable of executing 16 distinct operations on data routed via the P and Q ALU inputs."
+        },
+        "interruptVector": {
+          "value": 256,
+          "quote": "A low-to-high transition on this pin executes a call instruction to location 100H, if interrupts were previously enabled."
+        },
+        "resetSetsProgramCounterTo": {
+          "value": 0,
+          "quote": "This input initializes the SPI+ internal logic and sets the PC to 0."
+        },
+        "hostInterfaceBusBits": {
+          "value": 8,
+          "quote": "Host CPU Interface   8-bit bus"
+        },
+        "statusDataRegisterSelect": {
+          "quote": "A0 [Status Data Register Select] This input selects data register for read/write (low) or status register for read (high)."
+        },
+        "serialNanosecondsPerBit": {
+          "value": 244,
+          "quote": "Serial: 8- or 16-bit (244 ns/bit)",
+          "note": "Two instruction cycles per serial bit at 8.192 MHz. Nothing in a cartridge uses the serial port."
+        }
+      },
+      "predecessorForContrast": {
+        "part": "upd77C20A",
+        "instructionCycleNanoseconds": 244,
+        "clocksPerInstruction": 2,
+        "quote": "Instruction cycle   122 ns ... 244 ns",
+        "why": "Recorded because a reader who finds a 250 ns instruction cycle quoted for this family has found the earlier part. Taking that figure for this one would halve the rate at which it runs."
+      }
+    },
+    {
+      "part": "upd96050",
+      "verified": false,
+      "document": null,
+      "unverified": {
+        "note": "No manufacturer document for this part was located. Everything asserted about it below therefore rests on secondary sources, and secondary sources for this family are emulators, which is the weakest kind of evidence this project accepts for a fact the manufacturer would have printed. It is recorded as unverified rather than quietly adopted.",
+        "whatIsAsserted": {
+          "programWords": 16384,
+          "dataRomWords": 2048,
+          "dataRamWords": 2048,
+          "stackLevels": 8
+        },
+        "whatThisProjectUses": {
+          "programWords": 16384,
+          "dataRomWords": 2048,
+          "dataRamWords": 2048,
+          "stackLevels": 8,
+          "why": "The three memory sizes are corroborated by the images themselves: an ST010 firmware file is exactly 16384 program words of three bytes plus 2048 table words of two bytes, so a wrong size would not load. The stack depth has no such corroboration. Eight is used because it is what the secondary sources say and because it is the smallest value consistent with them; the measurement in the sibling project shows no microcode in the family reaching past slot three, so the exposure of being wrong here is small but it is not zero."
+        },
+        "howToSettleIt": "A NEC data book covering the uPD96050, or a decapped part. Until one is read, this entry stays marked unverified and the README says so."
+      }
+    }
+  ]
+}

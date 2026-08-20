@@ -152,18 +152,52 @@ class WordTest(unittest.TestCase):
 
 
 class StackTest(unittest.TestCase):
-    def test_the_stack_is_as_deep_as_the_part_makes_it(self) -> None:
-        found = registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11)
+    """How many return addresses there are, which the field usually gets wrong.
 
-        self.assertEqual(len(found.stack), registers.STACK_DEPTH)
+    Four is not a number chosen here. It is what NEC prints for this part, and
+    conformance/hardware.test.py is where that is held against the document. What
+    these check is that the register file is built to whatever depth it is handed,
+    and that the pointer cannot reach past the last slot.
+    """
 
-    def test_the_stack_pointer_wraps_within_its_own_nibble(self) -> None:
-        found = registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11)
-        found.sp = registers.STACK_DEPTH - 1
+    def _held(self, **options: int) -> registers.Registers:
+        return registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11, **options)
+
+    def test_a_part_that_says_nothing_gets_the_smaller_parts_four(self) -> None:
+        self.assertEqual(len(self._held().stack), 4)
+
+    def test_a_part_that_holds_more_is_built_with_more(self) -> None:
+        self.assertEqual(len(self._held(stack_levels=8).stack), 8)
+
+    def test_the_pointer_wraps_at_the_last_slot_of_a_four_deep_stack(self) -> None:
+        found = self._held()
+        found.sp = 3
 
         found.sp += 1
 
         self.assertEqual(found.sp, 0)
+
+    def test_and_at_the_last_slot_of_an_eight_deep_one(self) -> None:
+        found = self._held(stack_levels=8)
+        found.sp = 7
+
+        found.sp += 1
+
+        self.assertEqual(found.sp, 0)
+
+    def test_a_four_deep_stack_cannot_be_pointed_past_its_last_slot(self) -> None:
+        found = self._held()
+
+        found.sp = 9
+
+        self.assertLess(found.sp, 4)
+
+    def test_every_slot_of_the_stack_can_be_reached(self) -> None:
+        found = self._held()
+
+        for at in range(4):
+            found.sp = at
+            self.assertEqual(found.sp, at)
 
 
 if __name__ == "__main__":

@@ -204,6 +204,7 @@ class Core:
     stores: Stores
     flags_a: Flags
     flags_b: Flags
+    cycles: int
 
     def __init__(
         self,
@@ -216,6 +217,7 @@ class Core:
             counter_bits=model.counter_bits,
             table_bits=model.table_bits,
             pointer_bits=model.pointer_bits,
+            stack_levels=model.stack_levels,
         )
         self.stores = Stores(
             program_words=model.program_words,
@@ -226,9 +228,18 @@ class Core:
         )
         self.flags_a = Flags()
         self.flags_b = Flags()
+        self.cycles = 0
 
     def step(self) -> None:
-        """One instruction, and the multiply that follows every one of them."""
+        """One instruction, and the multiply that follows every one of them.
+
+        One instruction is one cycle on this part, so the count kept here is a
+        cycle count and not merely an instruction count. That is the
+        manufacturer's figure rather than a convenience: "Since the 77C25
+        executes an instruction in one external clock cycle", and "All
+        instructions execute in one instruction cycle". Nothing here has to carry
+        a per-instruction cycle table, because the part does not have one.
+        """
         opcode = self.stores.program[self.registers.pc]
         self.registers.pc += 1
 
@@ -243,6 +254,7 @@ class Core:
             self._load(opcode)
 
         self._multiply()
+        self.cycles += 1
 
     def run(self, instructions: int) -> None:
         for _ in range(instructions):

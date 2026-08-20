@@ -64,7 +64,7 @@ def prepared(seed: int, part: int) -> "reference.Upd96050":
     chip.dataROM = Sourced(seed, instructions.AT_TABLE, reference.DATA_WORDS, 0xFFFF)
     chip.dataRAM = Sourced(seed, instructions.AT_SCRATCH, reference.DATA_WORDS, 0xFFFF)
 
-    for at in range(reference.STACK_DEPTH):
+    for at in range(len(chip.regs.stack)):
         chip.regs.stack[at] = instructions.word_at(seed, instructions.AT_STACK + at) & 0xFFFF
 
     registers = chip.regs
@@ -121,7 +121,10 @@ def answer(seed: int, part: int, opcode: int) -> str:
             f"{int(chip.flags_a):02x}",
             f"{int(chip.flags_b):02x}",
             f"{registers.sr.siack << 1 | registers.sr.soack:01x}",
-            "".join(f"{word:04x}" for word in registers.stack),
+            "".join(
+                f"{registers.stack[at] if at < len(registers.stack) else 0:04x}"
+                for at in range(instructions.RECORDED_STACK_SLOTS)
+            ),
             f"{min(len(changes), instructions.TOO_MANY_CHANGES):02x}",
             "".join(f"{at:03x}{word:04x}" for at, word in slots),
         )

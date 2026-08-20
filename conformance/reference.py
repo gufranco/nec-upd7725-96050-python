@@ -23,7 +23,7 @@ WORD = 0x10000
 
 SIGN = 0x8000
 
-STACK_DEPTH = 16
+DEFAULT_STACK_LEVELS = 4
 
 PROGRAM_WORDS = 16384
 
@@ -43,6 +43,18 @@ WIDTHS = {
     UPD7725: (11, 10, 8),
     UPD96050: (14, 11, 11),
 }
+
+STACK_LEVELS = {
+    UPD7725: 4,
+    UPD96050: 8,
+}
+"""How many return addresses each part holds.
+
+Four for the smaller one because NEC prints four. Eight for the larger one
+because no manufacturer document for it was found and eight is what the secondary
+sources say, which conformance/hardware.json records as unverified rather than
+letting it pass for a fact.
+"""
 
 FLAG_BITS = ("ov0", "ov1", "z", "c", "s0", "s1")
 
@@ -183,11 +195,18 @@ class Registers:
     trb: int
     dr: int
 
-    def __init__(self, counter_bits: int, table_bits: int, pointer_bits: int) -> None:
+    def __init__(
+        self,
+        counter_bits: int,
+        table_bits: int,
+        pointer_bits: int,
+        stack_levels: int = DEFAULT_STACK_LEVELS,
+    ) -> None:
         self.pc_mask = (1 << counter_bits) - 1
         self.rp_mask = (1 << table_bits) - 1
         self.dp_mask = (1 << pointer_bits) - 1
-        self.stack = [0] * STACK_DEPTH
+        self.stack_mask = stack_levels - 1
+        self.stack = [0] * stack_levels
         self.sr = Status()
         self._pc = self._rp = self._dp = self._sp = 0
         for name in SIGNED_REGISTERS + PLAIN_REGISTERS:
@@ -223,7 +242,7 @@ class Registers:
 
     @sp.setter
     def sp(self, value: int) -> None:
-        self._sp = value & 0xF
+        self._sp = value & self.stack_mask
 
 
 SOURCES: "tuple[Callable[[Upd96050], int], ...]" = (
@@ -332,7 +351,7 @@ class Upd96050:
         if revision not in WIDTHS:
             raise UnknownRevision(f"{revision} is not a revision this reference has")
         self.revision = revision
-        self.regs = Registers(*WIDTHS[revision])
+        self.regs = Registers(*WIDTHS[revision], stack_levels=STACK_LEVELS[revision])
         self.flags_a = Flag()
         self.flags_b = Flag()
         self.programROM = [0] * PROGRAM_WORDS

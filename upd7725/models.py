@@ -37,6 +37,7 @@ class Model:
         table_bits: int,
         pointer_bits: int,
         parts: Iterable[str],
+        stack_levels: int,
         aliases: Iterable[str] = (),
     ) -> None:
         self.name = name
@@ -44,8 +45,18 @@ class Model:
         self.counter_bits = counter_bits
         self.table_bits = table_bits
         self.pointer_bits = pointer_bits
+        self.stack_levels = stack_levels
         self.parts = tuple(parts)
         self.aliases = tuple(aliases)
+
+    @property
+    def stack_pointer_bits(self) -> int:
+        """How wide the pointer into that stack is.
+
+        A four-level stack is reached by a two-bit pointer, so this follows from
+        the depth rather than being a second number that could disagree with it.
+        """
+        return (self.stack_levels - 1).bit_length()
 
     @property
     def program_words(self) -> int:
@@ -68,7 +79,8 @@ class Model:
     def __repr__(self) -> str:
         return (
             f"<Model {self.name}, counter {self.counter_bits} bits, "
-            f"table {self.table_bits}, pointer {self.pointer_bits}>"
+            f"table {self.table_bits}, pointer {self.pointer_bits}, "
+            f"stack {self.stack_levels}>"
         )
 
 
@@ -84,6 +96,7 @@ _CATALOGUE = (
         counter_bits=11,
         table_bits=10,
         pointer_bits=8,
+        stack_levels=4,
         parts=("dsp1", "dsp1a", "dsp1b", "dsp2", "dsp3", "dsp4"),
         aliases=("7725", "upd77c25", "77c25", "necupd7725"),
     ),
@@ -97,6 +110,7 @@ _CATALOGUE = (
         counter_bits=14,
         table_bits=11,
         pointer_bits=11,
+        stack_levels=8,
         parts=("st010", "st011"),
         aliases=("96050", "upd96050gf", "necupd96050"),
     ),

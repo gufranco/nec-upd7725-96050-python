@@ -1,9 +1,27 @@
 {
+  "note": "Where the recorded states came from, and what that is worth. Read conformance/hardware.json first: it carries what the manufacturer says the part is, and it outranks everything here. This file covers the other question, which is behaviour the manufacturer did not document.",
   "reference": {
     "name": "ares",
     "url": "https://github.com/ares-emulator/ares",
     "license": "ISC",
     "commit": "b80f67d38312648d197762121c3a27b02c0887db",
-    "note": "The behaviour of this processor was studied against the implementation that project carries, and corpus.json was recorded from it at the commit above. No part of it is present in this repository: the implementation in conformance/reference.py is an independent one, and it is held to those recordings rather than to anything fetched."
-  }
+    "note": "The behaviour of this processor was studied against the implementation that project carries. No part of it is present in this repository: conformance/reference.py is an independent implementation, written to a deliberately different shape, and held to the recordings rather than to anything fetched."
+  },
+  "chainOfCustody": [
+    "The instruction-level behaviour was derived from ares at the commit above, and conformance/reference.py was written from that study rather than copied from it.",
+    "reference.py was then held to the recorded states, and reproduces every one of them.",
+    "corpus.json as it stands was produced by running reference.py over every case, which is what --record does. It is therefore a frozen record of a validated implementation rather than a fresh reading of a third-party one, and it is worth exactly that: it catches any later change to either local implementation, and it is not independent evidence about silicon.",
+    "The independent evidence about silicon is hardware.json, which is the manufacturer's own document, and it is the rung that decides."
+  ],
+  "retaken": [
+    {
+      "date": "2026-08-20",
+      "why": "The manufacturer's document gives the smaller part a four-level program stack. Both implementations here carried sixteen, which is what every implementation in the field carries, and the recorded states encoded it: the case generator seeded the stack pointer across sixteen slots, so a large part of the corpus described a state the silicon cannot be in.",
+      "whatChanged": "Stack depth became a property of the part, four for the uPD7725 and eight for the uPD96050. The stack pointer masks to the part's own width. Case generation seeds the pointer within the part's real range. The recorded state carries eight stack words whatever the part, padded, so one stride still finds any case.",
+      "whatDidNotChange": "Nothing about the arithmetic, the flags, the pointers or the branches. After the retake the two implementations still agree on every one of the 22,240 recorded cases, and on 40,000 further cases derived past the end of the corpus.",
+      "evidenceItRestsOn": "conformance/hardware.json, the stackLevels entry for upd7725, quoting the datasheet and corroborated by its block diagram.",
+      "corroboration": "The sibling project drove every recorded cartridge exchange for the DSP-1, DSP-2, DSP-3 and DSP-4 under all 256 command bytes, 31,541 stack movements in total, and the deepest slot any shipped microcode reached was 3. Nothing a real cartridge does needs a fifth level, so the correction changes no real exchange."
+    }
+  ],
+  "howToRetake": "python3 conformance/instructions.py --record --retake. The second flag is required because the first alone would replace recorded evidence with what this repository answers today, and a recording taken from the thing it is meant to check is worth nothing. Retake only to carry a corrected hardware fact, and add an entry above saying which."
 }
