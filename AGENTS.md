@@ -11,20 +11,31 @@ not of a program: every instruction is settled by generating instruction words,
 so the whole gate runs on a machine holding nothing anybody licensed. Firmware is
 never carried here and never will be.
 
-## The one rule that decides most questions
+## The authority ladder
 
-**The recordings decide. Nothing else does.**
+Every factual question is answered by the highest rung that has an answer, and a
+lower rung never overrules a higher one.
 
-`conformance/corpus.json` holds 22,240 states recorded from a third
-implementation, at the commit named in `conformance/pinned.json`, before either
-Python implementation in this repository existed. When the model and the corpus
-disagree, the corpus is right and the model is wrong. When the model and the
-ported reference in `conformance/reference.py` disagree, that is a candidate to
-investigate, and the corpus settles it.
+1. **`conformance/hardware.json`**, which is NEC's own datasheet pinned fact by
+   fact with the sentence each figure came from. It decides anything the
+   manufacturer printed: widths, memory sizes, stack depth, clocks per
+   instruction, what reset does.
+2. **`conformance/corpus.json`**, 22,240 recorded states, which decides
+   instruction-level behaviour the document does not specify: exact flag rules,
+   undefined encodings, the result of every field combination.
+3. **Nothing else.** An emulator, an FPGA core and a wiki are rung 2 at best and
+   rung 3 for a printed fact. This matters here more than it sounds: every
+   implementation of this family in the field gives the part a sixteen-level
+   stack, and NEC prints four. The corpus encoded sixteen until the datasheet was
+   read.
 
-Never edit `corpus.json` by hand. Never edit it to make a test pass. It is
-regenerated with `python3 conformance/instructions.py --record`, which reads the
-reference, and doing that is a change to what this project claims is true.
+When the document and the corpus disagree, the document wins and the corpus is
+retaken. Record it in `pinned.json` under `retaken`, saying which fact and why.
+
+Never edit `corpus.json` by hand, and never edit it to make a test pass.
+`--record` alone now refuses to overwrite it, because recording from the thing the
+corpus is meant to check produces evidence worth nothing. `--record --retake` is
+the deliberate act, and it is only for carrying a corrected hardware fact.
 
 ## Every gate, in the order to run them
 

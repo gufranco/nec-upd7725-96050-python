@@ -151,8 +151,25 @@ which is what a fixed-point routine does constantly.
 
 ## How this is proved
 
+The evidence is not all worth the same, and the order matters more than the list.
+NEC's own datasheet decides anything NEC printed. The recorded corpus decides
+instruction-level behaviour the datasheet does not specify. Nothing else decides
+anything: an emulator, an FPGA core and a wiki are below both, and this is not a
+philosophical point. Every implementation of this family in the field gives the
+part a sixteen-level program stack. NEC prints four, twice, and draws four slots
+in the block diagram. The corpus here encoded sixteen until the document was read.
+
+[`conformance/hardware.json`](conformance/hardware.json) is that document, pinned
+fact by fact, each figure carrying the sentence it came from, the publication it
+was read out of and the date it was read. Where the document is silent it says so
+rather than guessing: what a fifth consecutive call does is printed nowhere, so
+the wrap to slot zero is recorded as an inference from a two-bit pointer. The
+uPD96050 has no document behind it at all and is marked unverified rather than
+quietly given somebody else's number.
+
 | Part | Evidence | Strength |
 |:-----|:---------|:---------|
+| Every documented width, size and depth | NEC's datasheet, quoted per fact and checked against the model | Manufacturer |
 | Every instruction | 22,240 recorded states, and 1,002,240 compared while the corpus was built | Differential, over the whole state |
 | Every field of every form | 1,120 encodings walked rather than sampled | Exhaustive within each form |
 | Both parts | Every case runs on both, at their own register widths | Differential |
@@ -282,7 +299,9 @@ conformance/
   instructions.py     the runner that settles every instruction
   differential.py     the two implementations against each other, unbounded
   against_firmware.py the opt-in runner that needs an image you already own
+  hardware.json       what NEC says the part is, quoted fact by fact
   corpus.json         22,240 recorded states
+  pinned.json         where they came from, and every time they were retaken
 firmware/         where your own copies go, and nothing is ever committed
 ```
 
@@ -323,6 +342,7 @@ for f in upd7725/*.test.py conformance/*.test.py; do python3 "$f"; done
 | Reference | [`conformance/reference.test.py`](conformance/reference.test.py) | The independent implementation, on its own |
 | Oracle | [`conformance/oracle.test.py`](conformance/oracle.test.py) | That it reproduces every recorded state |
 | Corpus | [`conformance/instructions.test.py`](conformance/instructions.test.py) | Case generation, coverage of the encoding, replay |
+| The datasheet | [`conformance/hardware.test.py`](conformance/hardware.test.py) | Every documented width, size and depth against the model, and that each recorded fact carries its quote |
 | Differential | [`conformance/differential.test.py`](conformance/differential.test.py) | The unbounded sweep: case derivation, time budget, reporting, and both implementations live |
 | Firmware run | [`conformance/against_firmware.test.py`](conformance/against_firmware.test.py) | Booting each image, and the comparison between masks |
 
@@ -337,6 +357,7 @@ Coverage is enforced at 100% of statements and branches by [`pyproject.toml`](py
 | `python3 -m coverage run -a <file>` | Run one test file under coverage |
 | `python3 -m coverage report` | Coverage, which fails below 100% |
 | `mypy` | Types, at strict, with every optional error class on |
+| `python3 conformance/instructions.py --record --retake` | Retake the corpus, which only a corrected hardware fact justifies |
 | `python3 conformance/instructions.py` | Replay the recorded states |
 | `python3 conformance/differential.py` | Run the two implementations against each other |
 | `python3 conformance/against_firmware.py` | Run whatever images are on your disk |
