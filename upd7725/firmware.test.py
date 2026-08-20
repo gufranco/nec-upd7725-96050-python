@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -150,6 +151,158 @@ class IdentifyTest(unittest.TestCase):
             firmware.identify(b"\x00" * 7, {"artifacts": []})
 
         self.assertIn(hashlib.sha256(b"\x00" * 7).hexdigest(), str(raised.exception))
+
+
+def a_catalogue(image: bytes, part: str = "made-up", **extra: object) -> dict[str, Any]:
+    """A manifest holding one artifact, which is that image."""
+    return {
+        "artifacts": [
+            {
+                "part": part,
+                "processor": "upd7725",
+                "bytes": len(image),
+                "programWords": 2048,
+                "dataWords": 1024,
+                "accepted": [{"revision": "one", "sha256": hashlib.sha256(image).hexdigest()}],
+                **extra,
+            }
+        ]
+    }
+
+
+class RepairTest(unittest.TestCase):
+    """What can be done to a file the user already has.
+
+    Nothing here is ever suggested on a hunch. A transform is applied, its result
+    is hashed, and it is only named when the hash matches something published. So
+    a repair that is offered is a repair that works, and a file nothing helps gets
+    told that instead of being given a list of things to try.
+    """
+
+    def test_a_file_carrying_a_copier_header_is_told_to_strip_it(self) -> None:
+        image = an_image()
+
+        found = firmware.repairs(b"H" * 512 + image, a_catalogue(image)["artifacts"])
+
+        self.assertEqual(len(found), 1)
+        self.assertIn("512", found[0][0])
+
+    def test_and_told_which_part_it_would_become(self) -> None:
+        image = an_image()
+
+        found = firmware.repairs(b"H" * 512 + image, a_catalogue(image, "dsp9")["artifacts"])
+
+        self.assertEqual(found[0][1], "dsp9")
+
+    def test_a_file_with_its_bytes_in_the_wrong_order_is_told_to_swap_them(self) -> None:
+        image = bytes(range(256)) * 32
+        swapped = bytes(image[at ^ 1] for at in range(len(image)))
+
+        found = firmware.repairs(swapped, a_catalogue(image)["artifacts"])
+
+        self.assertTrue(any("swap" in how for how, _part in found), found)
+
+    def test_a_file_that_is_already_right_needs_nothing(self) -> None:
+        image = an_image()
+
+        self.assertEqual(firmware.repairs(image, a_catalogue(image)["artifacts"]), [])
+
+    def test_a_file_nothing_helps_is_offered_nothing(self) -> None:
+        image = an_image()
+
+        found = firmware.repairs(b"Z" * len(image), a_catalogue(image)["artifacts"])
+
+        self.assertEqual(found, [])
+
+    def test_a_file_too_short_to_strip_is_offered_nothing(self) -> None:
+        image = an_image()
+
+        self.assertEqual(firmware.repairs(b"Z" * 8, a_catalogue(image)["artifacts"]), [])
+
+    def test_the_diagnosis_names_the_repair_rather_than_the_length(self) -> None:
+        image = an_image()
+
+        with self.assertRaises(firmware.Unrecognised) as raised:
+            firmware.identify(b"H" * 512 + image, a_catalogue(image))
+
+        self.assertIn("512", str(raised.exception))
+        self.assertIn("checked rather than guessed", str(raised.exception))
+
+
+class BadDumpTest(unittest.TestCase):
+    """A damaged copy, told apart from a copy of the wrong thing.
+
+    Two different problems: a wrong file means go and find the right one, and a
+    damaged file means that copy is broken. The manifest carries no bad dumps
+    today because nobody has sent one, so what is pinned here is the mechanism
+    that will name one when somebody does.
+    """
+
+    def test_a_declared_bad_dump_is_named_as_damaged(self) -> None:
+        image = an_image()
+        broken = an_image(filler=0x00)
+        catalogue = a_catalogue(
+            image,
+            badDumps=[{"sha256": hashlib.sha256(broken).hexdigest(), "why": "truncated"}],
+        )
+
+        with self.assertRaises(firmware.Unrecognised) as raised:
+            firmware.identify(broken, catalogue)
+
+        self.assertIn("known bad dump", str(raised.exception))
+
+    def test_and_names_the_part_it_is_a_bad_dump_of(self) -> None:
+        image = an_image()
+        broken = an_image(filler=0x00)
+        catalogue = a_catalogue(
+            image,
+            part="dsp9",
+            badDumps=[{"sha256": hashlib.sha256(broken).hexdigest()}],
+        )
+
+        with self.assertRaises(firmware.Unrecognised) as raised:
+            firmware.identify(broken, catalogue)
+
+        self.assertIn("dsp9", str(raised.exception))
+
+    def test_an_undeclared_file_is_not_called_a_bad_dump(self) -> None:
+        image = an_image()
+
+        with self.assertRaises(firmware.Unrecognised) as raised:
+            firmware.identify(an_image(filler=0x00), a_catalogue(image))
+
+        self.assertNotIn("known bad dump", str(raised.exception))
+
+    def test_the_manifest_that_ships_declares_the_list_for_every_part(self) -> None:
+        for artifact in firmware.manifest()["artifacts"]:
+            self.assertIn("badDumps", artifact, artifact["part"])
+
+
+class ProvenanceTest(unittest.TestCase):
+    """Where each published digest came from, which a digest alone does not say."""
+
+    def test_every_accepted_revision_says_where_its_digest_came_from(self) -> None:
+        for artifact in firmware.manifest()["artifacts"]:
+            for accepted in artifact["accepted"]:
+                self.assertIn("provenance", accepted, artifact["part"])
+
+    def test_and_names_a_kind_the_manifest_explains(self) -> None:
+        held = firmware.manifest()
+        kinds = held["provenance"]["kinds"]
+
+        for artifact in held["artifacts"]:
+            for accepted in artifact["accepted"]:
+                self.assertIn(accepted["provenance"]["kind"], kinds, artifact["part"])
+
+    def test_and_the_date_it_was_checked_on(self) -> None:
+        for artifact in firmware.manifest()["artifacts"]:
+            for accepted in artifact["accepted"]:
+                self.assertIn("verifiedOn", accepted["provenance"], artifact["part"])
+
+    def test_the_weakest_kind_says_that_it_is_the_weakest(self) -> None:
+        kinds = firmware.manifest()["provenance"]["kinds"]
+
+        self.assertIn("weakest", kinds["localCopy"])
 
 
 class CrossCheckTest(unittest.TestCase):

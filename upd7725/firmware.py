@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, override
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Iterable, Iterator, Mapping
+    from collections.abc import Callable, Iterable, Iterator, Mapping
 
     from .core import Core
 
@@ -174,7 +174,76 @@ def _confirm(entry: dict[str, Any], accepted: dict[str, Any], found: dict[str, s
             )
 
 
+REPAIRS: tuple[tuple[str, Callable[[bytes], bytes]], ...] = (
+    (
+        "strip the first 512 bytes, which is a copier header",
+        lambda image: image[512:],
+    ),
+    (
+        "strip the last 512 bytes",
+        lambda image: image[:-512] if len(image) > 512 else image,
+    ),
+    (
+        "swap every pair of bytes, which undoes a byte-order change",
+        lambda image: bytes(image[at ^ 1] for at in range(len(image) - len(image) % 2)),
+    ),
+)
+"""Lossless things that can be done to a file the user already has.
+
+Each one is deterministic, each one throws nothing away that was not added, and
+none of them supplies a byte the file did not contain. What makes this safe to
+offer is that nothing is ever suggested on a hunch: a transform is only ever named
+after it has been applied and its result has matched a published digest. A repair
+that has not been confirmed is a guess, and a guess about somebody's file is worse
+than saying nothing.
+"""
+
+
+def repairs(image: bytes, entries: Iterable[dict[str, Any]]) -> list[tuple[str, str]]:
+    """Every transform of this file that turns it into a file the manifest knows.
+
+    Returns what to do and what it would produce, and returns nothing at all when
+    nothing works, which is the common case and the honest answer.
+    """
+    accepted = {one[DECIDES]: entry["part"] for entry in entries for one in entry["accepted"]}
+    found = []
+    for how, apply in REPAIRS:
+        try:
+            changed = apply(image)
+        except (IndexError, ValueError):  # pragma: no cover
+            continue
+        if not changed or changed == image:
+            continue
+        digest = hashlib.sha256(changed).hexdigest()
+        if digest in accepted:
+            found.append((how, accepted[digest]))
+    return found
+
+
 def _diagnosis(image: bytes, digest: str, entries: list[dict[str, Any]]) -> str:
+    fixable = repairs(image, entries)
+    if fixable:
+        how, part = fixable[0]
+        return (
+            f"this is not a file the manifest knows, but {how} turns it into"
+            f" {part}. That was checked rather than guessed: the change was applied"
+            f" and the result matched the published sha256 for {part}. Do it to your"
+            " own copy and try again"
+        )
+
+    known_bad = [
+        entry
+        for entry in entries
+        for one in entry.get("badDumps", ())
+        if one.get(DECIDES) == digest
+    ]
+    if known_bad:
+        return (
+            f"this is a known bad dump of {known_bad[0]['part']}: its sha256"
+            f" {digest} is recorded in the manifest as damaged rather than as"
+            " unrecognised. The copy is the problem, not the name it was given"
+        )
+
     same_length = [entry for entry in entries if entry["bytes"] == len(image)]
 
     if same_length:
