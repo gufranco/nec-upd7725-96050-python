@@ -13,6 +13,14 @@ processor, and the programs themselves belong to whoever wrote them and are
 never carried here.
 """
 
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, override
+
+if TYPE_CHECKING:  # pragma: no cover
+    from .core import Core
+
 
 class UnknownModelError(Exception):
     pass
@@ -23,14 +31,14 @@ class Model:
 
     def __init__(
         self,
-        name,
-        summary,
-        counter_bits,
-        table_bits,
-        pointer_bits,
-        parts,
-        aliases=(),
-    ):
+        name: str,
+        summary: str,
+        counter_bits: int,
+        table_bits: int,
+        pointer_bits: int,
+        parts: Iterable[str],
+        aliases: Iterable[str] = (),
+    ) -> None:
         self.name = name
         self.summary = summary
         self.counter_bits = counter_bits
@@ -40,23 +48,24 @@ class Model:
         self.aliases = tuple(aliases)
 
     @property
-    def program_words(self):
+    def program_words(self) -> int:
         return 1 << self.counter_bits
 
     @property
-    def table_words(self):
+    def table_words(self) -> int:
         return 1 << self.table_bits
 
     @property
-    def scratch_words(self):
+    def scratch_words(self) -> int:
         return 1 << self.pointer_bits
 
-    def build(self, **options):
+    def build(self, **options: Any) -> Core:
         from .core import Core
 
         return Core(self, **options)
 
-    def __repr__(self):
+    @override
+    def __repr__(self) -> str:
         return (
             f"<Model {self.name}, counter {self.counter_bits} bits, "
             f"table {self.table_bits}, pointer {self.pointer_bits}>"
@@ -116,11 +125,11 @@ for _model in _CATALOGUE:
         _BY_ALIAS[_alias] = _model
 
 
-def _normalise(name):
+def _normalise(name: str) -> str:
     return str(name).strip().lower().replace("-", "").replace("_", "")
 
 
-def describe(name):
+def describe(name: str) -> Model:
     """The processor of that name, however it happens to be written."""
     wanted = _normalise(name)
     found = _BY_ALIAS.get(wanted)
@@ -133,7 +142,7 @@ def describe(name):
     )
 
 
-def carrying(part):
+def carrying(part: str) -> Model:
     """The processor a named cartridge part runs on."""
     wanted = _normalise(part)
     for found in _CATALOGUE:

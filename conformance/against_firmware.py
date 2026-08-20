@@ -16,7 +16,9 @@ Usage:
 """
 
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -88,12 +90,20 @@ class Usage(Exception):
     pass
 
 
+Present = tuple[tuple[Any, Path], ...]
+"""Every image found, each with the file it came from.
+
+The identity is whatever the manifest reader hands back. Its shape belongs to
+that reader, in the package, and pinning it here would put a second definition
+of it in a second place."""
+
+
 class Options:
-    def __init__(self, instructions=DEFAULT_INSTRUCTIONS):
+    def __init__(self, instructions: int = DEFAULT_INSTRUCTIONS) -> None:
         self.instructions = instructions
 
 
-def available(where=None):
+def available(where: Path | str | None = None) -> "Present":
     """Every image the manifest recognises, wherever it is looked for.
 
     A directory can be named outright, which is what a test does. Otherwise every
@@ -106,7 +116,7 @@ def available(where=None):
     return tuple(firmware.search())
 
 
-def booted(identity, path):
+def booted(identity: Any, path: Path) -> "ports.Console":
     """A part carrying that image, run until it first waits for the console."""
     chip = models.describe(identity.processor).build(fill=0)
     firmware.load(chip, path.read_bytes(), identity)
@@ -115,19 +125,27 @@ def booted(identity, path):
     return console
 
 
-def _answer(identity, path, command, arguments, reads=REVISION_READS):
+def _answer(
+    identity: Any,
+    path: Path,
+    command: int,
+    arguments: Sequence[int],
+    reads: int = REVISION_READS,
+) -> bytes:
     console = booted(identity, path)
     console.send_bytes([command, *arguments], SETTLE_LIMIT)
     return console.take_bytes(reads, SETTLE_LIMIT)
 
 
-def compare_revisions(present):
+def compare_revisions(
+    present: "Present",
+) -> "dict[int, tuple[Sequence[int], bytes, bytes]]":
     """Which commands the two masks of the DSP-1 answer differently."""
     by_part = {identity.part: (identity, path) for identity, path in present}
     if not {"dsp1", "dsp1b"} <= set(by_part):
         return {}
 
-    differ = {}
+    differ: dict[int, tuple[Sequence[int], bytes, bytes]] = {}
     for arguments in REVISION_ARGUMENTS:
         for command in range(COMMANDS):
             first = _answer(*by_part["dsp1"], command, arguments)
@@ -137,7 +155,7 @@ def compare_revisions(present):
     return differ
 
 
-def options(argv):
+def options(argv: Sequence[str]) -> "Options":
     chosen = Options()
     rest = list(argv)
     while rest:
@@ -150,7 +168,7 @@ def options(argv):
     return chosen
 
 
-def summary(differ):
+def summary(differ: Mapping[int, object]) -> tuple[str, ...]:
     """The closing line, and none at all when there was no pair to compare."""
     if not differ:
         return ()
@@ -160,12 +178,12 @@ def summary(differ):
     )
 
 
-def lines_for(present, instructions):
+def lines_for(present: "Present", instructions: int) -> tuple[str, ...]:
     """One line per image, and whatever the comparison between masks found."""
     if not present:
         return (f"  skipped: {WHY_NOT}",)
 
-    found = []
+    found: list[str] = []
     for identity, path in present:
         console = booted(identity, path)
         console.chip.run(instructions)
@@ -177,13 +195,13 @@ def lines_for(present, instructions):
     return (*found, *summary(compare_revisions(present)))
 
 
-def run(argv, where=None):
+def run(argv: Sequence[str], where: Path | str | None = None) -> int:
     chosen = options(argv)
     print(*lines_for(available(where), chosen.instructions), sep="\n")
     return 0
 
 
-def main(argv):
+def main(argv: Sequence[str]) -> int:
     try:
         return run(argv)
     except Usage as error:

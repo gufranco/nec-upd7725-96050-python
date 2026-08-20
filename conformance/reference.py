@@ -16,6 +16,9 @@ mistake made here shows up as a failure here rather than as agreement with a mod
 that made the same one.
 """
 
+from collections.abc import Callable
+from typing import Protocol, runtime_checkable
+
 WORD = 0x10000
 
 SIGN = 0x8000
@@ -67,35 +70,66 @@ class UnknownRevision(Exception):
     pass
 
 
-def n16(value):
+@runtime_checkable
+class Words(Protocol):
+    """A block of words this reference reads and writes by index.
+
+    A list satisfies it, and so does anything that answers the same way without
+    holding every word. The conformance oracle needs the second: filling twenty
+    thousand words to read three is the difference between a comparison that runs
+    in a second and one that runs in minutes. Declaring what is actually used, an
+    index in each direction and a length, lets the substitution be checked rather
+    than merely work.
+    """
+
+    def __len__(self) -> int: ...
+
+    def __getitem__(self, at: int) -> int: ...
+
+    def __setitem__(self, at: int, value: int) -> None: ...
+
+
+def n16(value: int) -> int:
     return value & 0xFFFF
 
 
-def n24(value):
+def n24(value: int) -> int:
     return value & 0xFFFFFF
 
 
-def i16(value):
+def i16(value: int) -> int:
     value &= 0xFFFF
     return value - WORD if value & SIGN else value
 
 
 class Flag:
-    """The six bits one accumulator carries."""
+    """The six bits one accumulator carries.
+
+    Each bit is declared rather than only named in FLAG_BITS, so a checker can
+    see the six that exist. The assignment still walks the tuple, because that
+    is the shape the implementation this was ported from has.
+    """
 
     __slots__ = FLAG_BITS
 
-    def __init__(self, word=0):
+    ov0: int
+    ov1: int
+    z: int
+    c: int
+    s0: int
+    s1: int
+
+    def __init__(self, word: int = 0) -> None:
         self.assign(word)
 
-    def assign(self, word):
+    def assign(self, word: int) -> None:
         for place, name in enumerate(FLAG_BITS):
             setattr(self, name, word >> place & 1)
 
-    def copy(self):
+    def copy(self) -> "Flag":
         return Flag(int(self))
 
-    def __int__(self):
+    def __int__(self) -> int:
         return sum(getattr(self, name) << place for place, name in enumerate(FLAG_BITS))
 
 
@@ -104,25 +138,52 @@ class Status:
 
     __slots__ = tuple(sorted({name for name, _ in STATUS_BITS} | {"drs", "siack", "soack"}))
 
-    def __init__(self, word=0):
+    p0: int
+    p1: int
+    ei: int
+    sic: int
+    soc: int
+    drc: int
+    dma: int
+    usf0: int
+    usf1: int
+    rqm: int
+    drs: int
+    siack: int
+    soack: int
+
+    def __init__(self, word: int = 0) -> None:
         self.siack = 0
         self.soack = 0
         self.assign(word)
 
-    def assign(self, word):
+    def assign(self, word: int) -> None:
         for name, place in STATUS_BITS:
             setattr(self, name, word >> place & 1)
         self.drs = word >> TRANSFER_BIT & 1
 
-    def __int__(self):
-        word = sum(getattr(self, name) << place for name, place in STATUS_BITS)
-        return word | (self.drs and not self.drc) << TRANSFER_BIT
+    def __int__(self) -> int:
+        word = int(sum(getattr(self, name) << place for name, place in STATUS_BITS))
+        transfer = int(bool(self.drs and not self.drc))
+        return word | transfer << TRANSFER_BIT
 
 
 class Registers:
     """The register file, narrowed to the widths the part being modelled has."""
 
-    def __init__(self, counter_bits, table_bits, pointer_bits):
+    k: int
+    l: int  # noqa: E741
+    m: int
+    n: int
+    a: int
+    b: int
+    si: int
+    so: int
+    tr: int
+    trb: int
+    dr: int
+
+    def __init__(self, counter_bits: int, table_bits: int, pointer_bits: int) -> None:
         self.pc_mask = (1 << counter_bits) - 1
         self.rp_mask = (1 << table_bits) - 1
         self.dp_mask = (1 << pointer_bits) - 1
@@ -133,39 +194,39 @@ class Registers:
             setattr(self, name, 0)
 
     @property
-    def pc(self):
+    def pc(self) -> int:
         return self._pc
 
     @pc.setter
-    def pc(self, value):
+    def pc(self, value: int) -> None:
         self._pc = value & self.pc_mask
 
     @property
-    def rp(self):
+    def rp(self) -> int:
         return self._rp
 
     @rp.setter
-    def rp(self, value):
+    def rp(self, value: int) -> None:
         self._rp = value & self.rp_mask
 
     @property
-    def dp(self):
+    def dp(self) -> int:
         return self._dp
 
     @dp.setter
-    def dp(self, value):
+    def dp(self, value: int) -> None:
         self._dp = value & self.dp_mask
 
     @property
-    def sp(self):
+    def sp(self) -> int:
         return self._sp
 
     @sp.setter
-    def sp(self, value):
+    def sp(self, value: int) -> None:
         self._sp = value & 0xF
 
 
-SOURCES = (
+SOURCES: "tuple[Callable[[Upd96050], int], ...]" = (
     lambda chip: n16(chip.regs.trb),
     lambda chip: n16(chip.regs.a),
     lambda chip: n16(chip.regs.b),
@@ -184,14 +245,14 @@ SOURCES = (
     lambda chip: n16(chip.dataRAM[chip.regs.dp]),
 )
 
-OPERANDS = (
+OPERANDS: "tuple[Callable[[Upd96050, int], int], ...]" = (
     lambda chip, moving: n16(chip.dataRAM[chip.regs.dp]),
     lambda chip, moving: moving,
     lambda chip, moving: n16(chip.regs.m),
     lambda chip, moving: n16(chip.regs.n),
 )
 
-OPERATIONS = {
+OPERATIONS: "dict[int, Callable[[int, int, int], tuple[int, int]]]" = {
     1: lambda left, right, carry: (n16(left | right), right),
     2: lambda left, right, carry: (n16(left & right), right),
     3: lambda left, right, carry: (n16(left ^ right), right),
@@ -212,7 +273,7 @@ OPERATIONS = {
 WITHOUT_CARRY = frozenset({1, 2, 3, 10, 13, 14, 15})
 WITH_CARRY = frozenset({4, 5, 6, 7, 8, 9})
 
-CONDITIONS = {
+CONDITIONS: "dict[int, Callable[[Upd96050], int]]" = {
     0x080: lambda chip: not chip.flags_a.c,
     0x082: lambda chip: chip.flags_a.c,
     0x084: lambda chip: not chip.flags_b.c,
@@ -259,7 +320,15 @@ CALL_FAR = 0x141
 class Upd96050:
     """One processor of the family, at the widths its revision has."""
 
-    def __init__(self, revision=UPD96050):
+    revision: str
+    regs: Registers
+    flags_a: Flag
+    flags_b: Flag
+    programROM: Words  # noqa: N815
+    dataROM: Words  # noqa: N815
+    dataRAM: Words  # noqa: N815
+
+    def __init__(self, revision: str = UPD96050) -> None:
         if revision not in WIDTHS:
             raise UnknownRevision(f"{revision} is not a revision this reference has")
         self.revision = revision
@@ -270,7 +339,7 @@ class Upd96050:
         self.dataROM = [0] * DATA_WORDS
         self.dataRAM = [0] * DATA_WORDS
 
-    def exec(self):
+    def exec(self) -> None:
         """One instruction, then the multiply the part runs after every one."""
         opcode = n24(self.programROM[self.regs.pc])
         self.regs.pc += 1
@@ -289,11 +358,11 @@ class Upd96050:
         self.regs.m = i16(product >> 15)
         self.regs.n = i16(product << 1)
 
-    def _read_data_and_ask(self):
+    def _read_data_and_ask(self) -> int:
         self.regs.sr.rqm = 1
         return n16(self.regs.dr)
 
-    def _operate(self, opcode):
+    def _operate(self, opcode: int) -> None:
         pselect = opcode >> 20 & 0x3
         alu = opcode >> 16 & 0xF
         asl = opcode >> 15 & 0x1
@@ -315,7 +384,7 @@ class Upd96050:
         if destination != 5 and rpdcr:
             self.regs.rp -= 1
 
-    def _arithmetic(self, alu, right, asl):
+    def _arithmetic(self, alu: int, right: int, asl: int) -> None:
         left = n16(self.regs.b if asl else self.regs.a)
         flags = (self.flags_b if asl else self.flags_a).copy()
         carry = (self.flags_a if asl else self.flags_b).c
@@ -352,12 +421,12 @@ class Upd96050:
             self.regs.a = i16(result)
             self.flags_a = flags
 
-    def _return(self, opcode):
+    def _return(self, opcode: int) -> None:
         self._operate(opcode)
         self.regs.sp -= 1
         self.regs.pc = self.regs.stack[self.regs.sp]
 
-    def _branch(self, opcode):
+    def _branch(self, opcode: int) -> None:
         branch = opcode >> 13 & 0x1FF
         address = opcode >> 2 & 0x7FF
         bank = opcode & 0x3
@@ -378,7 +447,7 @@ class Upd96050:
             self.regs.sp += 1
             self.regs.pc = target | FAR_HALF if branch == CALL_FAR else target & ~FAR_HALF
 
-    def _move(self, opcode):
+    def _move(self, opcode: int) -> None:
         value = opcode >> 6 & 0xFFFF
         destination = opcode & 0xF
         registers = self.regs
@@ -418,7 +487,7 @@ class Upd96050:
         else:
             self.dataRAM[registers.dp] = n16(value)
 
-    def _step_pointer(self, dpl, dphm):
+    def _step_pointer(self, dpl: int, dphm: int) -> None:
         registers = self.regs
         if dpl == 1:
             registers.dp = (registers.dp & 0xF0) + (registers.dp + 1 & 0x0F)
@@ -428,13 +497,13 @@ class Upd96050:
             registers.dp = registers.dp & 0xF0
         registers.dp = registers.dp ^ dphm << 4
 
-    def read_sr(self):
+    def read_sr(self) -> int:
         return int(self.regs.sr) >> 8
 
-    def write_sr(self, data):
+    def write_sr(self, data: int) -> None:
         return
 
-    def read_dr(self):
+    def read_dr(self) -> int:
         status = self.regs.sr
         if status.drc:
             status.rqm = 0
@@ -446,7 +515,7 @@ class Upd96050:
         status.drs = 0
         return self.regs.dr >> 8 & 0xFF
 
-    def write_dr(self, data):
+    def write_dr(self, data: int) -> None:
         status = self.regs.sr
         if status.drc:
             status.rqm = 0
@@ -460,11 +529,11 @@ class Upd96050:
         status.drs = 0
         self.regs.dr = data << 8 | self.regs.dr & 0x00FF
 
-    def read_dp(self, address):
+    def read_dp(self, address: int) -> int:
         word = self.dataRAM[address >> 1 & 2047]
         return word >> 8 & 0xFF if address & 1 else word & 0xFF
 
-    def write_dp(self, address, data):
+    def write_dp(self, address: int, data: int) -> None:
         where = address >> 1 & 2047
         word = self.dataRAM[where]
         if address & 1:

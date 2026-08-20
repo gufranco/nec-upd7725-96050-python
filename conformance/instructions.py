@@ -23,7 +23,9 @@ import base64
 import json
 import sys
 import zlib
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -113,13 +115,15 @@ class Usage(Exception):
 
 
 class Options:
-    def __init__(self, corpus=None, cases=None, record=False):
+    def __init__(
+        self, corpus: str | None = None, cases: int | None = None, record: bool = False
+    ) -> None:
         self.corpus = corpus
         self.cases = cases
         self.record = record
 
 
-def word_at(seed, index):
+def word_at(seed: int, index: int) -> int:
     """The word that seed puts at that address, without walking to it."""
     mixed = (seed + index * 0x9E3779B9) & 0xFFFFFFFF
     mixed ^= mixed >> 16
@@ -130,15 +134,24 @@ def word_at(seed, index):
     return mixed
 
 
-def _operate(alu=0, pselect=0, asl=0, dpl=0, dphm=0, rpdcr=0, src=0, dst=0):
+def _operate(
+    alu: int = 0,
+    pselect: int = 0,
+    asl: int = 0,
+    dpl: int = 0,
+    dphm: int = 0,
+    rpdcr: int = 0,
+    src: int = 0,
+    dst: int = 0,
+) -> int:
     return (
         pselect << 20 | alu << 16 | asl << 15 | dpl << 13 | dphm << 9 | rpdcr << 8 | src << 4 | dst
     )
 
 
-def _settled_opcodes():
+def _settled_opcodes() -> tuple[int, ...]:
     """Every field of every form, walked rather than sampled."""
-    found = []
+    found: list[int] = []
 
     for alu in range(16):
         for pselect in range(4):
@@ -173,7 +186,7 @@ SETTLED_OPCODES = _settled_opcodes()
 SETTLED = len(SETTLED_OPCODES) * len(PARTS)
 
 
-def case_for(index):
+def case_for(index: int) -> tuple[int, int, int]:
     """The seed, the part and the instruction that case number stands for."""
     seed = (index * 2654435761 + 0x9E3779B9) & 0xFFFFFFFF
 
@@ -183,7 +196,7 @@ def case_for(index):
     return seed, word_at(seed, 1 << 24) & 1, word_at(seed, 1 << 25) & 0xFFFFFF
 
 
-def _sources(seed):
+def _sources(seed: int) -> dict[str, Callable[[int], int]]:
     return {
         "program": lambda at: word_at(seed, AT_PROGRAM + at),
         "table": lambda at: word_at(seed, AT_TABLE + at),
@@ -191,12 +204,12 @@ def _sources(seed):
     }
 
 
-def _start(seed, name, place):
+def _start(seed: int, name: str, place: int) -> int:
     value = word_at(seed, AT_REGISTERS + place)
     return value & REGISTER_MASKS.get(name, 0xFFFF)
 
 
-def prepared(seed, part):
+def prepared(seed: int, part: int) -> core.Core:
     """A processor holding what that seed says it holds, before any instruction."""
     model = models.describe(PARTS[part])
     chip = core.Core(model, sources=_sources(seed))
@@ -221,7 +234,7 @@ def prepared(seed, part):
     return chip
 
 
-def state_of(chip):
+def state_of(chip: core.Core) -> str:
     """The processor's whole state, in the shape the recordings are in."""
     registers = chip.registers
     changed = chip.stores.scratch.changed()
@@ -256,7 +269,7 @@ def state_of(chip):
     )
 
 
-def replay(seed, part, opcode):
+def replay(seed: int, part: int, opcode: int) -> str:
     """The state the model is left in after that one instruction."""
     chip = prepared(seed, part)
     chip.stores.program[chip.registers.pc] = opcode
@@ -264,30 +277,32 @@ def replay(seed, part, opcode):
     return state_of(chip)
 
 
-def encode(states):
+def encode(states: Iterable[str]) -> str:
     return base64.b64encode(
         zlib.compress(b"".join(bytes.fromhex(state) for state in states), 9)
     ).decode()
 
 
-def decoded(corpus):
+def decoded(corpus: Mapping[str, Any]) -> bytes:
     return zlib.decompress(base64.b64decode(corpus["expected"]))
 
 
-def expected_of(corpus, index):
+def expected_of(corpus: Mapping[str, Any], index: int) -> str:
     return decoded(corpus)[index * PACKED : (index + 1) * PACKED].hex()
 
 
-def disagreement(expected, found):
+def disagreement(expected: str, found: str) -> tuple[str, str] | None:
     return None if expected == found else (expected, found)
 
 
-def load(path=None):
+def load(path: Path | str | None = None) -> dict[str, Any]:
     with Path(path or CORPUS).open() as handle:
-        return json.load(handle)
+        held = json.load(handle)
+    assert isinstance(held, dict), f"{path or CORPUS} does not hold an object"
+    return held
 
 
-def record(cases=None):
+def record(cases: int | None = None) -> dict[str, Any]:
     """Ask the reference for every case, and write down what it answered."""
     import oracle
 
@@ -302,7 +317,7 @@ def record(cases=None):
     }
 
 
-def options(argv):
+def options(argv: Sequence[str]) -> "Options":
     chosen = Options()
     rest = list(argv)
     while rest:
@@ -322,7 +337,7 @@ def options(argv):
     return chosen
 
 
-def run(argv):
+def run(argv: Sequence[str]) -> int:
     chosen = options(argv)
 
     if chosen.record:
@@ -338,15 +353,15 @@ def run(argv):
     for index in range(corpus["cases"]):
         expected = states[index * PACKED : (index + 1) * PACKED].hex()
         case = case_for(index)
-        found = disagreement(expected, replay(*case))
-        if found is None:
+        differs = disagreement(expected, replay(*case))
+        if differs is None:
             continue
         disagreed += 1
         if disagreed <= REPORT_LIMIT:
             seed, part, opcode = case
             print(f"case {index} (seed {seed:08x}, {PARTS[part]}, {opcode:06x})")
-            print(f"  reference {found[0]}")
-            print(f"  model     {found[1]}")
+            print(f"  reference {differs[0]}")
+            print(f"  model     {differs[1]}")
 
     if disagreed > REPORT_LIMIT:
         print(f"and {disagreed - REPORT_LIMIT} more")
@@ -355,7 +370,7 @@ def run(argv):
     return 1 if disagreed else 0
 
 
-def main(argv):
+def main(argv: Sequence[str]) -> int:
     try:
         return run(argv)
     except Usage as error:

@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 import unittest
+from collections.abc import Iterator
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -11,50 +12,50 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from upd7725 import firmware, models
 
 
-def an_image(program_words=2048, data_words=1024, filler=0xAB):
+def an_image(program_words: int = 2048, data_words: int = 1024, filler: int = 0xAB) -> bytes:
     return bytes([filler]) * (program_words * 3 + data_words * 2)
 
 
 class ManifestTest(unittest.TestCase):
-    def test_the_manifest_names_every_part_the_package_can_run(self):
+    def test_the_manifest_names_every_part_the_package_can_run(self) -> None:
         named = {entry["part"] for entry in firmware.manifest()["artifacts"]}
 
         self.assertIn("st011", named)
         self.assertIn("dsp1", named)
 
-    def test_each_part_names_the_processor_it_runs_on(self):
+    def test_each_part_names_the_processor_it_runs_on(self) -> None:
         for entry in firmware.manifest()["artifacts"]:
             self.assertIn(entry["processor"], models.MODELS, entry["part"])
 
-    def test_each_part_names_a_size_its_two_stores_add_up_to(self):
+    def test_each_part_names_a_size_its_two_stores_add_up_to(self) -> None:
         for entry in firmware.manifest()["artifacts"]:
             self.assertEqual(
                 entry["programWords"] * 3 + entry["dataWords"] * 2, entry["bytes"], entry["part"]
             )
 
-    def test_each_part_carries_at_least_one_digest(self):
+    def test_each_part_carries_at_least_one_digest(self) -> None:
         for entry in firmware.manifest()["artifacts"]:
             self.assertTrue(entry["accepted"], entry["part"])
 
-    def test_every_accepted_image_carries_all_four_digests(self):
+    def test_every_accepted_image_carries_all_four_digests(self) -> None:
         for entry in firmware.manifest()["artifacts"]:
             for accepted in entry["accepted"]:
                 for name in firmware.DIGESTS:
                     self.assertIn(name, accepted, (entry["part"], name))
 
-    def test_each_digest_is_the_length_that_kind_of_digest_has(self):
+    def test_each_digest_is_the_length_that_kind_of_digest_has(self) -> None:
         for entry in firmware.manifest()["artifacts"]:
             for accepted in entry["accepted"]:
                 for name, width in firmware.DIGEST_WIDTHS.items():
                     self.assertEqual(len(accepted[name]), width, (entry["part"], name))
 
-    def test_every_digest_is_a_whole_sha256(self):
+    def test_every_digest_is_a_whole_sha256(self) -> None:
         for entry in firmware.manifest()["artifacts"]:
             for accepted in entry["accepted"]:
                 self.assertEqual(len(accepted["sha256"]), 64, entry["part"])
 
-    def test_the_manifest_carries_no_run_of_bytes_longer_than_a_digest(self):
-        def strings(held):
+    def test_the_manifest_carries_no_run_of_bytes_longer_than_a_digest(self) -> None:
+        def strings(held: object) -> Iterator[str]:
             if isinstance(held, str):
                 yield held
             elif isinstance(held, dict):
@@ -73,7 +74,7 @@ class ManifestTest(unittest.TestCase):
 
         self.assertEqual(runs, [])
 
-    def test_a_manifest_can_be_read_from_somewhere_else(self):
+    def test_a_manifest_can_be_read_from_somewhere_else(self) -> None:
         where = Path(tempfile.mkdtemp()) / "other.json"
         where.write_text(json.dumps({"artifacts": []}))
 
@@ -81,7 +82,7 @@ class ManifestTest(unittest.TestCase):
 
 
 class IdentifyTest(unittest.TestCase):
-    def test_an_image_the_manifest_knows_is_named(self):
+    def test_an_image_the_manifest_knows_is_named(self) -> None:
         image = an_image()
         digest = hashlib.sha256(image).hexdigest()
         catalogue = {
@@ -99,7 +100,7 @@ class IdentifyTest(unittest.TestCase):
 
         self.assertEqual(firmware.identify(image, catalogue).part, "made-up")
 
-    def test_and_the_revision_it_turned_out_to_be(self):
+    def test_and_the_revision_it_turned_out_to_be(self) -> None:
         image = an_image()
         digest = hashlib.sha256(image).hexdigest()
         catalogue = {
@@ -117,7 +118,7 @@ class IdentifyTest(unittest.TestCase):
 
         self.assertEqual(firmware.identify(image, catalogue).revision, "one")
 
-    def test_an_image_of_the_right_size_and_the_wrong_content_says_so(self):
+    def test_an_image_of_the_right_size_and_the_wrong_content_says_so(self) -> None:
         catalogue = {
             "artifacts": [
                 {
@@ -136,15 +137,15 @@ class IdentifyTest(unittest.TestCase):
 
         self.assertIn("altered", str(raised.exception))
 
-    def test_an_image_of_no_size_the_manifest_knows_says_that_instead(self):
-        catalogue = {"artifacts": []}
+    def test_an_image_of_no_size_the_manifest_knows_says_that_instead(self) -> None:
+        catalogue: dict[str, list[object]] = {"artifacts": []}
 
         with self.assertRaises(firmware.Unrecognised) as raised:
             firmware.identify(b"\x00" * 7, catalogue)
 
         self.assertIn("7", str(raised.exception))
 
-    def test_the_report_always_carries_the_digest_that_was_computed(self):
+    def test_the_report_always_carries_the_digest_that_was_computed(self) -> None:
         with self.assertRaises(firmware.Unrecognised) as raised:
             firmware.identify(b"\x00" * 7, {"artifacts": []})
 
@@ -152,7 +153,7 @@ class IdentifyTest(unittest.TestCase):
 
 
 class CrossCheckTest(unittest.TestCase):
-    def test_an_image_whose_other_digests_disagree_is_refused(self):
+    def test_an_image_whose_other_digests_disagree_is_refused(self) -> None:
         image = an_image()
         catalogue = {
             "artifacts": [
@@ -180,7 +181,7 @@ class CrossCheckTest(unittest.TestCase):
 
         self.assertIn("crc32", str(raised.exception))
 
-    def test_a_cross_check_that_passes_every_digest_accepts_the_image(self):
+    def test_a_cross_check_that_passes_every_digest_accepts_the_image(self) -> None:
         image = an_image()
         catalogue = {
             "artifacts": [
@@ -197,7 +198,7 @@ class CrossCheckTest(unittest.TestCase):
 
         self.assertEqual(firmware.identify(image, catalogue).revision, "one")
 
-    def test_every_kind_of_disagreement_is_caught(self):
+    def test_every_kind_of_disagreement_is_caught(self) -> None:
         image = an_image()
         for name, wrong in (("crc32", "0" * 8), ("md5", "0" * 32), ("sha1", "0" * 40)):
             catalogue = {
@@ -218,7 +219,7 @@ class CrossCheckTest(unittest.TestCase):
             with self.assertRaises(firmware.Corrupt):
                 firmware.identify(image, catalogue)
 
-    def test_an_image_the_manifest_only_partly_describes_is_still_accepted(self):
+    def test_an_image_the_manifest_only_partly_describes_is_still_accepted(self) -> None:
         image = an_image()
         catalogue = {
             "artifacts": [
@@ -237,7 +238,7 @@ class CrossCheckTest(unittest.TestCase):
 
 
 class IdentityTest(unittest.TestCase):
-    def test_an_identity_prints_as_the_part_it_names(self):
+    def test_an_identity_prints_as_the_part_it_names(self) -> None:
         found = firmware.Identity("dsp1", "upd7725", "DSP-1", 2048, 1024)
 
         self.assertIn("dsp1", repr(found))
@@ -245,7 +246,7 @@ class IdentityTest(unittest.TestCase):
 
 
 class LoadTest(unittest.TestCase):
-    def test_a_loaded_image_fills_the_program_store(self):
+    def test_a_loaded_image_fills_the_program_store(self) -> None:
         chip = models.describe("upd7725").build(fill=0)
         image = bytes(range(256)) * 32 + bytes(2048)
 
@@ -253,7 +254,7 @@ class LoadTest(unittest.TestCase):
 
         self.assertEqual(chip.stores.program[0], 0x000102)
 
-    def test_and_the_table_after_it(self):
+    def test_and_the_table_after_it(self) -> None:
         chip = models.describe("upd7725").build(fill=0)
         program = bytes(2048 * 3)
         table = bytes([0xAA, 0xBB]) * 1024
@@ -262,7 +263,7 @@ class LoadTest(unittest.TestCase):
 
         self.assertEqual(chip.stores.table[0], 0xAABB)
 
-    def test_an_image_that_does_not_match_the_processor_is_refused(self):
+    def test_an_image_that_does_not_match_the_processor_is_refused(self) -> None:
         chip = models.describe("upd7725").build(fill=0)
 
         with self.assertRaises(firmware.WrongShape):
@@ -270,13 +271,13 @@ class LoadTest(unittest.TestCase):
 
 
 class FoundTest(unittest.TestCase):
-    def test_a_directory_with_nothing_in_it_yields_nothing(self):
+    def test_a_directory_with_nothing_in_it_yields_nothing(self) -> None:
         self.assertEqual(list(firmware.found(Path(tempfile.mkdtemp()))), [])
 
-    def test_a_directory_that_is_not_there_yields_nothing_either(self):
+    def test_a_directory_that_is_not_there_yields_nothing_either(self) -> None:
         self.assertEqual(list(firmware.found(Path("/nowhere/at/all"))), [])
 
-    def test_a_file_the_manifest_knows_is_yielded_with_its_name(self):
+    def test_a_file_the_manifest_knows_is_yielded_with_its_name(self) -> None:
         where = Path(tempfile.mkdtemp())
         image = an_image()
         (where / "made-up.bin").write_bytes(image)
@@ -297,59 +298,59 @@ class FoundTest(unittest.TestCase):
 
         self.assertEqual(found[0][0].part, "made-up")
 
-    def test_a_file_that_is_not_an_image_at_all_is_passed_over(self):
+    def test_a_file_that_is_not_an_image_at_all_is_passed_over(self) -> None:
         where = Path(tempfile.mkdtemp())
         (where / "README.md").write_text("notes, not an image")
         (where / "notes.txt").write_text("also not one")
 
         self.assertEqual(list(firmware.found(where, {"artifacts": []})), [])
 
-    def test_a_file_the_manifest_does_not_know_is_passed_over(self):
+    def test_a_file_the_manifest_does_not_know_is_passed_over(self) -> None:
         where = Path(tempfile.mkdtemp())
         (where / "nonsense.bin").write_bytes(b"\x00" * 99)
 
         self.assertEqual(list(firmware.found(where, {"artifacts": []})), [])
 
-    def test_the_directory_comes_from_the_environment_when_one_is_named(self):
+    def test_the_directory_comes_from_the_environment_when_one_is_named(self) -> None:
         self.assertEqual(firmware.directory({"UPD7725_FIRMWARE_DIR": "/x"}), Path("/x"))
 
-    def test_and_from_the_repository_when_none_is(self):
+    def test_and_from_the_repository_when_none_is(self) -> None:
         self.assertEqual(firmware.directory({}).name, "firmware")
 
 
 class SearchPathTest(unittest.TestCase):
-    def test_the_package_always_looks_in_its_own_directory(self):
+    def test_the_package_always_looks_in_its_own_directory(self) -> None:
         self.assertIn(firmware.DEFAULT_DIRECTORY, firmware.directories({}))
 
-    def test_and_in_the_project_that_carries_it_as_a_submodule(self):
+    def test_and_in_the_project_that_carries_it_as_a_submodule(self) -> None:
         self.assertIn(firmware.ALONGSIDE, firmware.directories({}))
 
-    def test_the_project_above_is_looked_at_before_the_package_itself(self):
+    def test_the_project_above_is_looked_at_before_the_package_itself(self) -> None:
         found = firmware.directories({})
 
         self.assertLess(found.index(firmware.ALONGSIDE), found.index(firmware.DEFAULT_DIRECTORY))
 
-    def test_a_named_directory_is_looked_at_before_either(self):
+    def test_a_named_directory_is_looked_at_before_either(self) -> None:
         found = firmware.directories({"UPD7725_FIRMWARE_DIR": "/x"})
 
         self.assertEqual(found[0], Path("/x"))
 
-    def test_more_than_one_can_be_named_at_once(self):
+    def test_more_than_one_can_be_named_at_once(self) -> None:
         found = firmware.directories({"UPD7725_FIRMWARE_DIR": f"/x{os.pathsep}/y"})
 
         self.assertEqual(found[:2], (Path("/x"), Path("/y")))
 
-    def test_an_empty_entry_between_two_names_is_passed_over(self):
+    def test_an_empty_entry_between_two_names_is_passed_over(self) -> None:
         found = firmware.directories({"UPD7725_FIRMWARE_DIR": f"/x{os.pathsep}{os.pathsep}/y"})
 
         self.assertEqual(found[:2], (Path("/x"), Path("/y")))
 
-    def test_no_directory_appears_twice(self):
+    def test_no_directory_appears_twice(self) -> None:
         found = firmware.directories({"UPD7725_FIRMWARE_DIR": str(firmware.DEFAULT_DIRECTORY)})
 
         self.assertEqual(len(found), len(set(found)))
 
-    def test_searching_finds_an_image_in_any_of_them(self):
+    def test_searching_finds_an_image_in_any_of_them(self) -> None:
         first = Path(tempfile.mkdtemp())
         second = Path(tempfile.mkdtemp())
         image = an_image()
@@ -371,7 +372,7 @@ class SearchPathTest(unittest.TestCase):
 
         self.assertEqual(found[0][0].part, "made-up")
 
-    def test_the_first_directory_holding_a_part_is_the_one_that_answers(self):
+    def test_the_first_directory_holding_a_part_is_the_one_that_answers(self) -> None:
         first = Path(tempfile.mkdtemp())
         second = Path(tempfile.mkdtemp())
         image = an_image()

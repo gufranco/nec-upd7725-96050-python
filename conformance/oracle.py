@@ -12,6 +12,7 @@ which is what turns the port from a claim into a measurement.
 """
 
 import sys
+from collections.abc import Iterable
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -31,31 +32,31 @@ class Sourced:
     remembers what was written so the changes can be named without a second sweep.
     """
 
-    def __init__(self, seed, base, words, mask):
+    def __init__(self, seed: int, base: int, words: int, mask: int) -> None:
         self.seed = seed
         self.base = base
         self.words = words
         self.mask = mask
-        self.written = {}
+        self.written: dict[int, int] = {}
 
-    def started(self, at):
+    def started(self, at: int) -> int:
         return instructions.word_at(self.seed, self.base + at) & self.mask
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.words
 
-    def __getitem__(self, at):
+    def __getitem__(self, at: int) -> int:
         held = self.written.get(at)
         return self.started(at) if held is None else held
 
-    def __setitem__(self, at, value):
+    def __setitem__(self, at: int, value: int) -> None:
         self.written[at] = value & self.mask
 
-    def changed(self):
+    def changed(self) -> list[tuple[int, int]]:
         return [(at, word) for at, word in sorted(self.written.items()) if word != self.started(at)]
 
 
-def prepared(seed, part):
+def prepared(seed: int, part: int) -> "reference.Upd96050":
     """A reference processor holding what that seed says it holds."""
     chip = reference.Upd96050(REVISIONS[part])
 
@@ -86,13 +87,15 @@ def prepared(seed, part):
     return chip
 
 
-def answer(seed, part, opcode):
+def answer(seed: int, part: int, opcode: int) -> str:
     """The state the reference is left in after that one instruction."""
     chip = prepared(seed, part)
     chip.programROM[chip.regs.pc] = opcode
     chip.exec()
 
-    changes = chip.dataRAM.changed()
+    scratch = chip.dataRAM
+    assert isinstance(scratch, Sourced), "the oracle drives its own scratch, never a plain list"
+    changes = scratch.changed()
     slots = changes[: instructions.REPORTED_CHANGES]
     slots += [(0, 0)] * (instructions.REPORTED_CHANGES - len(slots))
 
@@ -125,5 +128,5 @@ def answer(seed, part, opcode):
     )
 
 
-def answers(cases):
+def answers(cases: Iterable[tuple[int, int, int]]) -> list[str]:
     return [answer(*case) for case in cases]

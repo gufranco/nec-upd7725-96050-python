@@ -21,6 +21,10 @@ The processor itself is settled without any of them, one instruction at a time,
 across every field of its own encoding.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from . import core, firmware, flags, memory, models, ports, registers
 from .core import Core
 from .models import MODELS, UnknownModelError, carrying, describe
@@ -28,10 +32,13 @@ from .version import VERSION
 
 __version__ = VERSION
 
+if TYPE_CHECKING:  # pragma: no cover
+    from .core import Core
+
 DEFAULT_MODEL = "upd96050"
 
 
-def Processor(model=DEFAULT_MODEL, **options):  # noqa: N802
+def Processor(model: str = DEFAULT_MODEL, **options: Any) -> Core:  # noqa: N802
     """A processor of the named part, however the name happens to be written."""
     return describe(model).build(**options)
 

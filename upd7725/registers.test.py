@@ -8,10 +8,10 @@ from upd7725 import registers
 
 
 class StatusTest(unittest.TestCase):
-    def test_a_fresh_status_holds_nothing(self):
+    def test_a_fresh_status_holds_nothing(self) -> None:
         self.assertEqual(int(registers.Status()), 0)
 
-    def test_each_bit_sits_where_the_part_puts_it(self):
+    def test_each_bit_sits_where_the_part_puts_it(self) -> None:
         for name, place in (
             ("p0", 0),
             ("p1", 1),
@@ -29,20 +29,20 @@ class StatusTest(unittest.TestCase):
 
             self.assertEqual(int(found), 1 << place, name)
 
-    def test_the_transfer_bit_reads_back_while_the_word_is_wide(self):
+    def test_the_transfer_bit_reads_back_while_the_word_is_wide(self) -> None:
         found = registers.Status()
         found.drs = True
 
         self.assertEqual(int(found) & 1 << 12, 1 << 12)
 
-    def test_but_reads_as_clear_once_the_word_is_narrow(self):
+    def test_but_reads_as_clear_once_the_word_is_narrow(self) -> None:
         found = registers.Status()
         found.drs = True
         found.drc = True
 
         self.assertEqual(int(found) & 1 << 12, 0)
 
-    def test_a_status_takes_every_bit_the_part_defines(self):
+    def test_a_status_takes_every_bit_the_part_defines(self) -> None:
         defined = sum(1 << place for _, place in registers.STATUS_PLACES)
         found = registers.Status()
 
@@ -50,39 +50,39 @@ class StatusTest(unittest.TestCase):
 
         self.assertEqual(int(found), defined)
 
-    def test_the_bits_between_the_named_ones_are_not_kept(self):
+    def test_the_bits_between_the_named_ones_are_not_kept(self) -> None:
         found = registers.Status()
 
         found.assign(0x007C)
 
         self.assertEqual(int(found), 0)
 
-    def test_the_acknowledgements_are_not_part_of_the_word(self):
+    def test_the_acknowledgements_are_not_part_of_the_word(self) -> None:
         found = registers.Status()
         found.siack = True
         found.soack = True
 
         self.assertEqual(int(found), 0)
 
-    def test_a_status_prints_the_bits_it_holds(self):
+    def test_a_status_prints_the_bits_it_holds(self) -> None:
         found = registers.Status()
         found.rqm = True
 
         self.assertIn("rqm", repr(found))
 
-    def test_and_says_so_when_it_holds_none(self):
+    def test_and_says_so_when_it_holds_none(self) -> None:
         self.assertIn("none", repr(registers.Status()))
 
 
 class WidthTest(unittest.TestCase):
-    def test_a_counter_keeps_only_as_many_bits_as_it_has(self):
+    def test_a_counter_keeps_only_as_many_bits_as_it_has(self) -> None:
         found = registers.Registers(counter_bits=11, table_bits=10, pointer_bits=8)
 
         found.pc = 0xFFFF
 
         self.assertEqual(found.pc, 0x7FF)
 
-    def test_each_of_the_three_has_its_own_width(self):
+    def test_each_of_the_three_has_its_own_width(self) -> None:
         found = registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11)
 
         found.pc = 0xFFFF
@@ -91,7 +91,7 @@ class WidthTest(unittest.TestCase):
 
         self.assertEqual((found.pc, found.rp, found.dp), (0x3FFF, 0x7FF, 0x7FF))
 
-    def test_a_counter_that_runs_past_its_end_comes_back_to_the_start(self):
+    def test_a_counter_that_runs_past_its_end_comes_back_to_the_start(self) -> None:
         found = registers.Registers(counter_bits=11, table_bits=10, pointer_bits=8)
         found.pc = 0x7FF
 
@@ -101,20 +101,20 @@ class WidthTest(unittest.TestCase):
 
 
 class SignedTest(unittest.TestCase):
-    def test_a_multiplicand_takes_the_sign_of_the_word_it_is_given(self):
+    def test_a_multiplicand_takes_the_sign_of_the_word_it_is_given(self) -> None:
         found = registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11)
 
         found.k = 0xFFFF
 
         self.assertEqual(found.k, -1)
 
-    def test_and_reads_back_unsigned_when_asked_that_way(self):
+    def test_and_reads_back_unsigned_when_asked_that_way(self) -> None:
         found = registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11)
         found.k = -1
 
         self.assertEqual(found.word("k"), 0xFFFF)
 
-    def test_every_signed_register_behaves_the_same_way(self):
+    def test_every_signed_register_behaves_the_same_way(self) -> None:
         found = registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11)
 
         for name in registers.SIGNED:
@@ -124,19 +124,40 @@ class SignedTest(unittest.TestCase):
 
 
 class AttributeTest(unittest.TestCase):
-    def test_a_name_no_register_has_is_refused(self):
+    def test_a_name_no_register_has_is_refused(self) -> None:
+        found = registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11)
+        absent = "nonsense"
+
+        self.assertRaises(AttributeError, lambda: getattr(found, absent))
+
+
+class WordTest(unittest.TestCase):
+    """Reading a signed register back as the bits it holds."""
+
+    def test_a_signed_register_reads_back_as_sixteen_bits(self) -> None:
+        found = registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11)
+        found.a = -1
+
+        self.assertEqual(found.word("a"), 0xFFFF)
+
+    def test_asking_for_the_status_register_this_way_is_refused(self) -> None:
         found = registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11)
 
-        self.assertRaises(AttributeError, lambda: found.nonsense)
+        self.assertRaises(AttributeError, lambda: found.word("sr"))
+
+    def test_and_so_is_asking_for_the_stack(self) -> None:
+        found = registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11)
+
+        self.assertRaises(AttributeError, lambda: found.word("stack"))
 
 
 class StackTest(unittest.TestCase):
-    def test_the_stack_is_as_deep_as_the_part_makes_it(self):
+    def test_the_stack_is_as_deep_as_the_part_makes_it(self) -> None:
         found = registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11)
 
         self.assertEqual(len(found.stack), registers.STACK_DEPTH)
 
-    def test_the_stack_pointer_wraps_within_its_own_nibble(self):
+    def test_the_stack_pointer_wraps_within_its_own_nibble(self) -> None:
         found = registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11)
         found.sp = registers.STACK_DEPTH - 1
 

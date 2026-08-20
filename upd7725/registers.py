@@ -10,6 +10,8 @@ and the two halves of the product, and a model that keeps them unsigned agrees
 with the part until the first negative multiply and then stops.
 """
 
+from typing import override
+
 WORD = 0x10000
 
 SIGN = 0x8000
@@ -41,12 +43,17 @@ WRITABLE_BY_INSTRUCTION = 0x907C
 """The bits an instruction may not set, because the part owns them."""
 
 
-def signed(word):
+def signed(word: int) -> int:
     return word - WORD if word & SIGN else word
 
 
 class Status:
-    """The word the console reads to find out whether the part wants attention."""
+    """The word the console reads to find out whether the part wants attention.
+
+    The ten bits are declared rather than set in a loop over their names. A loop
+    is shorter and costs every reader and every checker the ability to see that
+    the bits exist: `sr.rqm` and a misspelling of it are the same thing to a loop.
+    """
 
     __slots__ = (
         "dma",
@@ -65,33 +72,81 @@ class Status:
         "usf1",
     )
 
-    def __init__(self):
-        for name in self.__slots__:
-            setattr(self, name, False)
+    def __init__(self) -> None:
+        self.p0 = False
+        self.p1 = False
+        self.ei = False
+        self.sic = False
+        self.soc = False
+        self.drc = False
+        self.dma = False
+        self.usf0 = False
+        self.usf1 = False
+        self.rqm = False
+        self.drs = False
+        self.siack = False
+        self.soack = False
+        self.so_reserved = False
 
-    def assign(self, word):
-        """Take every bit the part defines, and nothing between them."""
-        for name, place in STATUS_PLACES:
-            setattr(self, name, bool(word >> place & 1))
+    def assign(self, word: int) -> None:
+        """Take every bit the part defines, and nothing between them.
+
+        The three acknowledgements are not among them. They are state the part
+        holds and never puts in the word the console reads, so a write to the
+        register cannot set them and reading the word back cannot see them.
+        """
+        self.p0 = bool(word >> 0 & 1)
+        self.p1 = bool(word >> 1 & 1)
+        self.ei = bool(word >> 7 & 1)
+        self.sic = bool(word >> 8 & 1)
+        self.soc = bool(word >> 9 & 1)
+        self.drc = bool(word >> 10 & 1)
+        self.dma = bool(word >> 11 & 1)
+        self.usf0 = bool(word >> 13 & 1)
+        self.usf1 = bool(word >> 14 & 1)
+        self.rqm = bool(word >> 15 & 1)
         self.drs = bool(word >> TRANSFER_PLACE & 1)
 
-    def __int__(self):
-        word = 0
-        for name, place in STATUS_PLACES:
-            word |= int(getattr(self, name)) << place
+    def __int__(self) -> int:
+        word = (
+            int(self.p0) << 0
+            | int(self.p1) << 1
+            | int(self.ei) << 7
+            | int(self.sic) << 8
+            | int(self.soc) << 9
+            | int(self.drc) << 10
+            | int(self.dma) << 11
+            | int(self.usf0) << 13
+            | int(self.usf1) << 14
+            | int(self.rqm) << 15
+        )
         if self.drs and not self.drc:
             word |= 1 << TRANSFER_PLACE
         return word
 
-    def __repr__(self):
+    @override
+    def __repr__(self) -> str:
         held = [name for name, _ in STATUS_PLACES if getattr(self, name)]
         return f"<Status {' '.join(held) if held else 'none'}>"
 
 
 class Registers:
-    """The whole register file, at the widths the part being modelled has."""
+    """The whole register file, at the widths the part being modelled has.
 
-    def __init__(self, counter_bits, table_bits, pointer_bits):
+    Every register is declared. An earlier version kept the six signed ones in a
+    dictionary reached through `__getattr__`, which is four fewer lines and hides
+    the most important structure in this package from every reader and every
+    checker: a misspelt register name read as zero instead of raising, and a
+    renamed one broke nothing until something ran.
+
+    The six signed registers are properties rather than plain attributes because
+    a store has to narrow to sixteen bits and re-sign. That is the part's
+    behaviour: it holds two accumulators, two multiplicands and the two halves of
+    a product as signed values, and a model that keeps them unsigned agrees with
+    the part until the first negative multiply.
+    """
+
+    def __init__(self, counter_bits: int, table_bits: int, pointer_bits: int) -> None:
         self.counter_mask = (1 << counter_bits) - 1
         self.table_mask = (1 << table_bits) - 1
         self.pointer_mask = (1 << pointer_bits) - 1
@@ -100,54 +155,102 @@ class Registers:
         self._rp = 0
         self._dp = 0
         self._sp = 0
-        self._signed = dict.fromkeys(SIGNED, 0)
-        for name in UNSIGNED:
-            setattr(self, name, 0)
+        self._k = 0
+        self._l = 0
+        self._m = 0
+        self._n = 0
+        self._a = 0
+        self._b = 0
+        self.si = 0
+        self.so = 0
+        self.tr = 0
+        self.trb = 0
+        self.dr = 0
         self.sr = Status()
 
     @property
-    def pc(self):
+    def pc(self) -> int:
         return self._pc
 
     @pc.setter
-    def pc(self, value):
+    def pc(self, value: int) -> None:
         self._pc = value & self.counter_mask
 
     @property
-    def rp(self):
+    def rp(self) -> int:
         return self._rp
 
     @rp.setter
-    def rp(self, value):
+    def rp(self, value: int) -> None:
         self._rp = value & self.table_mask
 
     @property
-    def dp(self):
+    def dp(self) -> int:
         return self._dp
 
     @dp.setter
-    def dp(self, value):
+    def dp(self, value: int) -> None:
         self._dp = value & self.pointer_mask
 
     @property
-    def sp(self):
+    def sp(self) -> int:
         return self._sp
 
     @sp.setter
-    def sp(self, value):
+    def sp(self, value: int) -> None:
         self._sp = value & STACK_MASK
 
-    def word(self, name):
+    @property
+    def k(self) -> int:
+        return self._k
+
+    @k.setter
+    def k(self, value: int) -> None:
+        self._k = signed(value & 0xFFFF)
+
+    @property
+    def l(self) -> int:  # noqa: E743
+        return self._l
+
+    @l.setter
+    def l(self, value: int) -> None:  # noqa: E743
+        self._l = signed(value & 0xFFFF)
+
+    @property
+    def m(self) -> int:
+        return self._m
+
+    @m.setter
+    def m(self, value: int) -> None:
+        self._m = signed(value & 0xFFFF)
+
+    @property
+    def n(self) -> int:
+        return self._n
+
+    @n.setter
+    def n(self, value: int) -> None:
+        self._n = signed(value & 0xFFFF)
+
+    @property
+    def a(self) -> int:
+        return self._a
+
+    @a.setter
+    def a(self, value: int) -> None:
+        self._a = signed(value & 0xFFFF)
+
+    @property
+    def b(self) -> int:
+        return self._b
+
+    @b.setter
+    def b(self, value: int) -> None:
+        self._b = signed(value & 0xFFFF)
+
+    def word(self, name: str) -> int:
         """A signed register read back as the sixteen bits it actually holds."""
-        return self._signed[name] & 0xFFFF
-
-    def __getattr__(self, name):
-        if name in SIGNED:
-            return self._signed[name]
-        raise AttributeError(name)
-
-    def __setattr__(self, name, value):
-        if name in SIGNED:
-            self._signed[name] = signed(value & 0xFFFF)
-            return
-        object.__setattr__(self, name, value)
+        found = getattr(self, name)
+        if not isinstance(found, int):
+            raise AttributeError(name)
+        return found & 0xFFFF

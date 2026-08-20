@@ -13,6 +13,13 @@ only for words nothing has written yet. Filling four thousand words to read two 
 them is waste, and a store that computes them on demand is the same store.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Callable
+
 PROGRAM_BITS = 24
 
 WORD_BITS = 16
@@ -35,52 +42,74 @@ class NotWholeWords(Exception):
 class Store:
     """A run of words of one width, addressed within its own length."""
 
-    def __init__(self, words, bits, fill=DEFAULT_FILL, source=None):
+    def __init__(
+        self,
+        words: int,
+        bits: int,
+        fill: int | None = DEFAULT_FILL,
+        source: Callable[[int], int] | None = None,
+    ) -> None:
         self.bits = bits
         self.mask = (1 << bits) - 1
         self.words = words
         self.source = source
-        self._written = {}
-        self._fill = None if source else (fill or 0) & self.mask
+        self._written: dict[int, int] = {}
+        self._fill = 0 if source else (fill or 0) & self.mask
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.words
 
-    def __getitem__(self, at):
+    def __getitem__(self, at: int) -> int:
         at %= self.words
         held = self._written.get(at)
         if held is not None:
             return held
-        return self._fill if self.source is None else self.source(at) & self.mask
+        return self._unwritten(at)
 
-    def __setitem__(self, at, value):
+    def _unwritten(self, at: int) -> int:
+        """What an address that has never been written to holds.
+
+        Exactly one of the two ways of saying that is in force: a store either
+        has a source that answers for every address, or a single fill it answers
+        everywhere. Naming both here rather than at each use is what lets the
+        second be an int rather than something that might be missing.
+        """
+        if self.source is None:
+            return self._fill
+        return self.source(at) & self.mask
+
+    def __setitem__(self, at: int, value: int) -> None:
         self._written[at % self.words] = value & self.mask
 
-    def changed(self):
+    def changed(self) -> dict[int, int]:
         """Every address whose word is not what the store started with."""
-        started = (
-            (lambda at: self._fill)
-            if self.source is None
-            else (lambda at: self.source(at) & self.mask)
-        )
-        return {at: word for at, word in sorted(self._written.items()) if word != started(at)}
+        return {
+            at: word for at, word in sorted(self._written.items()) if word != self._unwritten(at)
+        }
 
 
 class Stores:
     """The program store, the constant table and the scratch the part shares."""
 
-    def __init__(self, program_words, table_words, scratch_words, fill=DEFAULT_FILL, sources=None):
+    def __init__(
+        self,
+        program_words: int,
+        table_words: int,
+        scratch_words: int,
+        fill: int | None = DEFAULT_FILL,
+        sources: dict[str, Callable[[int], int]] | None = None,
+    ) -> None:
         sources = sources or {}
         self.program = Store(program_words, PROGRAM_BITS, fill, sources.get("program"))
         self.table = Store(table_words, WORD_BITS, fill, sources.get("table"))
         self.scratch = Store(scratch_words, WORD_BITS, fill, sources.get("scratch"))
 
-    def read_byte(self, at):
+    def read_byte(self, at: int) -> int:
         """One half of a scratch word, the low half from the even address."""
         word = self.scratch[at >> 1]
         return word >> 8 & 0xFF if at & 1 else word & 0xFF
 
-    def write_byte(self, at, value):
+    def write_byte(self, at: int, value: int) -> None:
         """The same halves, written without disturbing the other one."""
         where = at >> 1
         word = self.scratch[where]
@@ -89,14 +118,14 @@ class Stores:
         else:
             self.scratch[where] = word & 0xFF00 | value & 0xFF
 
-    def load_program(self, image):
+    def load_program(self, image: bytes) -> None:
         _load(self.program, image, PROGRAM_BYTES_PER_WORD)
 
-    def load_table(self, image):
+    def load_table(self, image: bytes) -> None:
         _load(self.table, image, TABLE_BYTES_PER_WORD)
 
 
-def _load(store, image, per_word):
+def _load(store: Store, image: bytes, per_word: int) -> None:
     if len(image) % per_word:
         raise NotWholeWords(f"{len(image)} bytes is not a whole number of {per_word} byte words")
     words = len(image) // per_word

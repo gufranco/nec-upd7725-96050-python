@@ -20,12 +20,21 @@ is not is worse than no report. And nothing is inferred: every line is something
 looked at just now rather than something that ought to be true.
 """
 
+from __future__ import annotations
+
 import platform
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING, override
 
 from . import firmware, models
 from .version import VERSION
+
+if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Callable, Iterable, Sequence
+
+    from .core import Core
+    from .firmware import Identity
 
 OLDEST_PYTHON = (3, 12)
 
@@ -33,29 +42,30 @@ OLDEST_PYTHON = (3, 12)
 class Finding:
     """One thing that was looked at, and what was there."""
 
-    def __init__(self, name, ok, detail, advice=None):
+    def __init__(self, name: str, ok: bool, detail: str, advice: str | None = None) -> None:
         self.name = name
         self.ok = ok
         self.detail = detail
         self.advice = advice
 
     @property
-    def line(self):
+    def line(self) -> str:
         """The one-line form, which is what a reader scans."""
         return f"  {'ok  ' if self.ok else '   !'}  {self.name}: {self.detail}"
 
     @property
-    def report(self):
+    def report(self) -> str:
         """The same, with what to do about it when there is something to do."""
         if self.ok or not self.advice:
             return self.line
         return f"{self.line}\n         {self.advice}"
 
-    def __repr__(self):
+    @override
+    def __repr__(self) -> str:
         return f"<Finding {self.name} {'ok' if self.ok else 'not ok'}>"
 
 
-def _python():
+def _python() -> Finding:
     return Finding(
         "python",
         sys.version_info[:2] >= OLDEST_PYTHON,
@@ -64,15 +74,15 @@ def _python():
     )
 
 
-def _package():
+def _package() -> Finding:
     return Finding("upd7725", True, f"version {VERSION}")
 
 
-def _default_build(name):
+def _default_build(name: str) -> Core:
     return models.describe(name).build()
 
 
-def _processor(name, build):
+def _processor(name: str, build: Callable[[str], Core]) -> Finding:
     """Whether that processor builds, saying exactly what stopped it if not."""
     try:
         core = build(name)
@@ -93,7 +103,7 @@ def _processor(name, build):
     )
 
 
-def _where():
+def _where() -> Finding:
     return Finding(
         "looking in",
         True,
@@ -102,14 +112,14 @@ def _where():
     )
 
 
-def _declared():
+def _declared() -> Finding:
     held = firmware.manifest()["artifacts"]
     return Finding(
         "declared", bool(held), f"{len(held)} images: " + ", ".join(one["part"] for one in held)
     )
 
 
-def _images(search):
+def _images(search: Callable[[], Iterable[tuple[Identity, Path]]]) -> list[Finding]:
     """Every image on this machine, each with the digest that identifies it."""
     try:
         found = list(search())
@@ -145,7 +155,7 @@ def _images(search):
     return lines
 
 
-def _digest_of(path):
+def _digest_of(path: Path | str) -> str:
     """The digest of the file that is here, which is what settles a report."""
     import hashlib
 
@@ -155,7 +165,10 @@ def _digest_of(path):
         return f"could not be read: {trouble}"
 
 
-def examine(build=_default_build, search=firmware.search):
+def examine(
+    build: Callable[[str], Core] = _default_build,
+    search: Callable[[], Iterable[tuple[Identity, Path]]] = firmware.search,
+) -> list[Finding]:
     """Everything worth looking at on this machine, in the order a reader wants it."""
     found = [_python(), _package()]
     found.extend(_processor(name, build) for name in sorted(models.MODELS))
@@ -165,7 +178,7 @@ def examine(build=_default_build, search=firmware.search):
     return found
 
 
-def report(found):
+def report(found: Sequence[Finding]) -> list[str]:
     """The lines a person pastes into an issue."""
     unwell = [one for one in found if not one.ok]
     lines = [f"upd7725 {VERSION} on {platform.python_version()}, {platform.system()}", ""]
@@ -178,7 +191,11 @@ def report(found):
     return lines
 
 
-def main(argv=(), examine=examine, say=print):
+def main(
+    argv: Sequence[str] = (),
+    examine: Callable[..., Sequence[Finding]] = examine,
+    say: Callable[[str], object] = print,
+) -> int:
     found = examine()
     for line in report(found):
         say(line)

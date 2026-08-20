@@ -12,6 +12,10 @@ form performs its move after its arithmetic, so the value it moves is the one th
 was read at the start rather than the one the arithmetic just produced.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from .flags import (
     Flags,
     record_addition,
@@ -22,6 +26,11 @@ from .flags import (
 )
 from .memory import Stores
 from .registers import Registers
+
+if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Callable
+
+    from .models import Model
 
 WORD = 0x10000
 
@@ -149,7 +158,7 @@ JUMP_HIGH = 0x101
 CALL_LOW = 0x140
 CALL_HIGH = 0x141
 
-BRANCHES = {
+BRANCHES: dict[int, Callable[[Core], bool]] = {
     JUMP_IF_NO_CARRY_A: lambda chip: not chip.flags_a.c,
     JUMP_IF_CARRY_A: lambda chip: chip.flags_a.c,
     JUMP_IF_NO_CARRY_B: lambda chip: not chip.flags_b.c,
@@ -190,7 +199,18 @@ BRANCHES = {
 class Core:
     """One processor, its registers, its flags and its three stores."""
 
-    def __init__(self, model, fill=0, sources=None):
+    model: Model
+    registers: Registers
+    stores: Stores
+    flags_a: Flags
+    flags_b: Flags
+
+    def __init__(
+        self,
+        model: Model,
+        fill: int | None = 0,
+        sources: dict[str, Callable[[int], int]] | None = None,
+    ) -> None:
         self.model = model
         self.registers = Registers(
             counter_bits=model.counter_bits,
@@ -207,7 +227,7 @@ class Core:
         self.flags_a = Flags()
         self.flags_b = Flags()
 
-    def step(self):
+    def step(self) -> None:
         """One instruction, and the multiply that follows every one of them."""
         opcode = self.stores.program[self.registers.pc]
         self.registers.pc += 1
@@ -224,16 +244,16 @@ class Core:
 
         self._multiply()
 
-    def run(self, instructions):
+    def run(self, instructions: int) -> None:
         for _ in range(instructions):
             self.step()
 
-    def _multiply(self):
+    def _multiply(self) -> None:
         product = self.registers.k * self.registers.l
         self.registers.m = product >> MULTIPLY_SHIFT
         self.registers.n = product << 1
 
-    def _operate(self, opcode):
+    def _operate(self, opcode: int) -> None:
         pselect = opcode >> 20 & 0x3
         alu = opcode >> 16 & 0xF
         asl = opcode >> 15 & 0x1
@@ -255,12 +275,12 @@ class Core:
         if destination != TO_TABLE_POINTER and rpdcr:
             self.registers.rp -= 1
 
-    def _return(self, opcode):
+    def _return(self, opcode: int) -> None:
         self._operate(opcode)
         self.registers.sp -= 1
         self.registers.pc = self.registers.stack[self.registers.sp]
 
-    def _jump(self, opcode):
+    def _jump(self, opcode: int) -> None:
         branch = opcode >> 13 & 0x1FF
         address = opcode >> 2 & 0x7FF
         bank = opcode & 0x3
@@ -282,7 +302,7 @@ class Core:
             if taken is not None and taken(self):
                 self.registers.pc = target
 
-    def _read(self, source):
+    def _read(self, source: int) -> int:
         registers = self.registers
         if source == FROM_TRB:
             return registers.trb
@@ -315,7 +335,7 @@ class Core:
             return registers.word("l")
         return self.stores.scratch[registers.dp]
 
-    def _compute(self, alu, pselect, asl, moving):
+    def _compute(self, alu: int, pselect: int, asl: int, moving: int) -> None:
         registers = self.registers
 
         if pselect == 0:
@@ -355,7 +375,7 @@ class Core:
             registers.a = result
             self.flags_a = flags
 
-    def _load(self, opcode):
+    def _load(self, opcode: int) -> None:
         value = opcode >> 6 & WORD_MASK
         destination = opcode & 0xF
         registers = self.registers
@@ -394,7 +414,7 @@ class Core:
         else:
             self.stores.scratch[registers.dp] = value
 
-    def _step_pointer(self, dpl, dphm):
+    def _step_pointer(self, dpl: int, dphm: int) -> None:
         registers = self.registers
         pointer = registers.dp
 
@@ -410,7 +430,7 @@ class Core:
         registers.dp = registers.dp ^ dphm << POINTER_HIGH_SHIFT
 
 
-def _apply(alu, left, right, carry):
+def _apply(alu: int, left: int, right: int, carry: int) -> tuple[int, int]:
     """The result, and the operand the flags should be told about.
 
     Two of the sixteen replace their operand with one before the flags are set,

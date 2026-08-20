@@ -16,11 +16,19 @@ different content, or the other revision, or an archive rather than the thing
 inside it, tells you what to do next.
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import os
 import zlib
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, override
+
+if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable, Iterator, Mapping
+
+    from .core import Core
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -64,7 +72,7 @@ class Corrupt(Exception):
     pass
 
 
-def digests_of(image):
+def digests_of(image: bytes) -> dict[str, str]:
     """Every digest the manifest publishes, for one file."""
     return {
         "crc32": f"{zlib.crc32(image) & 0xFFFFFFFF:08x}",
@@ -77,28 +85,37 @@ def digests_of(image):
 class Identity:
     """What an image turned out to be."""
 
-    def __init__(self, part, processor, revision, program_words, data_words):
+    def __init__(
+        self,
+        part: str,
+        processor: str,
+        revision: str,
+        program_words: int,
+        data_words: int,
+    ) -> None:
         self.part = part
         self.processor = processor
         self.revision = revision
         self.program_words = program_words
         self.data_words = data_words
 
-    def __repr__(self):
+    @override
+    def __repr__(self) -> str:
         return f"<Identity {self.part} {self.revision} on {self.processor}>"
 
 
-def manifest(path=None):
+def manifest(path: Path | str | None = None) -> dict[str, Any]:
     with Path(path or MANIFEST).open() as handle:
-        return json.load(handle)
+        held: dict[str, Any] = json.load(handle)
+    return held
 
 
-def directory(environment=None):
+def directory(environment: Mapping[str, str] | None = None) -> Path:
     """The first place images are looked for."""
     return directories(environment)[0]
 
 
-def directories(environment=None):
+def directories(environment: Mapping[str, str] | None = None) -> tuple[Path, ...]:
     """Every place images are looked for, in the order they are looked at.
 
     Whatever was named comes first, then the project this package sits inside if
@@ -116,7 +133,7 @@ def directories(environment=None):
     return tuple(seen)
 
 
-def identify(image, catalogue=None):
+def identify(image: bytes, catalogue: dict[str, Any] | None = None) -> Identity:
     """Which part this image is, or why it is not one the manifest knows."""
     found = digests_of(image)
     entries = (catalogue or manifest())["artifacts"]
@@ -137,7 +154,7 @@ def identify(image, catalogue=None):
     raise Unrecognised(_diagnosis(image, found[DECIDES], entries))
 
 
-def _confirm(entry, accepted, found):
+def _confirm(entry: dict[str, Any], accepted: dict[str, Any], found: dict[str, str]) -> None:
     """Every other digest the manifest publishes has to agree as well.
 
     Reaching here means the deciding digest already matched, so a disagreement is
@@ -157,7 +174,7 @@ def _confirm(entry, accepted, found):
             )
 
 
-def _diagnosis(image, digest, entries):
+def _diagnosis(image: bytes, digest: str, entries: list[dict[str, Any]]) -> str:
     same_length = [entry for entry in entries if entry["bytes"] == len(image)]
 
     if same_length:
@@ -178,7 +195,7 @@ def _diagnosis(image, digest, entries):
     )
 
 
-def load(chip, image, identity=None):
+def load(chip: Core, image: bytes, identity: Identity | None = None) -> Core:
     """Put an image into a processor, program first and table second."""
     program_words = identity.program_words if identity else len(chip.stores.program)
     data_words = identity.data_words if identity else len(chip.stores.table)
@@ -195,7 +212,9 @@ def load(chip, image, identity=None):
     return chip
 
 
-def found(where=None, catalogue=None):
+def found(
+    where: Path | str | None = None, catalogue: dict[str, Any] | None = None
+) -> Iterator[tuple[Identity, Path]]:
     """Every image the manifest recognises in one directory, with its file."""
     where = Path(where) if where is not None else directory()
     if not where.is_dir():
@@ -210,7 +229,9 @@ def found(where=None, catalogue=None):
             continue
 
 
-def search(places=None, catalogue=None):
+def search(
+    places: Iterable[Path] | None = None, catalogue: dict[str, Any] | None = None
+) -> Iterator[tuple[Identity, Path]]:
     """The same across every place that is searched, the first copy of each part winning."""
     seen = set()
     for where in places if places is not None else directories():
