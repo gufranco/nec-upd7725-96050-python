@@ -120,6 +120,7 @@ cd nec-upd7725-python
 
 ```bash
 python3 conformance/instructions.py
+
 #   22,240 instructions, 0 disagreed
 ```
 
@@ -226,7 +227,9 @@ and reconstructs nothing.
 ```bash
 export UPD7725_FIRMWARE_DIR=~/nec-upd7725-python/firmware
 python3 conformance/against_firmware.py
+
 #   dsp1   DSP-1   on upd7725: 200,000 instructions, still inside its own program store
+
 #   st011  ST011   on upd96050: 200,000 instructions, still inside its own program store
 ```
 
@@ -240,9 +243,13 @@ A file that does not match is diagnosed rather than merely refused:
 from upd7725 import firmware
 
 firmware.identify(open("mystery.bin", "rb").read())
+
 # Unrecognised: this is 8192 bytes, the length of dsp1, dsp1b, dsp2, dsp3, dsp4,
+
 # but its content is altered: its sha256 is ... and no accepted revision has
+
 # that. A file of the right length with the wrong content is usually a different
+
 # revision than the one it is named after, or a bad dump
 ```
 
@@ -254,6 +261,7 @@ both images on this processor and asking them the same questions:
 
 ```bash
 python3 conformance/against_firmware.py
+
 #   the two masks of the DSP-1 answer differently on 217 of 256 command bytes
 ```
 
@@ -276,8 +284,11 @@ part this package does not have says why rather than only that:
 from upd7725 import Processor
 
 Processor("upd7720")
+
 # UnknownModelError: upd7720 is not modelled here: the uPD7720 is the earlier
+
 # part of the same family, and the reference this package is measured against
+
 # does not implement it; a model of it here would have nothing behind it
 ```
 
@@ -374,8 +385,6 @@ Coverage is enforced at 100% of statements and branches by [`pyproject.toml`](py
 | JSON formatting | [Prettier](https://prettier.io/), configured in [`.prettierrc.json`](.prettierrc.json) |
 | Test layout | `<module>.test.py` beside the module it covers |
 | Types | [mypy](https://mypy.readthedocs.io/) at strict, configured in [`pyproject.toml`](pyproject.toml) |
-| Agent instructions | [`AGENTS.md`](AGENTS.md) |
-| Current behaviour | [`specs/current/`](specs/current/), one requirement per observable behaviour with checkable scenarios |
 
 ## Versioning
 

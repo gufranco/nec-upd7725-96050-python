@@ -33,9 +33,6 @@ type imported only for checking passes on one and fails to import on the other:
 uvx --python 3.12 python upd7725/core.test.py
 ```
 
-If you are working through a coding agent, the same ground is in
-[AGENTS.md](AGENTS.md) in the shape an agent reads.
-
 ## The workflows
 
 They are checked too, by actionlint, and the archive it comes from is verified
