@@ -1,0 +1,54 @@
+{
+  "comment": "Every place a source is weaker than it looks, and every place this package deliberately claims nothing. The facts themselves live in hardware.json; this file is about their standing, and it is the file a reader of any sibling repository looks in for that.",
+  "sources": {
+    "document": "NEC uPD77C25/uPD77P25 Digital Signal Processor Data Sheet, August 1987. Pinned in hardware.json. It covers the part Nintendo shipped as the DSP-1 through DSP-4.",
+    "corpus": "conformance/corpus.json, recorded from an emulator named in pinned.json. Good evidence for behaviour nobody documented, poor evidence for anything a manufacturer printed.",
+    "artifact": "The firmware images themselves, which corroborate a size when a wrong size would fail to load."
+  },
+  "divergences": [
+    {
+      "id": "no-document-for-the-upd96050",
+      "parts": ["upd96050"],
+      "severity": "high",
+      "status": "open",
+      "documentSays": "Nothing. No manufacturer document for this part was located.",
+      "referenceDoes": "Secondary sources give 16384 program words, 2048 data ROM words, 2048 data RAM words and eight stack levels.",
+      "packageFollows": "reference",
+      "reasoning": "Secondary sources for this family are emulators, which is the weakest evidence this project accepts for a fact a manufacturer would have printed. Three of the four figures have a second witness that is not an emulator: an ST010 firmware image is exactly 16384 program words of three bytes plus 2048 table words of two bytes, so a wrong size would fail to load. The stack depth has no such witness and rests on the secondary source alone.",
+      "wouldSettleIt": "An NEC data sheet for the uPD96050, or a measurement: push past eight levels on a real part and see where it wraps."
+    },
+    {
+      "id": "the-corpus-was-recorded-from-an-emulator",
+      "parts": ["upd77c25", "upd96050"],
+      "severity": "high",
+      "status": "open",
+      "documentSays": "Widths, stack depth, cycles per instruction and memory sizes for the uPD77C25. It does not specify every flag rule, every undefined encoding, or the result of every field combination.",
+      "referenceDoes": "Answers all of those, because a recording answers whatever it was asked.",
+      "packageFollows": "corpus",
+      "reasoning": "Instruction-level behaviour the data sheet leaves open is taken from the recording, and the recording is an emulator. Where the two overlap the document wins and the recording is retaken; where they do not overlap there is nothing to check the recording against, and that covers most of the flag rules.",
+      "wouldSettleIt": "A recording taken off a real uPD77C25: drive known inputs through a known program and capture the outputs. Failing that, a fuller NEC document than the Advance Product Information sheet."
+    },
+    {
+      "id": "the-mapper-access-count-is-unverified",
+      "parts": ["upd77c25", "upd96050"],
+      "severity": "medium",
+      "status": "open",
+      "documentSays": "Nothing about how long the console takes to reach this part. That is a property of the cartridge board and the console bus, not of the DSP.",
+      "referenceDoes": "Every implementation costs an access to the coprocessor region at twelve master cycles.",
+      "packageFollows": "reference",
+      "reasoning": "The figure belongs to snes-mapper-python rather than here, and it is marked unverified there for the same reason: Nintendo's Book I lists two bus speeds and not a third. It is named here as well because a reader timing a DSP-1 routine will be using both packages and should not pick the mark up from only one of them.",
+      "wouldSettleIt": "A passage in Nintendo's Book I or Book II giving the access time for that region, or a measurement on real hardware."
+    },
+    {
+      "id": "the-two-parts-are-one-model-family",
+      "parts": ["upd77c25", "upd96050"],
+      "severity": "low",
+      "status": "notADisagreement",
+      "documentSays": "The uPD77C25 and uPD77P25 are functionally identical, one mask ROM and one UVEPROM.",
+      "referenceDoes": "Treats the uPD96050 as the same instruction set with more memory.",
+      "packageFollows": "neither",
+      "reasoning": "The instruction set is modelled once and the sizes differ per model. That is a decision this package makes rather than a fact either source states, and it would be wrong if the larger part turned out to differ in behaviour rather than only in capacity.",
+      "wouldSettleIt": "The missing uPD96050 data sheet, which would either confirm the instruction set or name a difference."
+    }
+  ]
+}

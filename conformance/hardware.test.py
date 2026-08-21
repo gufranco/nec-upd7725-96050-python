@@ -2,7 +2,7 @@ import json
 import sys
 import unittest
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -245,6 +245,51 @@ class MultiplierTest(unittest.TestCase):
         chip.step()
 
         self.assertEqual(chip.registers.word("n") & 1, 0)
+
+
+class DivergenceTest(unittest.TestCase):
+    """The standing of each fact, kept in the file the family reads for that.
+
+    `hardware.json` already marks the part with no document. This checks that the
+    same thing is said where a reader of any sibling repository will look for it,
+    so the two cannot part company.
+    """
+
+    @override
+    def setUp(self) -> None:
+        here = Path(__file__).resolve().parent
+        self.entries: list[dict[str, Any]] = json.loads((here / "divergences.json").read_text())[
+            "divergences"
+        ]
+
+    def test_each_entry_says_which_source_the_package_follows(self) -> None:
+        allowed = {"document", "reference", "corpus", "neither"}
+
+        self.assertEqual({entry["packageFollows"] for entry in self.entries} - allowed, set())
+
+    def test_each_entry_says_what_would_settle_it(self) -> None:
+        missing = [entry["id"] for entry in self.entries if not entry.get("wouldSettleIt")]
+
+        self.assertEqual(missing, [])
+
+    def test_the_part_with_no_document_is_named_here_too(self) -> None:
+        named = {entry["id"] for entry in self.entries}
+
+        self.assertIn("no-document-for-the-upd96050", named)
+
+    def test_and_it_agrees_with_the_mark_on_the_part_itself(self) -> None:
+        unverified = [part for part in declared()["parts"] if not part["verified"]]
+
+        self.assertEqual(len(unverified), 1)
+
+    def test_the_corpus_being_a_recording_is_recorded(self) -> None:
+        entry = next(
+            item
+            for item in self.entries
+            if item["id"] == "the-corpus-was-recorded-from-an-emulator"
+        )
+
+        self.assertEqual(entry["severity"], "high")
 
 
 if __name__ == "__main__":
