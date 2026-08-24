@@ -23,7 +23,7 @@
   <a href="https://github.com/gufranco/nec-upd7725-python/issues">Issues</a>
 </p>
 
-**2** parts · **4** instruction forms · **1,120** encodings walked field by field · **1,002,240** instructions compared against the reference, **0** disagreements · **558** tests · **100%** statement and branch coverage · **strict** types throughout · **zero** firmware, ever
+**2** parts · **4** instruction forms · **1,120** encodings walked field by field · **1,002,240** instructions compared against the reference, **0** disagreements · **561** tests · **100%** statement and branch coverage · **strict** types throughout · **zero** firmware, ever
 
 ```python
 from upd7725 import Processor

@@ -11,7 +11,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from typing import override
+from typing import Any, override
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -113,6 +113,38 @@ class LibraryTest(unittest.TestCase):
         found = quotes.readable(ROOT / "anything.pdf", self.refuse)
 
         self.assertEqual(found, "")
+
+    def test_a_reader_that_answers_gives_back_what_it_read(self) -> None:
+        found = quotes.readable(ROOT / "anything.pdf", self.answering("Hello, World."))
+
+        self.assertEqual(found, "helloworld")
+
+    def test_a_reading_left_beside_the_document_is_pooled_with_it(self) -> None:
+        folder = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        (folder / "one.pdf").write_bytes(b"")
+        (folder / "one.txt").write_text("from the pages")
+
+        found = quotes.readable(folder / "one.pdf", self.answering("from the layer"))
+
+        self.assertEqual(found, "fromthelayerfromthepages")
+
+    def test_and_nothing_is_pooled_when_nobody_has_read_the_pages(self) -> None:
+        folder = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        (folder / "one.pdf").write_bytes(b"")
+
+        found = quotes.readable(folder / "one.pdf", self.answering("only the layer"))
+
+        self.assertEqual(found, "onlythelayer")
+
+    @staticmethod
+    def answering(text: str) -> Any:
+        class Answered:
+            stdout = text
+
+        def reader(*rest: object, **named: object) -> Answered:
+            return Answered()
+
+        return reader
 
     @staticmethod
     def refuse(*rest: object, **named: object) -> None:
