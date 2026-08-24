@@ -52,124 +52,156 @@
         "clocksPerInstruction": {
           "value": 1,
           "quote": "Since the 77C25 executes an instruction in one external clock cycle (versus two cycles of the same 8.192 MHz clock for 77C20A), the 77C25 may be substituted for a 77C20A (or 7720A or 77P20) in a circuit without modification of that circuit.",
-          "page": 3
+          "page": 3,
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "everyInstructionSameLength": {
           "value": true,
           "quote": "All instructions execute in one instruction cycle",
-          "page": 1
+          "page": 1,
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "instructionCycleNanoseconds": {
           "value": 122,
           "atClockHz": 8192000,
           "quote": "Fast instruction execution: 122 ns with 8.192 MHz clock.",
-          "page": 1
+          "page": 1,
+          "appliesTo": ["upd7725"],
+          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for."
         },
         "maximumClockHz": {
           "value": 8300000,
           "quote": "The external clock frequency (8.3 MHz maximum) remains the same as for 7720/77C20 while the internal instruction execution speed is doubled.",
-          "page": 1
+          "page": 1,
+          "appliesTo": ["upd7725"],
+          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for."
         },
         "programWords": {
           "value": 2048,
           "wordBits": 24,
           "quote": "Program ROM (2048 x 24 bits)",
-          "page": 2
+          "page": 2,
+          "appliesTo": ["upd7725"],
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
         },
         "programCounterBits": {
           "value": 11,
           "quote": "The 2048 x 24-bit words of instruction ROM are addressed by the 11-bit program counter that can be modified by an external reset, interrupt, call, jump, or return instruction.",
-          "page": 7
+          "page": 7,
+          "appliesTo": ["upd7725"],
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
         },
         "dataRomWords": {
           "value": 1024,
           "wordBits": 16,
           "quote": "The data ROM is organized in 1024 x 16-bit words that are addressed through a 10-bit ROM pointer (RP register).",
-          "page": 8
+          "page": 8,
+          "appliesTo": ["upd7725"],
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
         },
         "romPointerBits": {
           "value": 10,
           "quote": "addressed through a 10-bit ROM pointer (RP register)",
-          "page": 8
+          "page": 8,
+          "appliesTo": ["upd7725"],
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
         },
         "dataRamWords": {
           "value": 256,
           "wordBits": 16,
           "quote": "The data RAM is 256 x 16-bit words and is addressed through an 8-bit data pointer (DP register).",
-          "page": 8
+          "page": 8,
+          "appliesTo": ["upd7725"],
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
         },
         "dataPointerBits": {
           "value": 8,
           "quote": "The data RAM is 256 x 16-bit words and is addressed through an 8-bit data pointer (DP register).",
           "page": 8,
-          "note": "The same sentence the data RAM size comes from, quoted whole rather than cut down to the clause about the pointer, so a reader finds it on the page as it is printed."
+          "note": "The same sentence the data RAM size comes from, quoted whole rather than cut down to the clause about the pointer, so a reader finds it on the page as it is printed.",
+          "appliesTo": ["upd7725"],
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
         },
         "stackLevels": {
           "value": 4,
           "quote": "The SPI+ contains a four-level program stack for efficient program usage and interrupt handling.",
           "page": 9,
           "corroboration": "The block diagram on page 7 draws the stack as four slots, labelled 0, 1, 2 and 3.",
-          "notStated": "What happens on a fifth consecutive call is not stated in this document. A two-bit pointer wrapping to slot zero is the consequence of the width the document gives, and the model takes that, but it is an inference from the width rather than a figure the document prints."
+          "notStated": "What happens on a fifth consecutive call is not stated in this document. A two-bit pointer wrapping to slot zero is the consequence of the width the document gives, and the model takes that, but it is an inference from the width rather than a figure the document prints.",
+          "appliesTo": ["upd7725"],
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
         },
         "accumulators": {
           "value": 2,
           "bits": 16,
           "quote": "Dual 16-bit accumulators",
-          "page": 2
+          "page": 2,
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "flagsPerAccumulator": {
           "value": ["SA1", "SA0", "CA", "ZA", "OVA1", "OVA0"],
           "quote": "In addition to zero result, sign, carry, and overflow flags, the SPI+ incorporates auxiliary overflow and sign flags (SA1, SB1, OVA1, OVB1). These flags enable the detection of an overflow condition and maintain the correct sign after as many as three successive additions or subtractions.",
-          "page": 8
+          "page": 8,
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "multiplier": {
           "inputBits": 16,
           "productBits": 31,
           "quote": "Thirty-one-bit results are developed by a 16 x 16-bit two's complement multiplier in 122 ns. The result is automatically latched to two 16-bit registers, M and N, at the end of each instruction cycle. The sign bit and 15 higher bits are in M and the 16 lower bits are in N; the LSB in N is zero. A new product is available for use after every instruction cycle",
-          "page": 9
+          "page": 9,
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "aluOperations": {
           "value": 16,
           "quote": "The ALU is a 16-bit two's complement unit capable of executing 16 distinct operations on data routed via the P and Q ALU inputs.",
-          "page": 8
+          "page": 8,
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "interruptVector": {
           "value": 256,
           "quote": "A low-to-high transition on this pin executes a call instruction to location 100H, if interrupts were previously enabled.",
-          "page": 5
+          "page": 5,
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "resetSetsProgramCounterTo": {
           "value": 0,
           "quote": "This input initializes the SPI+ internal logic and sets the PC to 0.",
-          "page": 5
+          "page": 5,
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "hostInterfaceBusBits": {
           "value": 8,
           "quote": "Host CPU Interface   8-bit bus",
-          "page": 3
+          "page": 3,
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "statusDataRegisterSelect": {
           "quote": "A0 [Status Data Register Select] This input selects data register for read/write (low) or status register for read (high).",
-          "page": 5
+          "page": 5,
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "serialNanosecondsPerBit": {
           "value": 244,
           "quote": "Serial: 8- or 16-bit (244 ns/bit)",
           "page": 2,
-          "note": "Two instruction cycles per serial bit at 8.192 MHz. Nothing in a cartridge uses the serial port."
+          "note": "Two instruction cycles per serial bit at 8.192 MHz. Nothing in a cartridge uses the serial port.",
+          "appliesTo": ["upd7725"],
+          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for."
         },
         "instructionElementOrder": {
           "value": ["multiply", "data move", "arithmetic", "pointer modification", "return"],
           "quote": "To control the execution of instructions, the external 8 MHz clock is divided into phases for internal execution. The various elements of the 24-bit instruction word are executed in a set order. Multiplication automatically begins first. Also, data moves from source to destination before other elements of the instruction. Data being moved on the internal data bus (IDB) is available for use in ALU operations (if P-select of the instruction specifies IDB).",
           "page": 12,
-          "andAlso": "Pointer modifications occur at the end of the instruction cycle after their values have been used for data moves. The result of multiplication is available at the end of the instruction cycle for possible use in the next instruction. If a return is specified as part of an OP instruction, it is executed last."
+          "andAlso": "Pointer modifications occur at the end of the instruction cycle after their values have been used for data moves. The result of multiplication is available at the end of the instruction cycle for possible use in the next instruction. If a return is specified as part of an OP instruction, it is executed last.",
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "arithmeticSupersededByItsOwnDestination": {
           "value": true,
           "quote": "However, if the accumulator specified in the ASL field is also specified as the destination of the data move, the ALU operation becomes a NOP, as the data move supersedes the ALU operation.",
           "page": 12,
           "consequence": "A NOP is the one operation that leaves the flags alone: \"These flags ... are updated at the end of each arithmetic instruction (except NOP)\", and the ALU table gives NOP no flag effects at all. So the arithmetic must not run, rather than run and be overwritten. A model that overwrites holds the right accumulator and the wrong flags, and the next conditional branch reads those flags.",
-          "foundBy": "Reading this page. Both implementations here ran the arithmetic and let the move overwrite it, and so does the emulator the corpus was recorded from: 581 of the 22,240 recorded cases changed when it was fixed."
+          "foundBy": "Reading this page. Both implementations here ran the arithmetic and let the move overwrite it, and so does the emulator the corpus was recorded from: 581 of the 22,240 recorded cases changed when it was fixed.",
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "statusRegisterBits": {
           "value": {
@@ -188,31 +220,36 @@
           "quote": "Figure 3. Status Register (SR): bit 15 RQM, 14 USF1, 13 USF0, 12 DRS, 11 DMA, 10 DRC, 9 SOC, 8 SIC, 7 EI, bits 6 to 2 zero, 1 P1, 0 P0",
           "assembled": true,
           "page": 11,
-          "note": "Checked against both implementations here and they already matched, bit for bit."
+          "note": "Checked against both implementations here and they already matched, bit for bit.",
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "requestBitSemantics": {
           "quote": "RQM (Request for Master): A read or write form DR to IDB sets RQM = 1, An external read (write) resets RQM = 0.",
           "assembled": true,
           "page": 12,
-          "note": "The part raises it when its own program touches the data register; the console clears it by reading or writing. Checked against the implementation here and it already matched."
+          "note": "The part raises it when its own program touches the data register; the console clears it by reading or writing. Checked against the implementation here and it already matched.",
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "transferHalfSemantics": {
           "quote": "DRS (DR Status): For 16-bit DR transfers (DRC = 0), DRS = 1 after first 8 bits have been transferred. DRS = 0 after all 16 bits have been transferred.",
           "assembled": true,
           "page": 12,
-          "note": "Already matched."
+          "note": "Already matched.",
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "statusReadWidth": {
           "value": 8,
           "quote": "Eight MSBs of SR are output to D0-D7",
           "page": 11,
           "andWriting": "Illegal (SR is read only)",
-          "note": "The read width already matched. A write to the status port does nothing here, which is the least surprising reading of illegal."
+          "note": "The read width already matched. A write to the status port does nothing here, which is the least surprising reading of illegal.",
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "parallelInterfaceIsEightBit": {
           "quote": "Host CPU Interface   8-bit bus",
           "page": 3,
-          "note": "So a sixteen-bit data register is moved a byte at a time, which is what DRS tracks."
+          "note": "So a sixteen-bit data register is moved a byte at a time, which is what DRS tracks.",
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "aluFlagMatrix": {
           "document": "dataBook",
@@ -247,7 +284,8 @@
           "whatItSettles": "Which flags each ALU operation touches, from the manufacturer rather than from the recording. It confirms the split this model already made: only the one-bit shifts take the carry from the bit shifted out, while the two-bit and four-bit shifts, the exchange, the complement and the three logic operations reset it.",
           "whatItLeavesOpen": "The auxiliary sign flag is declared indefinite for the logic operations, the complement, the exchange and every shift. This model gives it a definite value there, following the recording, because a model has to answer something. That is a choice this project makes and not a figure the manufacturer gives.",
           "filePage": 82,
-          "headerOnThatPage": "uPD77C25/77P25"
+          "headerOnThatPage": "uPD77C25/77P25",
+          "appliesTo": ["upd7725", "upd96050"]
         },
         "clockCycleNanoseconds": {
           "typical": 122,
@@ -256,14 +294,18 @@
           "quote": "CLK Cycle Time tCYC 120 122 2000 ns",
           "assembled": true,
           "page": 22,
-          "note": "The symbol every other timing figure in the document is given in. One clock cycle is one instruction on this part, so a figure quoted in tCYC is a figure in instructions."
+          "note": "The symbol every other timing figure in the document is given in. One clock cycle is one instruction on this part, so a figure quoted in tCYC is a figure in instructions.",
+          "appliesTo": ["upd7725"],
+          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for."
         },
         "resetPulseCycles": {
           "value": 4,
           "quote": "RST Pulse Width tRST 4 tCYC ns",
           "assembled": true,
           "page": 26,
-          "note": "The minimum the host must hold the reset line, not a count of what the part does internally, which the document does not give. This model spends it, because a board that pulls the line has spent it."
+          "note": "The minimum the host must hold the reset line, not a count of what the part does internally, which the document does not give. This model spends it, because a board that pulls the line has spent it.",
+          "appliesTo": ["upd7725"],
+          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for."
         },
         "interruptPulseCycles": {
           "pulse": 3,
@@ -271,7 +313,9 @@
           "quote": "INT Pulse Width tINT 3 tCYC ns; INT Recovery Time tRINT 2 tCYC ns",
           "assembled": true,
           "page": 26,
-          "note": "What the host must hold the interrupt line for, and how long it must wait before raising it again. Recorded because it is the manufacturer speaking about a pin this package does not yet drive."
+          "note": "What the host must hold the interrupt line for, and how long it must wait before raising it again. Recorded because it is the manufacturer speaking about a pin this package does not yet drive.",
+          "appliesTo": ["upd7725"],
+          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for."
         }
       },
       "predecessorForContrast": {
@@ -284,7 +328,8 @@
         "document": "dataSheet",
         "why": "Recorded because a reader who finds a 250 ns instruction cycle quoted for this family has found the earlier part. Taking that figure for this one would halve the rate at which it runs.",
         "section": "the comparison table on printed page 3, which sets the two parts side by side"
-      }
+      },
+      "scopeNote": "Every fact names the parts it governs. Nesting them under the verified part said only where they were read, never how far they reach, and the two parts share an instruction set, so most reach both. What does not reach both is a width, which models.py gives differently, and an electrical characteristic, which no document for the other part states. OPEN-QUESTIONS.md carries what that assumption rests on."
     },
     {
       "part": "upd96050",

@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import reference
 
+import upd7725
 from upd7725 import models
 from upd7725.flags import Flags
 
@@ -319,6 +320,102 @@ class DivergenceTest(unittest.TestCase):
         )
 
         self.assertEqual(entry["severity"], "high")
+
+
+def overclaimed(facts: dict[str, Any], widths: dict[str, str]) -> list[str]:
+    """Every width claimed for a part that does not hold it, per models.py."""
+    found = []
+    for name, attribute in widths.items():
+        fact = facts[name]
+        holding = {
+            part
+            for part in upd7725.MODELS
+            if getattr(upd7725.describe(part), attribute) == fact["value"]
+        }
+        if set(fact["appliesTo"]) != holding:
+            found.append(f"{name}: claims {fact['appliesTo']}, holds for {sorted(holding)}")
+    return found
+
+
+class PartScopeTest(unittest.TestCase):
+    """That every fact says which parts it governs, not just where it was read.
+
+    Nesting the facts under the verified part recorded where each was read and
+    said nothing about how far it reaches. The two parts share an instruction
+    set, so most reach both; a width does not, and neither does a number measured
+    off one part's pins when no document for the other has been found.
+
+    A width is checked against models.py rather than taken on trust, so a fact
+    claiming both parts for a value that differs between them fails here.
+    """
+
+    def facts(self) -> dict[str, Any]:
+        held: dict[str, Any] = declared()["parts"][0]["facts"]
+        return held
+
+    def test_every_fact_names_the_parts_it_governs(self) -> None:
+        unscoped = [
+            name
+            for name, fact in self.facts().items()
+            if not isinstance(fact.get("appliesTo"), list) or not fact["appliesTo"]
+        ]
+
+        self.assertEqual(unscoped, [])
+
+    def test_and_every_part_it_names_is_one_the_package_builds(self) -> None:
+        invented = sorted(
+            {
+                part
+                for fact in self.facts().values()
+                for part in fact["appliesTo"]
+                if part not in upd7725.MODELS
+            }
+        )
+
+        self.assertEqual(invented, [])
+
+    def test_a_fact_the_parts_disagree_on_is_not_claimed_for_both(self) -> None:
+        """Every width the record states is checked against both models.
+
+        This is the one that would catch a fact widened by hand: the record says
+        a value, models.py says what each part holds, and a fact naming both
+        parts for a value only one of them has is a contradiction rather than a
+        matter of opinion.
+        """
+        widths = {
+            "programWords": "program_words",
+            "programCounterBits": "counter_bits",
+            "dataRomWords": "table_words",
+            "romPointerBits": "table_bits",
+            "dataRamWords": "scratch_words",
+            "dataPointerBits": "pointer_bits",
+            "stackLevels": "stack_levels",
+        }
+
+        self.assertEqual(overclaimed(self.facts(), widths), [])
+
+    def test_and_a_width_widened_by_hand_would_be_reported(self) -> None:
+        """The check has to be seen failing to be worth running."""
+        facts = {"programWords": {"value": 2048, "appliesTo": ["upd7725", "upd96050"]}}
+
+        found = overclaimed(facts, {"programWords": "program_words"})
+
+        self.assertEqual(len(found), 1)
+        self.assertIn("holds for ['upd7725']", found[0])
+
+    def test_a_shared_fact_reaches_both_parts(self) -> None:
+        shared = self.facts()["aluOperations"]
+
+        self.assertEqual(sorted(shared["appliesTo"]), sorted(upd7725.MODELS))
+
+    def test_a_fact_that_reaches_one_part_says_why(self) -> None:
+        narrow = [
+            name
+            for name, fact in self.facts().items()
+            if len(fact["appliesTo"]) < len(upd7725.MODELS) and "whyNotBoth" not in fact
+        ]
+
+        self.assertEqual(narrow, [])
 
 
 if __name__ == "__main__":
