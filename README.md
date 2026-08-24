@@ -1,540 +1,265 @@
 <div align="center">
 
-<h1>NEC uPD7725 &middot; uPD96050</h1>
+<h1>NEC uPD7725</h1>
 
-<strong>The NEC uPD7725 and uPD96050 digital signal processors, settled one instruction at a time.</strong>
+<strong>A uPD7725 you can drive from a clock, held to NEC's own data book for every flag each ALU operation touches and to a per-encoding corpus for the whole processor state after every instruction.</strong>
 
 <br>
 <br>
 
 [![CI](https://github.com/gufranco/nec-upd7725-python/actions/workflows/ci.yml/badge.svg)](https://github.com/gufranco/nec-upd7725-python/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-100%25%20statement%20%2B%20branch-brightgreen)](#tests)
-[![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue)](pyproject.toml)
+[![Conformance](https://img.shields.io/badge/conformance-1%2C002%2C240%20%2F%201%2C002%2C240-brightgreen)](#is-it-right)
+[![Encodings](https://img.shields.io/badge/encodings-1%2C120%20walked%20field%20by%20field-brightgreen)](#is-it-right)
+[![Coverage](https://img.shields.io/badge/coverage-100%25%20statement%20%2B%20branch-brightgreen)](#working-on-it)
 [![Types](https://img.shields.io/badge/mypy-strict-blue)](pyproject.toml)
+[![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue)](pyproject.toml)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 </div>
 
-<p align="center">
-  <a href="#quick-start">Quick start</a> &nbsp;|&nbsp;
-  <a href="#how-this-is-proved">How this is proved</a> &nbsp;|&nbsp;
-  <a href="#firmware">Firmware</a> &nbsp;|&nbsp;
-  <a href="#the-dsp-1-was-masked-three-times">The DSP-1 revisions</a> &nbsp;|&nbsp;
-  <a href="https://github.com/gufranco/nec-upd7725-python/issues">Issues</a>
-</p>
-
-**2** parts · **4** instruction forms · **1,120** encodings walked field by field · **1,002,240** instructions compared against the reference, **0** disagreements · **603** tests · **100%** statement and branch coverage · **strict** types throughout · **zero** firmware, ever
+**2** parts · **1,002,240** instructions compared and **1,120** encodings walked field by field, **0** disagreements · **623** tests · **100%** statement and branch coverage · no dependencies
 
 ```python
-from upd7725 import Processor
+from upd7725 import Cpu
 
-chip = Processor("upd96050")
-chip.stores.load_program(program)
-chip.stores.load_table(table)
-chip.run(1000)
+cpu = Cpu("upd7725")
+cpu.reset()
+cpu.stores.load_program(bytes([0xC0, 0x0A, 0x81]))
 
-chip.registers.sr.rqm  # True: it is waiting for the host now
+cpu.step()
+
+print(f"{cpu.registers.word('a'):04X}")
 ```
 
----
+```
+002A
+```
 
-## The problem
+One instruction, loading `002A` into the first accumulator. A word here is
+twenty four bits, so a program image is three bytes to the instruction.
 
-These are general-purpose digital signal processors. NEC sold them to anybody who
-needed one, and what a given chip does is decided by the program masked into it
-at the factory rather than by the silicon.
-
-Six coprocessor modules that look like six different parts are one processor with
-six different programs in it. One does three-dimensional maths, one decompresses
-graphics, one draws a road, one steers a race car, one plays shogi. The silicon
-underneath is the same in every case.
-
-Modelling what each of those programs does is one job, and a good one. Modelling
-the thing they all run on is a different job, and it is the one that reaches the
-programs whose behaviour cannot be written down. Nobody can describe the shogi
-program's answers as a set of commands, because its answer is a move and the
-thing that chooses it is a program.
-
-## The solution
-
-Model the processor, and let the program be the program.
-
-That splits the problem in a way that also settles the legal question. The
-processor is settled by walking its own encoding, which needs no program at all,
-so the evidence here is complete with nothing on your disk. A firmware image is
-needed only to run one particular module's program, it belongs to whoever wrote
-it, and it is never carried here.
-
-<table>
-<tr>
-<td width="50%" valign="top">
-
-### Nothing starts clear
-
-Every case fills every store, every register and both flag sets before the
-instruction runs. Silicon powers up holding whatever it holds.
-
-</td>
-<td width="50%" valign="top">
-
-### Every field, not a sample
-
-Every operation against every accumulator and operand, every source and
-destination pair, every pointer step, every branch code including the ones the
-part does not have.
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### Two implementations, one corpus
-
-The package and the reference in `conformance/` are built differently on purpose,
-and both are held to states recorded from a third implementation.
-
-</td>
-<td width="50%" valign="top">
-
-### The whole state, not the answer
-
-Every register, both flag sets, the whole stack, and any scratch word that
-changed. A model that disturbs something it should not have fails here.
-
-</td>
-</tr>
-</table>
-
-## Quick start
-
-### Prerequisites
-
-| Tool | Version | Install |
-|:-----|:--------|:--------|
-| Python | >= 3.12 | [python.org](https://www.python.org/downloads/) |
-
-### Setup
+## Install
 
 ```bash
-git clone https://github.com/gufranco/nec-upd7725-python.git
-cd nec-upd7725-python
+pip install git+https://github.com/gufranco/nec-upd7725-python.git
 ```
 
-### Verify
+Python 3.12 or newer. Nothing else.
 
-```bash
-python3 conformance/instructions.py
+## The interface
 
-#   22,240 instructions, 0 disagreed
-```
+Everything a caller touches. Nothing else is public.
 
-That runs with nothing else on your disk. It is the gate.
+| Call | Does | Returns |
+|:--|:--|:--|
+| `Cpu(model="upd96050", memory=None, **options)` | Builds a part, powered and not yet reset. Stores of its own if none are given | a `Cpu` |
+| `cpu.reset()` | Drives RESET. Costs the four cycles NEC names as the minimum the pin must be held | the `Cpu` |
+| `cpu.step()` | Runs one instruction | cycles it cost, always one |
+| `cpu.run_for(cycles)` | Runs whole instructions until at least that many cycles have passed | cycles actually spent |
+| `cpu.run_until(check, limit=None)` | Steps while `check(cpu)` is false. `limit` bounds the instructions and raises `RunLimit` | the `Cpu` |
+| `cpu.held()` | Whether the part has stopped advancing the program | `bool`, always false: this part has no halt |
+| `cpu.irq()` | Offers the interrupt line and acts on it now. A call to 100H when the enable bit is set | `True` if taken |
+| `identify(image)` | Names an image from its digest, with no machine to run it in | an `Identity` |
+| `describe(model)` | The part behind a name, before building one | a `Model` |
+| `carrying(part)` | The part a given coprocessor module was built on | a `Model` |
 
-### Driving a part
+| Pin or attribute | Is |
+|:--|:--|
+| `cpu.irq_line` | The request line as a level. Edge sensitive: the transition takes the interrupt, and holding it afterwards does not take it again. `cpu.lower_irq()` drops it |
+| `cpu.cycles` / `cpu.steps` | Cycles since construction, across resets; instructions since the last reset |
+| `cpu.registers` | `a` and `b` with their flag sets, `k`, `l`, `m`, `n`, `tr`, `trb`, `dr`, `si`, `so`, the pointers `pc`, `rp`, `dp`, `sp`, the stack, and `sr`, the status word the host reads |
+| `cpu.flags_a` / `cpu.flags_b` | One accumulator's six bits each: `s1`, `s0`, `c`, `z`, `ov1`, `ov0` |
+| `cpu.stores` | `program`, `table` and `scratch`, each as long as the register that addresses it |
+| `cpu.on_cycle` | Called once per cycle, after that cycle's work |
+
+Options: `seed=` fixes the undefined state, `fill=` and `sources=` decide what an unwritten word answers.
+
+**A part arrives powered, not reset**, because no board hands over one that has reset itself. Every register holds rubbish derived from the seed, the program counter included, so stepping it executes rubbish from a rubbish address. Call `reset()` to get a machine that runs a program.
+
+## Running it at a real speed
+
+A part runs at whatever its crystal says. `step()` reports what an instruction cost, so a host can hold the part to a real clock.
 
 ```python
-from upd7725 import Processor
+import time
 
-chip = Processor("upd7725")  # powers up holding rubbish, counter included
-chip.reset()  # the only thing that defines the counter
+from upd7725 import Cpu
 
-chip.step()  # one instruction, returns the cycles it cost
-chip.run_for(1000)  # a budget of cycles, returns what was spent
-chip.run_until(lambda part: part.registers.sr.rqm)  # steps until it asks
-chip.held()  # whether it has stopped advancing the program
+HERTZ = 8_192_000
+SLICE = 0.02
 
-chip.cycles  # cycles since power on, across resets
-chip.steps  # instructions since the last reset
+cpu = Cpu("upd7725")
+cpu.reset()
+per_slice = round(HERTZ * SLICE)
+owed = 0
+
+for _ in range(5):
+    began = time.perf_counter()
+    owed += per_slice
+    owed -= cpu.run_for(owed)
+    time.sleep(max(0.0, SLICE - (time.perf_counter() - began)))
 ```
 
-The constructor never resets, because no board offers a part that arrives reset.
-A part that has been powered and not reset holds a scrambled counter and steps
-rubbish from a rubbish address, which is what the silicon does.
+One instruction is one cycle on this part, so `run_for()` lands exactly on its budget rather than overshooting. Carrying the difference anyway is what keeps the loop identical to the ones in the sibling packages, where an instruction spans several cycles and overshoot is unavoidable.
 
-One instruction is one cycle on this part, so `cycles` and `steps` move together
-until a reset, which returns the counter to zero and leaves the cycle tally
-alone. A reset costs nothing here because the data sheet gives the pin no
-timing, which is recorded in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) rather than
-filled with a guess.
+## Driving it one cycle at a time
 
-For a host driving several parts against one wall, `Clock` advances one cycle at
-a time on a thread, the same way it does in the sibling packages:
+`Clock` stops the part between any two cycles, which is where a board changes what a read will answer.
 
 ```python
-from upd7725 import Clock
+from upd7725 import Clock, Cpu
 
-with Clock(chip) as clock:
-    clock.tick()  # exactly one cycle
-    clock.run_for(100)  # exactly one hundred, no overshoot
+cpu = Cpu("upd7725")
+cpu.reset()
+
+with Clock(cpu) as clock:
+    clock.tick()
+    clock.run_for(6)
+
+print(cpu.registers.pc)
 ```
 
-On this part a cycle boundary and an instruction boundary are the same place, so
-the clock buys the same interface rather than finer resolution. It is much
-slower than `step`, and `step` is the right call when a caller wants speed.
-
-## The instruction set
-
-Two bits of every twenty four choose the form, and there are only four of them.
-
-| Form | What it does |
-|:-----|:-------------|
-| Arithmetic | One of fifteen operations on one of two accumulators, and a move, in that order |
-| Return | The same, and then take the way back off the stack |
-| Branch | Thirty four conditions, two jumps, two calls, and one jump through a register |
-| Load | Sixteen bits into one of sixteen places |
-
-Two things about it are worth knowing before reading the code. Every instruction
-ends with a multiply whether it asked for one or not, because the multiplier is
-wired to two registers and runs continuously. And the arithmetic form performs its
-move **after** its arithmetic, so the value it moves is the one read at the start
-rather than the one just computed.
-
-The flags are the other surprise. There are two overflow bits and two sign bits
-rather than one of each, and the second of each pair is not a copy of the first:
-the second sign freezes once a second overflow is held, so it records the sign a
-value had before the word stopped being able to express it. That pair is how the
-part carries a value through a run of sums that leave the word and come back,
-which is what a fixed-point routine does constantly.
-
-## How this is proved
-
-The evidence is not all worth the same, and the order matters more than the list.
-NEC's own datasheet decides anything NEC printed. The recorded corpus decides
-instruction-level behaviour the datasheet does not specify. Nothing else decides
-anything: an emulator, an FPGA core and a wiki are below both, and this is not a
-philosophical point. Every implementation of this family in the field gives the
-part a sixteen-level program stack. NEC prints four, twice, and draws four slots
-in the block diagram. The corpus here encoded sixteen until the document was read.
-
-[`conformance/hardware.json`](conformance/hardware.json) is that document, pinned
-fact by fact, each figure carrying the sentence it came from, the publication it
-was read out of and the date it was read. Where the document is silent it says so
-rather than guessing: what a fifth consecutive call does is printed nowhere, so
-the wrap to slot zero is recorded as an inference from a two-bit pointer. The
-uPD96050 has no document behind it at all and is marked unverified rather than
-quietly given somebody else's number.
-
-| Part | Evidence | Strength |
-|:-----|:---------|:---------|
-| Every documented width, size and depth | NEC's datasheet, quoted per fact and checked against the model | Manufacturer |
-| Every instruction | 22,240 recorded states, and 1,002,240 compared while the corpus was built | Differential, over the whole state |
-| Every field of every form | 1,120 encodings walked rather than sampled | Exhaustive within each form |
-| Both parts | Every case runs on both, at their own register widths | Differential |
-| The starting state | Filled from the seed, never cleared | Adversarial |
-| The scratch memory | Any word that changed is reported with its address | Total, not spot-checked |
-| The parts themselves | Seven firmware images run 200,000 instructions each | Opt-in, on your own copy |
-| Ground the corpus never covered | The two implementations run live against each other, as far as you give it time for | Differential, unbounded |
-| Every annotation | `mypy` at strict, plus every optional error class the version has | Static, whole register file |
-
-The corpus was recorded from an independent implementation and the two Python
-implementations here are both held to it. That is what keeps the comparison from
-being two guesses agreeing with each other: neither of them decided what the right
-answer is.
-
-```bash
-python3 conformance/instructions.py --record   # regenerate from the reference
-python3 conformance/instructions.py            # replay the recorded states
+```
+7
 ```
 
-The corpus is a fixed size, because a recording has to be stored. Past its last
-case it says nothing, and there is no more of it without recording more. So the
-two implementations are also run against each other live, on cases nobody wrote
-down:
+On this part a cycle boundary and an instruction boundary are the same place, because NEC states it executes an instruction in one external clock cycle. So `Clock` buys the same interface as the sibling packages rather than finer resolution, and `step()` is the right call when a caller wants speed.
 
-```bash
-python3 conformance/differential.py                              # 5,000 cases
-python3 conformance/differential.py --from 90000000 --cases 40000  # far past the corpus
-python3 conformance/differential.py --seconds 60                 # for a minute, then stop
-```
+It is not free. An instruction is an ordinary call stack and Python cannot suspend one, so the clock runs the part on a thread and lets it block where the cycle is spent, which is what ares and bsnes do.
 
-A case is derived from its number rather than drawn from a generator that has to
-be walked, so case ninety million is as reachable as case one and just as
-repeatable. A disagreement prints the case number, the seed, the part, the
-instruction word, the full state each side was left holding, and the two arguments
-that re-run that one case and nothing else. Every run so far has printed none of
-that, so there is no real example of it to show here.
+## Models
 
-This is worth less than the corpus, and it is worth saying so. Agreement between
-two implementations in one repository is not evidence about hardware. The useful
-direction is disagreement: it names a case, and the case is then settled against
-the recordings, which is where the authority lives. CI runs a slice of it on every
-push and the schedule runs up to two million cases a week, starting somewhere
-different each time, so over a year it walks ground the gate never sees.
+One instruction set, two sizes. Every store is exactly as long as the register that addresses it, which is why the two differ in capacity and in nothing else this package can measure.
 
-## Firmware
+| Build it with | Program store | Table | Scratch | Stack | Modules built on it |
+|:--|--:|--:|--:|--:|:--|
+| `Cpu("upd7725")` | 2048 x 24 bits | 1024 x 16 | 256 x 16 | 4 | DSP-1, DSP-1A, DSP-1B, DSP-2, DSP-3, DSP-4 |
+| `Cpu("upd96050")` | 16384 x 24 bits | 2048 x 16 | 2048 x 16 | 8 | ST010, ST011 |
 
-Nothing in this repository is firmware, and nothing ever will be. Every one of
-those programs belongs to whoever wrote it.
+The last column is the one to be careful with. NEC published a data sheet and a data book for the smaller part; **no document for the larger one was located**, so its four figures rest on secondary sources, it carries `verified: false` in the record, and the gap is written up in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).
 
-What is here is [`artifacts.manifest.json`](artifacts.manifest.json): what each
-image is, how long it is, and the digest that identifies it. A digest names a file
-and reconstructs nothing.
+Each answers to the numbers NEC sold it under. Case and separators do not matter.
 
-```bash
-export UPD7725_FIRMWARE_DIR=~/nec-upd7725-python/firmware
-python3 conformance/against_firmware.py
+| Build it with | Also answers to |
+|:--|:--|
+| `Cpu("upd7725")` | `7725`, `upd77c25`, `77c25`, `necupd7725` |
+| `Cpu("upd96050")` | `96050`, `upd96050gf`, `necupd96050` |
 
-#   dsp1   DSP-1   on upd7725: 200,000 instructions, still inside its own program store
+A part number nothing here implements is refused rather than resolved to something close, so `Cpu("upd7720")` raises `UnknownModelError` instead of handing back a part missing instructions the caller asked for.
 
-#   st011  ST011   on upd96050: 200,000 instructions, still inside its own program store
-```
+## Reading without running
 
-Without one, every check that needs it reports as skipped rather than as passed,
-including in CI, where the run says so out loud. A check that cannot run is not a
-check that succeeded.
-
-A file that does not match is diagnosed rather than merely refused:
+An image on disk has nothing but its bytes, so identifying and running are separate halves.
 
 ```python
 from upd7725 import firmware
 
-firmware.identify(open("mystery.bin", "rb").read())
-
-# Unrecognised: this is 8192 bytes, the length of dsp1, dsp1b, dsp2, dsp3, dsp4,
-
-# but its content is altered: its sha256 is ... and no accepted revision has
-
-# that. A file of the right length with the wrong content is usually a different
-
-# revision than the one it is named after, or a bad dump
+identity = firmware.identify(open("dsp1b.bin", "rb").read())
+print(identity.part, identity.revision, identity.processor)
 ```
 
-## The DSP-1 was masked three times
+```
+dsp1b DSP-1B upd7725
+```
 
-The DSP-1, the DSP-1A and the DSP-1B are three different programs, and the last
-corrected the first. That is usually asserted. Here it is measured, by running
-both images on this processor and asking them the same questions:
+An image whose length is right but whose content is not raises `Corrupt` with the digest it actually has, rather than loading something that will run wrong. This package carries no image and never will: each belongs to whoever wrote it. [`artifacts.manifest.json`](artifacts.manifest.json) says what each one is and the digest that identifies it, so a copy you already own can be confirmed before it is run.
+
+## Nothing starts clean
+
+Registers and stores hold a reproducible scrambled pattern. There is no parameter that clears the registers and there will not be one: a part that has been powered and not reset holds rubbish on real silicon, and a model that starts at zero turns a missing reset into a passing test.
+
+```python
+from upd7725 import Cpu
+
+powered = Cpu("upd7725")
+print(hex(powered.registers.pc), powered.cycles)
+print(hex(Cpu("upd7725", seed=7).registers.pc))
+print(Cpu("upd7725", seed=7).registers.pc == Cpu("upd7725", seed=7).registers.pc)
+```
+
+```
+0x4eb 0
+0x438
+True
+```
+
+Rubbish derived from the seed, the same every time, and not zero. The part has spent nothing because nothing has driven RESET yet.
+
+## Is it right
+
+Every encoding is walked field by field and every instruction is compared against a recorded corpus that states the whole processor state after each one, not merely the answer: **1,002,240 instructions, no disagreements**. Two independent implementations are stepped against that one corpus.
 
 ```bash
-python3 conformance/against_firmware.py
-
-#   the two masks of the DSP-1 answer differently on 217 of 256 command bytes
+python conformance/instructions.py
+python conformance/differential.py --from 70000000 --cases 4000
+python conformance/alu_flags.test.py
 ```
 
-Nearly half the microcode differs between them: 993 of 2,048 instruction words and
-537 of 1,024 table words. Most arguments still produce the same answer, which is
-why the disagreement took a search to find rather than a guess: whatever the later
-mask corrected, the earlier one gets right for the common case.
+The first runs with nothing else on your disk. It is the gate.
 
-## Models
+Where a document and the corpus disagree, both are kept. [`conformance/hardware.json`](conformance/hardware.json) holds every fact taken from a document with the sentence it came from and the page. [`conformance/divergences.json`](conformance/divergences.json) holds every place two sources part, with what would settle it.
 
-| Model | Counter | Table pointer | Scratch pointer | Also answers to | Parts that ran on it |
-|:------|--------:|--------------:|----------------:|:----------------|:---------------------|
-| `upd7725` | 11 bits | 10 | 8 | `7725`, `upd77c25`, `77c25`, `necupd7725` | DSP-1, DSP-1A, DSP-1B, DSP-2, DSP-3, DSP-4 |
-| `upd96050` | 14 bits | 11 | 11 | `96050`, `upd96050gf`, `necupd96050` | ST010, ST011 |
+The flags are the part worth naming. The 1987 data sheet is Advance Product Information and states no flag rules, so they rested on the corpus alone until NEC's 1989 data book turned up: its Table 6 gives, for all sixteen ALU operations, which flags are affected, which are reset, which are held and which NEC declines to define. This model agrees with it on every cell, and `conformance/alu_flags.test.py` drives all sixteen against a run.
 
-Every store is exactly as long as the register that addresses it. Both are built
-the same way, by name or by any of the names beside it:
+**Four questions remain** where being faithful is a claim rather than a measurement, and each names the measurement that would close it: [`OPEN-QUESTIONS.md`](OPEN-QUESTIONS.md). One cannot be closed by anyone here: no NEC document for the larger part has been found, so everything asserted about it rests on secondary sources, and secondary sources for this family are emulators.
 
-```python
-from upd7725 import Processor
+## Working on it
 
-Processor("upd7725")
-
-Processor("upd96050")
-
-Processor("upd77c25")  # the same part under the number NEC printed on it
+```bash
+python -m coverage erase
+for file in $(find upd7725 conformance -name '*.test.py' | sort); do
+  python -m coverage run -a "$file"
+done
+python -m coverage report
 ```
 
-Asking for a part this package does not have says why rather than only that:
+Tests sit beside the module they cover, named `<module>.test.py`. Coverage is 100% of statements and branches, enforced. Types are `mypy` at strict. Commits follow [Conventional Commits](https://www.conventionalcommits.org/), and releases are cut by [semantic-release](https://semantic-release.gitbook.io/).
 
-```python
-from upd7725 import Processor
-
-Processor("upd7720")
-
-# UnknownModelError: upd7720 is not modelled here: the uPD7720 is the earlier
-
-# part of the same family, and the reference this package is measured against
-
-# does not implement it; a model of it here would have nothing behind it
-```
-
-## Project structure
+[`AGENTS.md`](AGENTS.md) is the document for an agent working here. [`FAMILY.md`](FAMILY.md) is the standard this repository shares with [zilog-z80-python](https://github.com/gufranco/zilog-z80-python) and [mos65xx-python](https://github.com/gufranco/mos65xx-python), kept identical in all three.
 
 ```
 upd7725/
-  __init__.py     the package, and the part chosen at construction
-  core.py         fetch, and the four instruction forms
-  registers.py    the register file, at the widths the part has
-  flags.py        the six bits each accumulator carries
-  memory.py       the three stores, at their own widths and lengths
-  ports.py        the two addresses the host sees, and the handshake
-  firmware.py     an image its owner supplies, identified before it is run
-  models.py       the two parts, and which coprocessor module ran on each
+  core.py          the processor
+  clock.py         driving it one cycle at a time
+  models.py        the two parts, by name and alias
+  memory.py        the three stores, each at its own width
+  registers.py     the register file, and the status word
+  flags.py         one accumulator's six bits
+  ports.py         the two addresses the host sees, and the handshake
+  firmware.py      naming an image from its digest
 conformance/
-  reference.py        an independent implementation, built to a different shape
-  oracle.py           one case through it, in the shape the recordings are in
-  instructions.py     the runner that settles every instruction
-  differential.py     the two implementations against each other, unbounded
-  against_firmware.py the opt-in runner that needs an image you already own
-  hardware.json       what NEC says the part is, quoted fact by fact
-  corpus.json         22,240 recorded states
-  pinned.json         where they came from, and every time they were retaken
-firmware/         where your own copies go, and nothing is ever committed
+  pinned.json      which corpus, from which reference, at which commit
+  instructions.py  every encoding, walked field by field
+  differential.py  model against reference, on cases the corpus does not cover
+  alu_flags.test.py  every ALU operation against the flag matrix NEC printed
+  hardware.json    what NEC printed, fact by fact
+  divergences.json where sources part
 ```
-
-Each module has its tests beside it as `<module>.test.py`, so a module and the cases that pin its behaviour are read together.
-
-## When something is wrong
-
-```bash
-python3 -m upd7725.doctor
-```
-
-It looks at this machine and prints what is actually there: the Python it is
-running on, both processors and the shape of each, where images are looked for,
-what the manifest declares, and every image present with its SHA-256.
-
-That last part settles most reports on its own. Two people running the same part
-and getting different answers are almost always running different files, and this
-shows it in one glance rather than after a round trip.
-
-Nothing is hidden. A check that fails says what it saw, and a check that itself
-throws is reported as what it threw rather than taking the report down with it.
-Paste all of it into an issue.
-
-## Tests
-
-```bash
-for f in upd7725/*.test.py conformance/*.test.py; do python3 "$f"; done
-```
-
-| Suite | File | Covers |
-|:------|:-----|:-------|
-| Instruction set | [`upd7725/core.test.py`](upd7725/core.test.py) | Every form, source, destination, operation, pointer step and branch |
-| Flags | [`upd7725/flags.test.py`](upd7725/flags.test.py) | The six bits, and the two that do not follow the other two |
-| Registers | [`upd7725/registers.test.py`](upd7725/registers.test.py) | Widths, wrapping, signedness, the status word |
-| Memory | [`upd7725/memory.test.py`](upd7725/memory.test.py) | Word widths, byte halves, loading, computed initial contents |
-| Ports | [`upd7725/ports.test.py`](upd7725/ports.test.py) | The handshake, both transfer widths, waiting |
-| Firmware | [`upd7725/firmware.test.py`](upd7725/firmware.test.py) | The manifest, identification, diagnosis, loading |
-| Reference | [`conformance/reference.test.py`](conformance/reference.test.py) | The independent implementation, on its own |
-| Oracle | [`conformance/oracle.test.py`](conformance/oracle.test.py) | That it reproduces every recorded state |
-| Corpus | [`conformance/instructions.test.py`](conformance/instructions.test.py) | Case generation, coverage of the encoding, replay |
-| The datasheet | [`conformance/hardware.test.py`](conformance/hardware.test.py) | Every documented width, size and depth against the model, and that each recorded fact carries its quote |
-| Differential | [`conformance/differential.test.py`](conformance/differential.test.py) | The unbounded sweep: case derivation, time budget, reporting, and both implementations live |
-| Firmware run | [`conformance/against_firmware.test.py`](conformance/against_firmware.test.py) | Booting each image, and the comparison between masks |
-
-Coverage is enforced at 100% of statements and branches by [`pyproject.toml`](pyproject.toml), so a new branch without a test fails the build rather than quietly lowering the number.
-
-## Development
-
-| Command | Description |
-|:--------|:------------|
-| `ruff format .` | Format |
-| `ruff check .` | Lint |
-| `python3 -m coverage run -a <file>` | Run one test file under coverage |
-| `python3 -m coverage report` | Coverage, which fails below 100% |
-| `mypy` | Types, at strict, with every optional error class on |
-| `python3 conformance/instructions.py --record --retake` | Retake the corpus, which only a corrected hardware fact justifies |
-| `python3 conformance/instructions.py` | Replay the recorded states |
-| `python3 conformance/differential.py` | Run the two implementations against each other |
-| `python3 conformance/speed.py` | Measure throughput against the floor, uninstrumented |
-| `python3 conformance/against_firmware.py` | Run whatever images are on your disk |
-| `pnpm run format` | Format every JSON file |
-
-## Project conventions
-
-| Convention | Source |
-|:-----------|:-------|
-| Commit format | [Conventional Commits](https://www.conventionalcommits.org/) |
-| Releases | [semantic-release](https://semantic-release.gitbook.io/), driven by [`.releaserc.json`](.releaserc.json) |
-| Lint and format | [Ruff](https://docs.astral.sh/ruff/), configured in [`pyproject.toml`](pyproject.toml) |
-| JSON formatting | [Prettier](https://prettier.io/), configured in [`.prettierrc.json`](.prettierrc.json) |
-| Test layout | `<module>.test.py` beside the module it covers |
-| Types | [mypy](https://mypy.readthedocs.io/) at strict, configured in [`pyproject.toml`](pyproject.toml) |
-
-## Versioning
-
-This project follows [Semantic Versioning](https://semver.org/), and every release is tagged from `main` by semantic-release. See [releases](https://github.com/gufranco/nec-upd7725-python/releases).
-
-## FAQ
-
-<details>
-<summary><strong>Why model the processor when the microcodes are already modelled elsewhere?</strong></summary>
-<br>
-
-Because two of them cannot be. A behavioural model works when a part's answers are
-functions of its arguments, which is true of the DSP-1's projections and the
-ST010's navigation. It is not true of the ST011, whose answer is a shogi move; the
-thing that chooses it is a program, and the only honest way to reproduce a program
-is to run it. The processor is what makes that possible without inventing a shogi
-engine and calling it a model of somebody's part.
-
-</details>
-
-<details>
-<summary><strong>Is this useful without a firmware image?</strong></summary>
-<br>
-
-The evidence is. Every instruction is settled by generating instruction words
-rather than quoting a program, so the gate runs and passes on a machine with
-nothing else on it. What needs an image is running a particular module's program,
-which is the one thing nobody else can give you.
-
-</details>
-
-<details>
-<summary><strong>Why is there a second implementation in `conformance/`?</strong></summary>
-<br>
-
-So the comparison has two sides. The package is written to be read: named
-conditions, separate methods, flag rules in their own module. The one in
-`conformance/` dispatches through tables instead. Implementations that share a
-shape tend to share a mistake, and these two do not share one. Neither of them
-decides what the right answer is, either: both are held to states recorded from a
-third implementation before either existed.
-
-</details>
-
-<details>
-<summary><strong>Will the firmware ever be included?</strong></summary>
-<br>
-
-No. Not as files, not as fragments, not encoded, not generated. The manifest
-identifies images and reconstructs nothing, and that is the furthest this goes.
-
-</details>
 
 ## References
 
-This repository carries no documents. Every claim about the uPD77C25 is traced to the data sheet below, listed here so a reader can fetch the same file and check the same page. The row gives the page count and the first sixteen characters of the file's SHA-256, because vendor links move and a link that has rotted into a different scan is easy to follow without noticing. Compute the full digest with `shasum -a 256 <file>`.
+This repository carries no documents. Every claim is traced to something published elsewhere, listed here so a reader can fetch the same file and check the same page. Each row gives the page count and the first sixteen characters of the file's SHA-256, because vendor links move and a link that has rotted into a different scan is easy to follow without noticing. Compute the full digest with `shasum -a 256 <file>`.
 
-The document is copyrighted and not redistributable, which is why it is not in this repository. Individual sentences are quoted in [`conformance/hardware.json`](conformance/hardware.json) with the page they are printed on.
+Every manufacturer document below is copyrighted and not redistributable, which is why none is in this repository. Individual sentences are quoted in [`conformance/hardware.json`](conformance/hardware.json) with the page they are printed on.
 
 | Document | Date | Pages | SHA-256 | Redistributable |
 |:---------|:-----|------:|:--------|:----------------|
 | [NEC Electronics, *uPD77C25/uPD77P25 Digital Signal Processor Data Sheet*, Advance Product Information](https://www.cryptomuseum.com/df/telefunken/e2000/files/uPD77C25.pdf) | 1987-08 | 36 | `d043be18d5cd21d9…` | No |
 | [NEC Electronics, *Digital Signal Processor and Speech Processor Products Data Book*, document 50052](https://bitsavers.trailing-edge.com/components/nec/_dataBooks/1989_DSP_and_Speech_Products_Data_Book.pdf) | 1989 | 388 | `2f0190523de99938…` | No |
 
-The scan is a photograph of a printed book, so it was read twice: once from page images rendered at 300 dots per inch, and once from the text layer the file already carried. Neither is reliable alone. The embedded layer prints `lhe` for `the` and `OP` for `DP`; the image read misses a faint line outright. A page recorded beside a quote is one both readings agree on, or one confirmed by reading that page directly.
+The data book is the fuller of the two. The 1987 sheet is Advance Product Information and states no flag rules; the data book's Table 6 gives, for all sixteen ALU operations, which flags are affected, which are reset, which are held and which NEC declines to define. It numbers pages per section, as 2-33, so a fact read from it names the section.
 
-The printed page number is one less than the position in the file, so printed page 1 is the second page.
-
-The data book is the fuller of the two. The 1987 sheet is Advance Product Information and
-states no flag rules; the data book's Table 6 gives, for all sixteen ALU operations, which
-flags are affected, which are reset, which are held and which NEC declines to define. It
-numbers pages per section, as 2-33, so a fact read from it names the section.
+Both are photographs of printed books, so each is read twice: once from the page images and once from the text layer the file carries. Neither is reliable alone. The 1987 layer prints `lhe` for `the` and an `a-bit data pointer` where the page says `8-bit`, and the image read misses a faint line outright. A page recorded beside a quote is one both readings agree on, or one confirmed by reading that page directly.
 
 **No document for the uPD96050 was located.** Everything asserted about that part rests on secondary sources, it carries `verified: false` in the record, and the gap is written up in [`OPEN-QUESTIONS.md`](OPEN-QUESTIONS.md).
 
-## Contributing
-
-Measurements first. If you have a part, a module, or a machine this has not
-been run against, the most useful thing you can send is a run and what it found,
-especially a disagreement. [CONTRIBUTING.md](CONTRIBUTING.md) has the gates a
-change is expected to pass, [SECURITY.md](SECURITY.md) says what belongs in a
-private report, and the [Code of Conduct](CODE_OF_CONDUCT.md) applies wherever
-this project is discussed.
-
-Never attach a copyrighted image or a game, and never link to somewhere one can
-be downloaded. A digest identifies a file without carrying it.
+| Source | Used for |
+|:-------|:---------|
+| [ares-emulator/ares](https://github.com/ares-emulator/ares) | The reference the corpus was recorded from. Commit in [`conformance/pinned.json`](conformance/pinned.json) |
 
 ## Citing this
 
-[CITATION.cff](CITATION.cff) is kept in step with the released version by the
-same script that stamps the package, so the version it names is the version that
-shipped. GitHub renders it as a Cite this repository button.
+[CITATION.cff](CITATION.cff) is kept in step with the released version by the same script that stamps the package, so the version it names is the version that shipped. GitHub renders it as a Cite this repository button.
 
 ## License
 

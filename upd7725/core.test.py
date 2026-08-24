@@ -676,20 +676,102 @@ class BoundedRunTest(unittest.TestCase):
     def test_a_run_stops_when_the_condition_holds(self) -> None:
         found = a_processor()
 
-        spent = found.run_until(lambda chip: chip.registers.pc >= 3)
+        returned = found.run_until(lambda chip: chip.registers.pc >= 3)
 
-        self.assertEqual(spent, 3)
+        self.assertIs(returned, found)
+        self.assertEqual(found.steps, 3)
 
     def test_a_condition_already_true_costs_nothing(self) -> None:
         found = a_processor()
 
-        self.assertEqual(found.run_until(lambda chip: True), 0)
+        found.run_until(lambda chip: True)
+
+        self.assertEqual(found.steps, 0)
+
+    def test_an_unbounded_run_needs_no_limit(self) -> None:
+        found = a_processor()
+
+        found.run_until(lambda chip: chip.steps >= 4)
+
+        self.assertEqual(found.steps, 4)
 
     def test_a_condition_that_never_holds_gives_up_rather_than_hanging(self) -> None:
         found = a_processor()
 
         with self.assertRaises(errors.RunLimit):
             found.run_until(lambda chip: False, limit=5)
+
+
+class InterruptTest(unittest.TestCase):
+    """That the pin is a line the part reads, not a method that acts."""
+
+    def enabled(self) -> "core.Core":
+        found = a_processor()
+        found.registers.sr.ei = True
+        return found
+
+    def test_a_request_is_refused_while_the_enable_bit_is_clear(self) -> None:
+        found = a_processor()
+
+        self.assertFalse(found.irq())
+
+    def test_and_the_counter_stays_where_it_was(self) -> None:
+        found = a_processor()
+        before = found.registers.pc
+
+        found.irq()
+
+        self.assertEqual(found.registers.pc, before)
+
+    def test_an_enabled_part_takes_it(self) -> None:
+        found = self.enabled()
+
+        self.assertTrue(found.irq())
+
+    def test_and_continues_at_the_address_the_document_names(self) -> None:
+        found = self.enabled()
+
+        found.irq()
+
+        self.assertEqual(found.registers.pc, 0x100)
+
+    def test_the_counter_it_was_about_to_run_from_is_pushed(self) -> None:
+        found = self.enabled()
+        found.registers.pc = 0x123
+        slot = found.registers.sp
+
+        found.irq()
+
+        self.assertEqual(found.registers.stack[slot], 0x123)
+
+    def test_taking_it_costs_the_one_cycle_an_instruction_costs(self) -> None:
+        found = self.enabled()
+        before = found.cycles
+
+        found.irq()
+
+        self.assertEqual(found.cycles - before, 1)
+
+    def test_a_line_already_raised_is_not_a_fresh_request(self) -> None:
+        found = self.enabled()
+        found.irq()
+
+        self.assertFalse(found.irq())
+
+    def test_but_lowering_it_first_makes_the_next_one_fresh(self) -> None:
+        found = self.enabled()
+        found.irq()
+
+        found.lower_irq()
+
+        self.assertTrue(found.irq())
+
+    def test_a_refusal_leaves_the_line_raised_as_a_device_would(self) -> None:
+        found = a_processor()
+
+        found.irq()
+
+        self.assertTrue(found.irq_line)
 
 
 if __name__ == "__main__":

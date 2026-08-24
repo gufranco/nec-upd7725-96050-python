@@ -68,10 +68,10 @@ class Model:
     def scratch_words(self) -> int:
         return 1 << self.pointer_bits
 
-    def build(self, **options: Any) -> Core:
+    def build(self, *arguments: Any, **options: Any) -> Core:
         from .core import Core
 
-        return Core(self, **options)
+        return Core(self, *arguments, **options)
 
     @override
     def __repr__(self) -> str:
@@ -86,7 +86,7 @@ _CATALOGUE = (
     Model(
         name="upd7725",
         summary=(
-            "The NEC uPD7725, the part Nintendo shipped under the DSP name. Two "
+            "The NEC uPD7725, the smaller of the two. Two "
             "thousand and forty eight instructions, a table of a thousand and "
             "twenty four constants, and two hundred and fifty six words of scratch "
             "shared with the console a byte at a time."
@@ -101,9 +101,9 @@ _CATALOGUE = (
     Model(
         name="upd96050",
         summary=(
-            "The NEC uPD96050, the part Seta shipped under the ST name. Eight times "
+            "The NEC uPD96050, the larger of the two. Eight times "
             "the program store of the smaller one, twice the table, and eight times "
-            "the scratch, which is where the console leaves its questions."
+            "the scratch, which is where the host leaves its questions."
         ),
         counter_bits=14,
         table_bits=11,

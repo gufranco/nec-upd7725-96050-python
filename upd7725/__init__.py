@@ -1,8 +1,8 @@
 """The NEC uPD7725 and uPD96050 digital signal processors.
 
-    from upd7725 import Processor
+    from upd7725 import Cpu
 
-    chip = Processor("upd96050").reset()
+    chip = Cpu("upd96050").reset()
     chip.stores.load_program(program)
     chip.stores.load_table(table)
     chip.run_for(1000)
@@ -40,9 +40,15 @@ if TYPE_CHECKING:  # pragma: no cover
 DEFAULT_MODEL = "upd96050"
 
 
-def Processor(model: str = DEFAULT_MODEL, **options: Any) -> Core:  # noqa: N802
-    """A processor of the named part, however the name happens to be written."""
-    return describe(model).build(**options)
+def Cpu(  # noqa: N802
+    model: str = DEFAULT_MODEL, memory: Any = None, **options: Any
+) -> Core:
+    """A part of the named model, however the name happens to be written.
+
+    Named and shaped the way the sibling packages name and shape theirs, so a
+    caller moving between them relearns nothing the hardware does not force.
+    """
+    return describe(model).build(memory, **options)
 
 
 __all__ = [
@@ -50,7 +56,7 @@ __all__ = [
     "Clock",
     "ClockClosed",
     "Core",
-    "Processor",
+    "Cpu",
     "RunLimit",
     "UnknownModelError",
     "__version__",

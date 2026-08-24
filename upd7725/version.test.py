@@ -10,13 +10,13 @@ from upd7725 import version
 
 class ConstructionTest(unittest.TestCase):
     def test_a_processor_is_built_from_the_name_of_a_part(self) -> None:
-        self.assertEqual(upd7725.Processor("upd7725").model.name, "upd7725")
+        self.assertEqual(upd7725.Cpu("upd7725").model.name, "upd7725")
 
     def test_the_default_part_is_the_larger_one(self) -> None:
-        self.assertEqual(upd7725.Processor().model.name, upd7725.DEFAULT_MODEL)
+        self.assertEqual(upd7725.Cpu().model.name, upd7725.DEFAULT_MODEL)
 
     def test_options_reach_the_processor_that_gets_built(self) -> None:
-        self.assertEqual(upd7725.Processor(fill=0xBEEF).stores.scratch[0], 0xBEEF)
+        self.assertEqual(upd7725.Cpu(fill=0xBEEF).stores.scratch[0], 0xBEEF)
 
 
 class VersionTest(unittest.TestCase):

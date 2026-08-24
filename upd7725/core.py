@@ -43,8 +43,13 @@ what the part does internally, which the document does not give. The distinction
 is recorded beside the figure in hardware.json.
 """
 
-DEFAULT_LIMIT = 1_000_000
-"""How long a bounded run waits before deciding the condition will never hold."""
+INTERRUPT_VECTOR = 0x100
+"""Where the part goes when it takes the interrupt.
+
+"A low-to-high transition on this pin executes a call instruction to location
+100H, if interrupts were previously enabled." A call, so the counter it was
+about to run from is pushed and a return comes back to it.
+"""
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
@@ -243,14 +248,23 @@ class Core:
     cycles: int
     steps: int
     on_cycle: Callable[[], None] | None
+    irq_line: bool
 
     def __init__(
         self,
         model: Model,
+        memory: Stores | None = None,
         fill: int | None = 0,
         sources: dict[str, Callable[[int], int]] | None = None,
         seed: int = UNSET_SEED,
     ) -> None:
+        """A part of that model, optionally sharing stores a caller already has.
+
+        The second parameter is called memory and is positional, so building one
+        of these reads the same as building the processors in the sibling
+        packages. Passing none gives the part its own stores, which is what a
+        chip does: the three of them are on the die.
+        """
         self.model = model
         self.registers = Registers(
             counter_bits=model.counter_bits,
@@ -258,18 +272,23 @@ class Core:
             pointer_bits=model.pointer_bits,
             stack_levels=model.stack_levels,
         )
-        self.stores = Stores(
-            program_words=model.program_words,
-            table_words=model.table_words,
-            scratch_words=model.scratch_words,
-            fill=fill,
-            sources=sources,
+        self.stores = (
+            Stores(
+                program_words=model.program_words,
+                table_words=model.table_words,
+                scratch_words=model.scratch_words,
+                fill=fill,
+                sources=sources,
+            )
+            if memory is None
+            else memory
         )
         self.flags_a = Flags()
         self.flags_b = Flags()
         self.cycles = 0
         self.steps = 0
         self.on_cycle = None
+        self.irq_line = False
         self.power_on(seed)
 
     def power_on(self, seed: int = UNSET_SEED) -> None:
@@ -330,6 +349,38 @@ class Core:
         if self.on_cycle is not None:
             self.on_cycle()
 
+    def irq(self) -> bool:
+        """Offer the interrupt line, and report whether the part took it.
+
+        The pin is edge sensitive: the document says a low-to-high transition
+        executes the call, so a line already high is not a fresh request and this
+        returns false. That is the family's rule about inputs being levels rather
+        than events, and it is the part's rule too, because a device holding its
+        request high does not get served twice.
+
+        Refused while the enable bit is clear, which is what "if interrupts were
+        previously enabled" means. A refusal costs nothing and leaves the line
+        raised, so the next lowering and raising is a new request.
+
+        Taking it is a call: the counter is pushed and execution continues at
+        100H. It costs one cycle, because every instruction on this part costs
+        one and the document calls this one an executed call instruction.
+        """
+        raised = not self.irq_line
+        self.irq_line = True
+        if not raised or not self.registers.sr.ei:
+            return False
+        registers = self.registers
+        registers.stack[registers.sp] = registers.pc
+        registers.sp += 1
+        registers.pc = INTERRUPT_VECTOR
+        self.spend()
+        return True
+
+    def lower_irq(self) -> None:
+        """Drop the interrupt line, so raising it again is a fresh request."""
+        self.irq_line = False
+
     def held(self) -> bool:
         """Whether the part has stopped advancing the program.
 
@@ -385,19 +436,26 @@ class Core:
             spent += self.step()
         return spent
 
-    def run_until(self, check: Callable[[Core], bool], limit: int = DEFAULT_LIMIT) -> int:
-        """Step until the condition holds, and report the cycles it took.
+    def run_until(self, check: Callable[[Core], bool], limit: int | None = None) -> Core:
+        """Step until the condition holds.
 
-        The limit is a guard against a program that never reaches it, and it
-        raises rather than returning quietly, because a caller who asked to run
-        until something happens has no reason to check a count.
+        `limit` bounds the number of instructions and raises when it is reached.
+        Without one this runs as long as the part would, which for a program
+        that never satisfies the condition is forever. That is what the silicon
+        does, so it is what happens here unless a caller asks for otherwise.
+
+        One instruction is one cycle on this part, so a bound on instructions
+        and a bound on cycles are the same number. The signature still counts
+        instructions, because that is what the two sibling cores count and a
+        caller moving between them should not have to know which.
         """
-        spent = 0
+        taken = 0
         while not check(self):
-            if spent >= limit:
-                raise RunLimit(f"still not met after {spent} cycles")
-            spent += self.step()
-        return spent
+            self.step()
+            taken += 1
+            if limit is not None and taken >= limit:
+                raise RunLimit(f"gave up after {taken} instructions at {self.registers.pc:03X}")
+        return self
 
     def _multiply(self) -> None:
         product = self.registers.k * self.registers.l

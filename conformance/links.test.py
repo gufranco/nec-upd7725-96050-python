@@ -101,7 +101,19 @@ class ReadingTest(unittest.TestCase):
         self.assertEqual(found, ["https://example.com/c"])
 
     def test_the_readme_of_this_project_names_addresses_to_check(self) -> None:
-        self.assertGreater(len(links.addresses()), 10)
+        self.assertGreater(len(links.addresses()), 5)
+
+    def test_and_every_document_the_references_pin_is_one_of_them(self) -> None:
+        """The rows this survey exists for.
+
+        A count is arbitrary and drifts with the badges. What matters is that
+        every document a claim rests on is an address somebody will be told
+        about when it stops answering.
+        """
+        found = links.addresses()
+        pinned = [one for one in found if "cryptomuseum" in one or "bitsavers" in one]
+
+        self.assertEqual(len(pinned), 2)
 
     def test_and_every_one_of_them_is_an_address(self) -> None:
         wrong = [one for one in links.addresses() if not one.startswith("https://")]
