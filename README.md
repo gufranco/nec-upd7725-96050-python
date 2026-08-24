@@ -23,7 +23,7 @@
   <a href="https://github.com/gufranco/nec-upd7725-python/issues">Issues</a>
 </p>
 
-**2** parts · **4** instruction forms · **1,120** encodings walked field by field · **1,002,240** instructions compared against the reference, **0** disagreements · **378** tests · **100%** statement and branch coverage · **strict** types throughout · **zero** firmware, ever
+**2** parts · **4** instruction forms · **1,120** encodings walked field by field · **1,002,240** instructions compared against the reference, **0** disagreements · **558** tests · **100%** statement and branch coverage · **strict** types throughout · **zero** firmware, ever
 
 ```python
 from upd7725 import Processor
@@ -272,13 +272,25 @@ mask corrected, the earlier one gets right for the common case.
 
 ## Models
 
-| Model | Counter | Table pointer | Scratch pointer | Parts that ran on it |
-|:------|--------:|--------------:|----------------:|:---------------------|
-| `upd7725` | 11 bits | 10 | 8 | DSP-1, DSP-1A, DSP-1B, DSP-2, DSP-3, DSP-4 |
-| `upd96050` | 14 bits | 11 | 11 | ST010, ST011 |
+| Model | Counter | Table pointer | Scratch pointer | Also answers to | Parts that ran on it |
+|:------|--------:|--------------:|----------------:|:----------------|:---------------------|
+| `upd7725` | 11 bits | 10 | 8 | `7725`, `upd77c25`, `77c25`, `necupd7725` | DSP-1, DSP-1A, DSP-1B, DSP-2, DSP-3, DSP-4 |
+| `upd96050` | 14 bits | 11 | 11 | `96050`, `upd96050gf`, `necupd96050` | ST010, ST011 |
 
-Every store is exactly as long as the register that addresses it. Asking for a
-part this package does not have says why rather than only that:
+Every store is exactly as long as the register that addresses it. Both are built
+the same way, by name or by any of the names beside it:
+
+```python
+from upd7725 import Processor
+
+Processor("upd7725")
+
+Processor("upd96050")
+
+Processor("upd77c25")  # the same part under the number NEC printed on it
+```
+
+Asking for a part this package does not have says why rather than only that:
 
 ```python
 from upd7725 import Processor

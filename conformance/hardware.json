@@ -77,8 +77,9 @@
         },
         "dataPointerBits": {
           "value": 8,
-          "quote": "addressed through an 8-bit data pointer (DP register)",
-          "page": 8
+          "quote": "The data RAM is 256 x 16-bit words and is addressed through an 8-bit data pointer (DP register).",
+          "page": 8,
+          "note": "The same sentence the data RAM size comes from, quoted whole rather than cut down to the clause about the pointer, so a reader finds it on the page as it is printed."
         },
         "stackLevels": {
           "value": 4,
@@ -162,16 +163,19 @@
             "P0": 0
           },
           "quote": "Figure 3. Status Register (SR): bit 15 RQM, 14 USF1, 13 USF0, 12 DRS, 11 DMA, 10 DRC, 9 SOC, 8 SIC, 7 EI, bits 6 to 2 zero, 1 P1, 0 P0",
+          "assembled": true,
           "page": 11,
           "note": "Checked against both implementations here and they already matched, bit for bit."
         },
         "requestBitSemantics": {
           "quote": "RQM (Request for Master): A read or write form DR to IDB sets RQM = 1, An external read (write) resets RQM = 0.",
+          "assembled": true,
           "page": 12,
           "note": "The part raises it when its own program touches the data register; the console clears it by reading or writing. Checked against the implementation here and it already matched."
         },
         "transferHalfSemantics": {
           "quote": "DRS (DR Status): For 16-bit DR transfers (DRC = 0), DRS = 1 after first 8 bits have been transferred. DRS = 0 after all 16 bits have been transferred.",
+          "assembled": true,
           "page": 12,
           "note": "Already matched."
         },
@@ -193,6 +197,9 @@
         "instructionCycleNanoseconds": 244,
         "clocksPerInstruction": 2,
         "quote": "Instruction cycle   122 ns ... 244 ns",
+        "assembled": true,
+        "page": 3,
+        "document": "the comparison table on printed page 3, which sets the two parts side by side",
         "why": "Recorded because a reader who finds a 250 ns instruction cycle quoted for this family has found the earlier part. Taking that figure for this one would halve the rate at which it runs."
       }
     },
