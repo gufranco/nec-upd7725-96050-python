@@ -17,7 +17,7 @@
 
 </div>
 
-**2** parts · **1,002,240** instructions compared and **1,120** encodings walked field by field, **0** disagreements · **676** tests · **100%** statement and branch coverage · no dependencies
+**2** parts · **1,002,240** instructions compared and **1,120** encodings walked field by field, **0** disagreements · **684** tests · **100%** statement and branch coverage · no dependencies
 
 ```python
 from upd7725 import Cpu
