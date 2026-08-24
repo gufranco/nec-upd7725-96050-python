@@ -38,7 +38,7 @@ TIMEOUT = 30
 ATTEMPTS = 3
 """How many times a single address is asked before its silence is believed."""
 
-AGENT = "source-watch (+https://github.com/gufranco/nec-upd7725-python)"
+AGENT = "source-watch (+https://github.com/gufranco/nec-upd7725-96050-python)"
 
 GONE = frozenset({404, 410})
 """The statuses that mean the server looked and the thing is not there.

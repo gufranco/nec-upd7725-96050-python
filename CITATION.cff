@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: nec-upd7725-python
+title: nec-upd7725-96050-python
 message: >-
   If you use this work, or the states it was settled against, please cite it.
 type: software
@@ -7,8 +7,8 @@ authors:
   - given-names: Gustavo
     family-names: Franco
     alias: gufranco
-repository-code: https://github.com/gufranco/nec-upd7725-python
-url: https://github.com/gufranco/nec-upd7725-python
+repository-code: https://github.com/gufranco/nec-upd7725-96050-python
+url: https://github.com/gufranco/nec-upd7725-96050-python
 abstract: >-
   A model of the NEC uPD7725 and uPD96050 digital signal processors, the parts
   that sit inside several Super Nintendo cartridges and run the microcode

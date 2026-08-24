@@ -48,7 +48,7 @@ to a word and the data two.
 ## How to use it
 
 ```bash
-export UPD7725_FIRMWARE_DIR=~/nec-upd7725-python/firmware
+export UPD7725_FIRMWARE_DIR=~/nec-upd7725-96050-python/firmware
 python3 conformance/against_firmware.py
 ```
 

@@ -7,7 +7,7 @@
 <br>
 <br>
 
-[![CI](https://github.com/gufranco/nec-upd7725-python/actions/workflows/ci.yml/badge.svg)](https://github.com/gufranco/nec-upd7725-python/actions/workflows/ci.yml)
+[![CI](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml/badge.svg)](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml)
 [![Conformance](https://img.shields.io/badge/conformance-1%2C002%2C240%20%2F%201%2C002%2C240-brightgreen)](#is-it-right)
 [![Encodings](https://img.shields.io/badge/encodings-1%2C120%20walked%20field%20by%20field-brightgreen)](#is-it-right)
 [![Coverage](https://img.shields.io/badge/coverage-100%25%20statement%20%2B%20branch-brightgreen)](#working-on-it)
@@ -41,7 +41,7 @@ twenty four bits, so a program image is three bytes to the instruction.
 ## Install
 
 ```bash
-pip install git+https://github.com/gufranco/nec-upd7725-python.git
+pip install git+https://github.com/gufranco/nec-upd7725-96050-python.git
 ```
 
 Python 3.12 or newer. Nothing else.

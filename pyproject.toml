@@ -22,9 +22,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/gufranco/nec-upd7725-python"
-Source = "https://github.com/gufranco/nec-upd7725-python"
-Issues = "https://github.com/gufranco/nec-upd7725-python/issues"
+Homepage = "https://github.com/gufranco/nec-upd7725-96050-python"
+Source = "https://github.com/gufranco/nec-upd7725-96050-python"
+Issues = "https://github.com/gufranco/nec-upd7725-96050-python/issues"
 
 [project.scripts]
 upd7725-doctor = "upd7725.doctor:main"
