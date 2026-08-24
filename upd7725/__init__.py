@@ -29,6 +29,7 @@ from . import clock, core, errors, firmware, flags, memory, models, ports, regis
 from .clock import Clock
 from .core import Core
 from .errors import ClockClosed, RunLimit, UnknownModelError
+from .memory import UNSET_SEED, NotWholeWords, Store, Stores, TooLarge, scramble
 from .models import MODELS, carrying, describe
 from .version import VERSION
 
@@ -52,12 +53,18 @@ def Cpu(  # noqa: N802
 
 
 __all__ = [
+    "DEFAULT_MODEL",
     "MODELS",
+    "UNSET_SEED",
     "Clock",
     "ClockClosed",
     "Core",
     "Cpu",
+    "NotWholeWords",
     "RunLimit",
+    "Store",
+    "Stores",
+    "TooLarge",
     "UnknownModelError",
     "__version__",
     "carrying",
@@ -71,4 +78,5 @@ __all__ = [
     "models",
     "ports",
     "registers",
+    "scramble",
 ]
