@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -88,7 +88,6 @@ exclude_also = [
   # runtime never runs it, because the class exists to be satisfied rather than
   # instantiated. Demanding coverage of the ellipses would mean calling methods
   # that deliberately do nothing.
-  'class .*\(.*Protocol.*\):',
   # The command line guard hands argv to a function that is itself tested, so
   # there is nothing behind it left to exercise. Importing the module to cover
   # the guard would run the tool rather than test it.
@@ -126,12 +125,3 @@ enable_error_code = [
   "unused-awaitable",
 ]
 files = ["upd7725", "conformance"]
-
-[[tool.mypy.overrides]]
-# The conformance scripts sit beside the package rather than inside it, and each
-# one puts its own directory on the path before importing its neighbours. The
-# checker has no such path, so it is told where to look rather than being told
-# to stop looking: a skipped import would report this package as untyped and
-# hide every finding in the suite that drives it.
-module = ["reference", "oracle", "instructions"]
-ignore_missing_imports = true
