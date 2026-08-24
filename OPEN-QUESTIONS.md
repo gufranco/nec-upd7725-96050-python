@@ -54,6 +54,13 @@ three bytes plus 2048 table words of two bytes, so a wrong size would fail to
 load. That is the artifact corroborating itself. The stack depth has no such
 witness and rests on the secondary source alone.
 
+**Where that data sheet is not.** NEC's *DSP and Speech Processor Products*,
+1992, 482 pages, is the later edition of the book this project already carries
+from 1989. Read on 2026-08-24: it covers the uPD77C20A, 7720A and 77P20, the
+uPD77C25 and 77P25, and the uPD77810, and the string 96050 appears on none of
+its pages. The only near hit is a uPD9605, which is a PCM codec. A later book
+than that one has not been located.
+
 **What would settle it.** An NEC data sheet for the uPD96050, or a measurement:
 push past eight levels on a real part and see where the return address comes
 from.
@@ -106,6 +113,17 @@ shift shifts in, or a measurement on a real part.
 it. Inside the µPD77C25/77P25 section every occurrence of the word outside
 Table 6 is about the serial port's shift registers, and the table names the two
 operations without saying what arrives in the vacated bits.
+
+**Nor is it in the later edition.** The 1992 book carries the same three ALU
+tables, for the uPD77C20A family on its page 72, for this part on its page 103,
+and for the uPD77810 on its page 221. All three name the two-bit and four-bit
+left shifts and none says what arrives at the bottom. Every occurrence of
+shifted in across all 482 pages is the serial port, and filled with, are filled,
+is filled, fill bit, shifted into, vacated, zero fill, sign extend and bits
+become do not occur anywhere in it. Its uPD77C25 chapter also adds nothing on
+flag values that the data sheet here does not already print: the sentence about
+SA1 holding the corrected sign of an overflow, the saturation constants and the
+three successive additions are all in `upd77c25.pdf`.
 
 **A near miss worth naming, so it is not mistaken for an answer later.** The
 same book documents the µPD7281 shifting zeros in, in a labelled figure, and

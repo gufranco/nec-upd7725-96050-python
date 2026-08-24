@@ -3,7 +3,7 @@
 The part reads its instructions from one store twenty four bits at a time, its
 constants from a second sixteen bits at a time, and it reads and writes a third
 that is also sixteen. None of the three is byte addressed from the inside; only
-the console sees bytes, and only of the third.
+the host sees bytes, and only of the third.
 
 Nothing here starts clear unless it is asked to. Real silicon powers up holding
 whatever it holds, and a model that starts at zero agrees with the part right up

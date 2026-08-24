@@ -132,7 +132,7 @@ upd7725/
   flags.py        the six bits each accumulator carries
   registers.py    the register file, at each part's own widths
   memory.py       program, table and scratch, filled rather than cleared
-  ports.py        the console side: the handshake and both transfer widths
+  ports.py        the host side: the handshake and both transfer widths
   models.py       the two parts, and what separates them
   doctor.py       what this machine actually has
 conformance/

@@ -14,7 +14,7 @@ Every figure is a median across repeats rather than a mean, because one scheduli
 hiccup moves a mean and moves a median much less, and the runtime version is
 printed beside it because it is the single thing that changes these numbers most.
 
-Nothing here needs an image or a cartridge. It runs whatever the fill puts in
+Nothing here needs a program image. It runs whatever the fill puts in
 front of it, which is the same work the conformance sweep does.
 
 The floor is checked here and never from inside the test suite, because the suite

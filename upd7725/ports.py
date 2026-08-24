@@ -1,14 +1,14 @@
-"""The two addresses the console sees, and the handshake across them.
+"""The two addresses the host sees, and the handshake across them.
 
 This is the whole of what a host can observe of this part. One address
-is a data register and the other is a status word, and the only thing the console
+is a data register and the other is a status word, and the only thing the host
 learns about the program running inside is one bit: whether the part is waiting
 for it.
 
 The handshake is the awkward part and the reason this is its own module. The data
-register is a word wide but the console is a byte wide, so a transfer is two
+register is a word wide but the host is a byte wide, so a transfer is two
 accesses, and which half comes next is state the part holds rather than something
-the console can see. A model that ignores that reads the same byte twice and gets
+the host can see. A model that ignores that reads the same byte twice and gets
 a plausible wrong answer instead of an error.
 """
 
@@ -30,8 +30,8 @@ STATUS = 1
 DEFAULT_LIMIT = 200000
 
 
-class Console:
-    """The console's side of the two registers, and the waiting between them."""
+class Host:
+    """The host's side of the two registers, and the waiting between them."""
 
     __slots__ = ("chip",)
 
@@ -40,7 +40,7 @@ class Console:
 
     @property
     def asking(self) -> bool:
-        """Whether the part is waiting for the console rather than working."""
+        """Whether the part is waiting for the host rather than working."""
         return bool(self.chip.registers.sr.rqm)
 
     def settle(self, limit: int = DEFAULT_LIMIT) -> int:

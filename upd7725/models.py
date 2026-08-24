@@ -97,7 +97,7 @@ _CATALOGUE = (
             "The NEC uPD7725, the smaller of the two. Two "
             "thousand and forty eight instructions, a table of a thousand and "
             "twenty four constants, and two hundred and fifty six words of scratch "
-            "shared with the console a byte at a time."
+            "shared with the host a byte at a time."
         ),
         counter_bits=11,
         table_bits=10,

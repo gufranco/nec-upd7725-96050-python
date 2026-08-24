@@ -64,7 +64,7 @@ def signed(word: int) -> int:
 
 
 class Status:
-    """The word the console reads to find out whether the part wants attention.
+    """The word the host reads to find out whether the part wants attention.
 
     The ten bits are declared rather than set in a loop over their names. A loop
     is shorter and costs every reader and every checker the ability to see that
@@ -108,7 +108,7 @@ class Status:
         """Take every bit the part defines, and nothing between them.
 
         The three acknowledgements are not among them. They are state the part
-        holds and never puts in the word the console reads, so a write to the
+        holds and never puts in the word the host reads, so a write to the
         register cannot set them and reading the word back cannot see them.
         """
         self.p0 = bool(word >> 0 & 1)

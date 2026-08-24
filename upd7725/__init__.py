@@ -7,9 +7,8 @@
     chip.stores.load_table(table)
     chip.run_for(1000)
 
-One instruction set, two widths, and a host that can see two addresses. Six
-coprocessor modules shipped on these two parts, four on the smaller and two on the
-larger; what makes one different from another is the program masked into it at the
+One instruction set, two widths, and a host that can see two addresses. What makes
+one shipped part different from another is the program masked into it at the
 factory rather than the silicon.
 
 So this package is the processor and nothing else. It carries no program and it

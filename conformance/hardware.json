@@ -184,7 +184,7 @@
           "value": 244,
           "quote": "Serial: 8- or 16-bit (244 ns/bit)",
           "page": 2,
-          "note": "Two instruction cycles per serial bit at 8.192 MHz. Nothing in a cartridge uses the serial port.",
+          "note": "Two instruction cycles per serial bit at 8.192 MHz. The port is modelled because the part has it, not because a program here drives it.",
           "appliesTo": ["upd7725"],
           "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for."
         },
@@ -233,7 +233,7 @@
           "quote": "RQM (Request for Master): A read or write form DR to IDB sets RQM = 1, An external read (write) resets RQM = 0.",
           "assembled": true,
           "page": 12,
-          "note": "The part raises it when its own program touches the data register; the console clears it by reading or writing. Checked against the implementation here and it already matched.",
+          "note": "The part raises it when its own program touches the data register; the host clears it by reading or writing. Checked against the implementation here and it already matched.",
           "appliesTo": ["upd7725", "upd96050"]
         },
         "transferHalfSemantics": {

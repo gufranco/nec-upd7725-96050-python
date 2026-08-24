@@ -146,7 +146,7 @@ class Flag:
 
 
 class Status:
-    """The word the console reads, plus the two acknowledgements it never sees."""
+    """The word the host reads, plus the two acknowledgements it never sees."""
 
     __slots__ = tuple(sorted({name for name, _ in STATUS_BITS} | {"drs", "siack", "soack"}))
 

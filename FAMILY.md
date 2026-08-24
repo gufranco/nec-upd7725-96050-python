@@ -62,7 +62,9 @@ checks the ones a test can reach.
 **Errors**
 
 - [ ] One `errors.py`, holding everything the package raises, importing nothing
-      from the package so it can never close a cycle.
+      from the package so it can never close a cycle. Both halves are checked.
+      A cycle that breaks outright announces itself, and the one worth a check is
+      the import that works today because of the order modules happen to load in.
 - [ ] No exception defined twice under one name. Two classes under one name both
       work, both get tested, and `except` catches half the cases it names.
 - [ ] Every exception a caller can meet is exported from the package. `except`
@@ -120,9 +122,14 @@ checks the ones a test can reach.
 
 - [ ] `README.md`, `AGENTS.md`, `CLAUDE.md` pointing at it, `FAMILY.md`
       byte-identical above the closing section, and `OPEN-QUESTIONS.md`.
-- [ ] No mention of any system the part was used in. A processor is not the
-      machine somebody put it in, and a package that names one is a catalogue of
-      that machine's parts wearing a processor's name.
+- [ ] No mention of any system the part was used in, in any tracked file. A
+      processor is not the machine somebody put it in, and a package that names
+      one is a catalogue of that machine's parts wearing a processor's name.
+      Identify a variant by its part number, never by the box it shipped in.
+      Whatever drives the part is the `host`, whichever kind of machine it was.
+- [ ] Two things are outside that and each says something. A quoted passage is a
+      document's words, and a document may name whatever it likes. The file
+      declaring the names to search for is the list rather than a mention.
 - [ ] Nothing licensed to anybody else is carried, fetched, vendored or
       generated. A copy belongs on the machine that runs it.
 
@@ -544,21 +551,22 @@ the others do not also get.*
 ## The state of this repository
 
 **One of the two parts has a manufacturer document and the other has none.**
-NEC's 1987 data sheet covers the uPD77C25, which is what Nintendo shipped as the
-DSP-1 through DSP-4, and it settles the widths, the stack depth, the cycle counts
-and the memory sizes. No document for the uPD96050 was located, so everything
-asserted about that part rests on secondary sources, and secondary sources for
-this family are emulators.
+NEC's 1987 data sheet covers the uPD77C25 and settles the widths, the stack
+depth, the cycle counts and the memory sizes. No document for the uPD96050 was
+located, so everything asserted about that part rests on secondary sources, and
+secondary sources for this family are emulators. The later edition of NEC's own
+data book, 1992, does not carry the part either.
 
 It carries `verified: false` in
 [`conformance/hardware.json`](conformance/hardware.json) and an entry in
 [`conformance/divergences.json`](conformance/divergences.json).
 
-**Three of its four figures have a second witness that is not an emulator.** An
-ST010 firmware image is exactly 16384 program words of three bytes plus 2048
-table words of two bytes, so a wrong size would fail to load. That is the
-artifact corroborating itself, which is the second rung of the ladder. The stack
-depth has no such witness and rests on the secondary source alone.
+**Three of its four figures have a second witness that is not an emulator.** A
+published image for the larger part is exactly 16384 program words of three
+bytes plus 2048 table words of two bytes, so a wrong size would fail to load.
+That is the artifact corroborating itself, which is the second rung of the
+ladder. The stack depth has no such witness and rests on the secondary source
+alone.
 
 **Instruction-level behaviour comes from a recording, and the recording is an
 emulator.** The data sheet is Advance Product Information: it does not give every
@@ -567,8 +575,13 @@ Where the document and the recording overlap the document wins and the recording
 is retaken. Where they do not overlap, and that covers most of the flag rules,
 there is nothing to check the recording against.
 
-**The access count into this part is unverified, and lives elsewhere.** How long
-the console takes to reach a coprocessor is a property of the board and the bus,
-so it belongs to snes-mapper-python, where it is marked unverified. It is named
-here too, because somebody timing a DSP-1 routine uses both packages and should
-not pick the mark up from only one.
+**How long a host takes to reach this part is not modelled here.** That is a
+property of the board it sits on and of the bus between them, so it belongs to
+whatever models the board. This package answers what the part does once it is
+reached, and counts the cycles that takes.
+
+**This package is the processor and nothing else.** It does not name the machines
+these parts shipped in, the products they were sold as, or the programs masked
+into them. A processor is not the machine somebody put it in, and a package that
+names one becomes a catalogue of that machine's parts wearing a processor's name.
+The word for whatever drives this part is `host`, everywhere, for that reason.

@@ -10,11 +10,11 @@ ALWAYS_ASKING = 3 << 22 | 6
 """A store full of loads into the data register, so the part keeps asking."""
 
 
-def a_console(fill: int = 0) -> "ports.Console":
-    """A console around a settled part, because these are interface tests.
+def a_console(fill: int = 0) -> "ports.Host":
+    """A host around a settled part, because these are interface tests.
 
     Construction scrambles every register, which the power-on tests check. What
-    is under test here is what the console sees through the two addresses, so
+    is under test here is what the host sees through the two addresses, so
     the part is reset and its registers put to a known value first rather than
     left holding whatever the seed produced.
     """
@@ -27,7 +27,7 @@ def a_console(fill: int = 0) -> "ports.Console":
     registers.si = registers.so = 0
     for slot in range(len(registers.stack)):
         registers.stack[slot] = 0
-    return ports.Console(chip)
+    return ports.Host(chip)
 
 
 class StatusTest(unittest.TestCase):
