@@ -30,6 +30,19 @@ from .registers import Registers
 
 WORD_MASK = 0xFFFF
 
+RESET_CYCLES = 4
+"""What a reset occupies of the board's clock.
+
+The data sheet gives the reset pin a minimum pulse width of four clock cycles,
+and one clock cycle is one instruction on this part. So a reset is not free: the
+line has to be held for four of them, and a host pacing against a wall has spent
+that time whether or not the part advanced a program.
+
+This is the minimum the manufacturer requires of the host rather than a count of
+what the part does internally, which the document does not give. The distinction
+is recorded beside the figure in hardware.json.
+"""
+
 DEFAULT_LIMIT = 1_000_000
 """How long a bounded run waits before deciding the condition will never hold."""
 
@@ -293,16 +306,17 @@ class Core:
         holding, because the page does not say a reset touches them and this
         model does not invent an event the part does not perform.
 
-        It costs no cycles, because the data sheet gives the reset pin a sentence
-        and no timing. Spending a plausible number here would be inventing one,
-        so the tally is left alone and the gap is written up in
-        OPEN-QUESTIONS.md.
+        It costs the four cycles the data sheet requires the reset line to be
+        held for, and they appear in the tally, because a board that pulls that
+        line has spent them.
 
         Returns the part, so a caller can build and reset in one expression
         without losing the reference.
         """
         self.registers.pc = 0
         self.steps = 0
+        for _ in range(RESET_CYCLES):
+            self.spend()
         return self
 
     def spend(self) -> None:

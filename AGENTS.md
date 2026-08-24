@@ -6,7 +6,7 @@ This file is for a coding agent. A person reading it will not be harmed, but
 ## What this project is, in one paragraph
 
 A model of the NEC uPD7725 and uPD96050, the processor that a shelf of Super
-Nintendo coprocessor cartridges turns out to contain. It is a model of silicon,
+several coprocessor modules turn out to contain. It is a model of silicon,
 not of a program: every instruction is settled by generating instruction words,
 so the whole gate runs on a machine holding nothing anybody licensed. Firmware is
 never carried here and never will be.

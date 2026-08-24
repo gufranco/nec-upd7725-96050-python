@@ -25,10 +25,12 @@ class TickTest(unittest.TestCase):
     def test_a_tick_spends_exactly_one_cycle(self) -> None:
         chip = a_processor()
 
+        before = chip.cycles
+
         with Clock(chip) as clock:
             clock.tick()
 
-        self.assertEqual((clock.cycles, chip.cycles), (1, 1))
+        self.assertEqual((clock.cycles, chip.cycles - before), (1, 1))
 
     def test_a_tick_reports_the_running_total(self) -> None:
         chip = a_processor()
@@ -58,9 +60,11 @@ class TickTest(unittest.TestCase):
     def test_the_worker_is_suspended_between_cycles(self) -> None:
         chip = a_processor()
 
+        before = chip.cycles
+
         with Clock(chip) as clock:
             clock.tick()
-            resting = chip.cycles
+            resting = chip.cycles - before
             counter = chip.registers.pc
 
         self.assertEqual((resting, counter), (1, 1))

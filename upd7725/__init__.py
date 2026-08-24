@@ -1,4 +1,4 @@
-"""The NEC uPD7725 and uPD96050, the processors a shelf of Super Nintendo parts run on.
+"""The NEC uPD7725 and uPD96050 digital signal processors.
 
     from upd7725 import Processor
 
@@ -7,10 +7,10 @@
     chip.stores.load_table(table)
     chip.run_for(1000)
 
-One instruction set, two widths, and a console that can see two addresses. Nintendo
-shipped four different microcodes on the smaller part under the DSP name, and Seta
-shipped two on the larger one under the ST name; what makes a DSP-1 different from
-a shogi player is the program masked into it rather than the silicon.
+One instruction set, two widths, and a host that can see two addresses. Six
+coprocessor modules shipped on these two parts, four on the smaller and two on the
+larger; what makes one different from another is the program masked into it at the
+factory rather than the silicon.
 
 So this package is the processor and nothing else. It carries no program and it
 never will: every one of them belongs to whoever wrote it. What it carries instead

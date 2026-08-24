@@ -596,13 +596,13 @@ class PowerOnTest(unittest.TestCase):
 
         self.assertEqual(found.registers.a, before)
 
-    def test_a_reset_costs_no_cycles_because_the_document_names_none(self) -> None:
+    def test_a_reset_costs_the_pulse_the_data_sheet_requires(self) -> None:
         found = a_processor()
         before = found.cycles
 
         found.reset()
 
-        self.assertEqual(found.cycles, before)
+        self.assertEqual(found.cycles - before, 4)
 
 
 class TallyTest(unittest.TestCase):
@@ -615,18 +615,20 @@ class TallyTest(unittest.TestCase):
 
     def test_the_cycle_count_is_cumulative(self) -> None:
         found = a_processor()
+        before = found.cycles
 
         found.run_for(4)
 
-        self.assertEqual(found.cycles, 4)
+        self.assertEqual(found.cycles - before, 4)
 
     def test_and_survives_a_reset(self) -> None:
         found = a_processor()
         found.run_for(4)
+        before = found.cycles
 
         found.reset()
 
-        self.assertEqual(found.cycles, 4)
+        self.assertGreater(found.cycles, before)
 
     def test_the_instruction_count_starts_again_at_a_reset(self) -> None:
         found = a_processor()
@@ -649,18 +651,20 @@ class TallyTest(unittest.TestCase):
     def test_every_cycle_passes_through_the_one_place(self) -> None:
         found = a_processor()
         seen: list[int] = []
+        before = found.cycles
         found.on_cycle = lambda: seen.append(found.cycles)
 
         found.run_for(3)
 
-        self.assertEqual(seen, [1, 2, 3])
+        self.assertEqual(seen, [before + 1, before + 2, before + 3])
 
     def test_a_part_with_no_watcher_still_counts(self) -> None:
         found = a_processor()
+        before = found.cycles
 
         found.spend()
 
-        self.assertEqual(found.cycles, 1)
+        self.assertEqual(found.cycles - before, 1)
 
     def test_this_part_never_stops_advancing_the_program(self) -> None:
         found = a_processor()

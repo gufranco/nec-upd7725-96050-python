@@ -28,7 +28,8 @@
       "referenceDoes": "Answers all of those, because a recording answers whatever it was asked.",
       "packageFollows": "corpus",
       "reasoning": "Instruction-level behaviour the data sheet leaves open is taken from the recording, and the recording is an emulator. Where the two overlap the document wins and the recording is retaken; where they do not overlap there is nothing to check the recording against, and that covers most of the flag rules.",
-      "wouldSettleIt": "A recording taken off a real uPD77C25: drive known inputs through a known program and capture the outputs. Failing that, a fuller NEC document than the Advance Product Information sheet."
+      "wouldSettleIt": "A recording taken off a real uPD77C25: drive known inputs through a known program and capture the outputs. Failing that, a fuller NEC document than the Advance Product Information sheet.",
+      "narrowedBy": "Table 6 of the 1989 data book states, for all sixteen ALU operations, which flags are affected, which are reset, which are held and which are indefinite. That is the manufacturer on behaviour this project had taken from the recording, and the model agrees with it on every cell: conformance/alu_flags.test.py drives all sixteen. What the recording still carries alone is the exact value of each affected flag, the auxiliary sign the manufacturer calls indefinite, and what a multi-bit shift brings in at the bottom."
     },
     {
       "id": "the-mapper-access-count-is-unverified",
@@ -58,13 +59,27 @@
       "id": "no-reset-timing",
       "parts": ["upd77c25", "upd96050"],
       "severity": "low",
-      "status": "open",
+      "status": "closed",
       "topic": "How many cycles a reset costs.",
       "documentSays": "That a reset happens and what it leaves behind, and nothing about how long it takes. The pin gets one sentence.",
       "referenceDoes": "Nothing to compare against: the corpus records instruction behaviour and never resets the part.",
       "packageFollows": "neither",
       "reasoning": "reset() spends no cycles. That is not a claim that a reset is instantaneous, which no silicon is; it is the absence of a figure. Spending a plausible number would put an invented one into every tally that crosses a reset, and a caller pacing against a wall would be pacing partly against this package's guess.",
-      "wouldSettleIt": "A timing figure for the reset pin in an NEC document, or a measurement on a real part: hold the pin low, release it, and count clocks until the first program fetch."
+      "wouldSettleIt": "A timing figure for the reset pin in an NEC document, or a measurement on a real part: hold the pin low, release it, and count clocks until the first program fetch.",
+      "settledBy": "The 1989 data book's Interrupt Reset Timing Requirements give the reset pin a minimum pulse width of four clock cycles, and one clock cycle is one instruction on this part. reset() spends four. That is the minimum required of the host rather than a count of internal work, which the document still does not give, and the record says so beside the figure.",
+      "wouldReopenIt": "An NEC document giving the part's internal reset sequence, which might be longer than the pulse the host has to supply."
+    },
+    {
+      "id": "what-a-multi-bit-shift-brings-in",
+      "parts": ["upd77c25", "upd96050"],
+      "severity": "low",
+      "status": "open",
+      "topic": "What a two-bit and a four-bit left shift bring in at the bottom.",
+      "documentSays": "Table 6 names them a 2-bit left shift and a 4-bit left shift and says nothing about what arrives in the vacated bits.",
+      "referenceDoes": "Brings ones in, so the result of either can never be zero.",
+      "packageFollows": "reference",
+      "reasoning": "Following the recording here is visible rather than hidden: it makes the zero flag unreachable for those two operations, while the manufacturer's table marks that flag as derived from the result. Both statements can be true at once, and they are, but the reason the flag never fires is a choice taken from an emulator.",
+      "wouldSettleIt": "A sentence in an NEC document about what a multi-bit shift shifts in, or a measurement on a real part: shift a known value and read the low bits back."
     }
   ],
   "writtenUpIn": "OPEN-QUESTIONS.md, which names every entry that is not closed"

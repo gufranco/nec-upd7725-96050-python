@@ -57,9 +57,17 @@ class DocumentTest(unittest.TestCase):
             self.assertIn("quote", fact, name)
             self.assertGreater(len(fact["quote"]), 20, name)
 
-    def test_and_the_page_those_words_are_printed_on(self) -> None:
+    def test_and_where_those_words_are_printed(self) -> None:
+        """A page number, or a section when the document numbers its pages per section.
+
+        The data book numbers pages as 2-33, so a fact read from it names the
+        section instead. Either answers the only question that matters, which is
+        where a reader goes to check the sentence.
+        """
         pages = declared()["parts"][0]["document"]["pdfPages"]
         for name, fact in facts_for("upd7725").items():
+            if isinstance(fact.get("section"), str):
+                continue
             self.assertIsInstance(fact.get("page"), int, name)
             self.assertGreaterEqual(fact["page"], 1, name)
             self.assertLess(fact["page"], pages, name)

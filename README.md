@@ -2,7 +2,7 @@
 
 <h1>NEC uPD7725 &middot; uPD96050</h1>
 
-<strong>The processor a shelf of Super Nintendo coprocessors turns out to be, settled one instruction at a time.</strong>
+<strong>The NEC uPD7725 and uPD96050 digital signal processors, settled one instruction at a time.</strong>
 
 <br>
 <br>
@@ -23,7 +23,7 @@
   <a href="https://github.com/gufranco/nec-upd7725-python/issues">Issues</a>
 </p>
 
-**2** parts · **4** instruction forms · **1,120** encodings walked field by field · **1,002,240** instructions compared against the reference, **0** disagreements · **594** tests · **100%** statement and branch coverage · **strict** types throughout · **zero** firmware, ever
+**2** parts · **4** instruction forms · **1,120** encodings walked field by field · **1,002,240** instructions compared against the reference, **0** disagreements · **603** tests · **100%** statement and branch coverage · **strict** types throughout · **zero** firmware, ever
 
 ```python
 from upd7725 import Processor
@@ -33,23 +33,27 @@ chip.stores.load_program(program)
 chip.stores.load_table(table)
 chip.run(1000)
 
-chip.registers.sr.rqm  # True: it is waiting for the console now
+chip.registers.sr.rqm  # True: it is waiting for the host now
 ```
 
 ---
 
 ## The problem
 
-Six different Super Nintendo coprocessors are the same silicon. The DSP-1 does
-three-dimensional maths, the DSP-3 decompresses graphics, the DSP-4 draws a road,
-the ST010 steers a race car and the ST011 plays shogi, and every one of them is
-this processor running a different program masked into it at the factory.
+These are general-purpose digital signal processors. NEC sold them to anybody who
+needed one, and what a given chip does is decided by the program masked into it
+at the factory rather than by the silicon.
+
+Six coprocessor modules that look like six different parts are one processor with
+six different programs in it. One does three-dimensional maths, one decompresses
+graphics, one draws a road, one steers a race car, one plays shogi. The silicon
+underneath is the same in every case.
 
 Modelling what each of those programs does is one job, and a good one. Modelling
 the thing they all run on is a different job, and it is the one that reaches the
-parts whose behaviour cannot be written down. Nobody can describe the ST011's
-answers as a set of commands, because its answer is a shogi move and the thing
-that chooses it is a program.
+programs whose behaviour cannot be written down. Nobody can describe the shogi
+program's answers as a set of commands, because its answer is a move and the
+thing that chooses it is a program.
 
 ## The solution
 
@@ -58,7 +62,7 @@ Model the processor, and let the program be the program.
 That splits the problem in a way that also settles the legal question. The
 processor is settled by walking its own encoding, which needs no program at all,
 so the evidence here is complete with nothing on your disk. A firmware image is
-needed only to run one particular cartridge's part, it belongs to whoever wrote
+needed only to run one particular module's program, it belongs to whoever wrote
 it, and it is never carried here.
 
 <table>
@@ -355,9 +359,9 @@ upd7725/
   registers.py    the register file, at the widths the part has
   flags.py        the six bits each accumulator carries
   memory.py       the three stores, at their own widths and lengths
-  ports.py        the two addresses the console sees, and the handshake
+  ports.py        the two addresses the host sees, and the handshake
   firmware.py     an image its owner supplies, identified before it is run
-  models.py       the two parts, and which cartridge chip ran on each
+  models.py       the two parts, and which coprocessor module ran on each
 conformance/
   reference.py        an independent implementation, built to a different shape
   oracle.py           one case through it, in the shape the recordings are in
@@ -465,7 +469,7 @@ engine and calling it a model of somebody's part.
 
 The evidence is. Every instruction is settled by generating instruction words
 rather than quoting a program, so the gate runs and passes on a machine with
-nothing else on it. What needs an image is running a particular cartridge's part,
+nothing else on it. What needs an image is running a particular module's program,
 which is the one thing nobody else can give you.
 
 </details>
@@ -501,16 +505,22 @@ The document is copyrighted and not redistributable, which is why it is not in t
 | Document | Date | Pages | SHA-256 | Redistributable |
 |:---------|:-----|------:|:--------|:----------------|
 | [NEC Electronics, *uPD77C25/uPD77P25 Digital Signal Processor Data Sheet*, Advance Product Information](https://www.cryptomuseum.com/df/telefunken/e2000/files/uPD77C25.pdf) | 1987-08 | 36 | `d043be18d5cd21d9…` | No |
+| [NEC Electronics, *Digital Signal Processor and Speech Processor Products Data Book*, document 50052](https://bitsavers.trailing-edge.com/components/nec/_dataBooks/1989_DSP_and_Speech_Products_Data_Book.pdf) | 1989 | 388 | `2f0190523de99938…` | No |
 
 The scan is a photograph of a printed book, so it was read twice: once from page images rendered at 300 dots per inch, and once from the text layer the file already carried. Neither is reliable alone. The embedded layer prints `lhe` for `the` and `OP` for `DP`; the image read misses a faint line outright. A page recorded beside a quote is one both readings agree on, or one confirmed by reading that page directly.
 
 The printed page number is one less than the position in the file, so printed page 1 is the second page.
 
+The data book is the fuller of the two. The 1987 sheet is Advance Product Information and
+states no flag rules; the data book's Table 6 gives, for all sixteen ALU operations, which
+flags are affected, which are reset, which are held and which NEC declines to define. It
+numbers pages per section, as 2-33, so a fact read from it names the section.
+
 **No document for the uPD96050 was located.** Everything asserted about that part rests on secondary sources, it carries `verified: false` in the record, and the gap is written up in [`OPEN-QUESTIONS.md`](OPEN-QUESTIONS.md).
 
 ## Contributing
 
-Measurements first. If you have a part, a cartridge, or a machine this has not
+Measurements first. If you have a part, a module, or a machine this has not
 been run against, the most useful thing you can send is a run and what it found,
 especially a disagreement. [CONTRIBUTING.md](CONTRIBUTING.md) has the gates a
 change is expected to pass, [SECURITY.md](SECURITY.md) says what belongs in a

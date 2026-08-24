@@ -74,22 +74,6 @@ should not pick the mark up from only one of them.
 **What would settle it.** A passage in Nintendo's Book I or Book II giving the
 access time for that region, or a measurement on real hardware.
 
-### How many cycles a reset costs.
-
-**The document says.** That a reset happens and what it leaves behind, and
-nothing about how long it takes. The pin gets one sentence.
-
-**What this project does.** `reset()` spends no cycles.
-
-**Why that is not a claim.** No silicon resets instantaneously. Zero here is the
-absence of a figure rather than a figure. Spending a plausible number would put
-an invented one into every tally that crosses a reset, and a caller pacing
-against a wall would be pacing partly against this package's guess.
-
-**What would settle it.** A timing figure for the reset pin in an NEC document,
-or a measurement on a real part: hold the pin low, release it, and count clocks
-until the first program fetch.
-
 ## Where the source is a recording rather than a part
 
 ### Every flag rule the data sheet does not state.
@@ -106,7 +90,32 @@ overlap the document wins and the recording is retaken; where they do not overla
 there is nothing to check the recording against, and that covers most of the flag
 rules.
 
-**What would settle it.** A recording taken off a real uPD77C25.
+**What the manufacturer since settled.** The 1989 data book states, for all
+sixteen ALU operations, which flags are affected, which are reset, which are
+held and which it declines to define. This model agrees with it on every cell,
+and `conformance/alu_flags.test.py` drives all sixteen against a run.
+
+**What the recording still carries alone.** The exact value each affected flag
+takes, the auxiliary sign the manufacturer calls indefinite, and what a
+multi-bit shift brings in at the bottom.
+
+**What would settle the rest.** A recording taken off a real uPD77C25.
+
+### What a two-bit and a four-bit left shift bring in at the bottom.
+
+**The document says.** Table 6 names them a 2-bit left shift and a 4-bit left
+shift and says nothing about what arrives in the vacated bits.
+
+**What this project does.** Brings ones in, following the recording, so the
+result of either can never be zero.
+
+**Why it is worth naming.** It makes the zero flag unreachable for those two
+operations, while the manufacturer's table marks that flag as derived from the
+result. Both statements are true at once, and the reason the flag never fires is
+a choice taken from an emulator rather than a figure from NEC.
+
+**What would settle it.** A sentence in an NEC document about what a multi-bit
+shift shifts in, or a measurement on a real part.
 
 ## What is not in question
 
