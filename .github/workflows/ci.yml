@@ -143,7 +143,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       # Every field of every instruction form, against states recorded from the
-      # reference. This needs no firmware at all, and it is the gate.
+      # reference. This needs no program image at all, and it is the gate.
       - name: Settle every instruction
         run: python -m conformance.instructions
 
@@ -153,29 +153,3 @@ jobs:
       # cheaply enough to run on every push. The long sweep is on the schedule.
       - name: Model against reference, on a slice the corpus does not cover
         run: python -m conformance.differential --from 70000000 --cases 4000
-
-  firmware:
-    name: Against firmware, when any is present
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-python@v7
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      # These checks exist and are meant to be seen. They run the parts
-      # themselves, from images nobody may distribute, so on a machine without
-      # them every one reports as skipped rather than as quietly passed.
-      - name: Run the parts themselves
-        run: |
-          python -m conformance.against_firmware | tee report.txt
-          python conformance/against_firmware.test.py -v 2>&1 | tee -a report.txt
-        shell: bash
-
-      - name: Say what ran and what could not
-        run: |
-          if grep -q "skipped" report.txt; then
-            echo "::notice title=Firmware checks skipped::No firmware image was present, so the checks that run the parts themselves did not run. They are not failures; they had nothing to run against."
-          fi
-        shell: bash

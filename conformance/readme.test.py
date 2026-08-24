@@ -25,14 +25,6 @@ README = ROOT / "README.md"
 
 BLOCK = re.compile(r"^```(\w*)\n(.*?)^```$", re.M | re.S)
 
-NEEDS_AN_IMAGE = "firmware.identify"
-"""The one example that reads a file no repository may carry.
-
-The program it names belongs to whoever wrote it, so it is not here and will not
-be. The example is still checked for syntax, because a reader with their own copy
-should not be handed one that cannot parse.
-"""
-
 
 def blocks(text: str | None = None) -> list[tuple[str, str]]:
     return [
@@ -78,8 +70,6 @@ def broken(found: list[tuple[str, str | None]]) -> list[str]:
     """
     failed = []
     for source, _ in found:
-        if NEEDS_AN_IMAGE in source:
-            continue
         finished = ran(source)
         if finished.returncode != 0:
             said = finished.stderr.strip().splitlines()
@@ -91,7 +81,7 @@ def mismatched(found: list[tuple[str, str | None]]) -> list[tuple[str, str]]:
     """What the readme claims each example prints, beside what it printed."""
     wrong = []
     for source, expected in found:
-        if expected is None or NEEDS_AN_IMAGE in source:
+        if expected is None:
             continue
         finished = ran(source)
         if finished.stdout != expected:
@@ -138,19 +128,6 @@ class CheckerTest(unittest.TestCase):
         readme = "```python\nprint(1)\n```\n"
 
         self.assertEqual(mismatched(examples(readme)), [])
-
-    def test_the_example_that_needs_an_image_is_still_valid_python(self) -> None:
-        needing = [source for source, _ in examples() if NEEDS_AN_IMAGE in source]
-
-        for source in needing:
-            compile(source, "readme", "exec")
-
-        self.assertEqual(len(needing), 1)
-
-    def test_no_example_is_skipped_without_needing_an_image(self) -> None:
-        skipped = [source for source, _ in examples() if NEEDS_AN_IMAGE in source]
-
-        self.assertTrue(all("open(" in source for source in skipped))
 
 
 if __name__ == "__main__":

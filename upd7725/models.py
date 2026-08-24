@@ -1,4 +1,4 @@
-"""Which processors this package covers, and which cartridge parts run on each.
+"""Which processors this package covers, and what separates them.
 
 NEC built a family of digital signal processors around one instruction set, and
 the members differ in how far three registers can reach rather than in what the
@@ -6,11 +6,11 @@ instructions do. That is the whole difference between the two parts here: the
 counter, the table pointer and the scratch pointer are wider on the larger one,
 and every store is exactly as long as the register that addresses it.
 
-A cartridge part is not a processor. The DSP-1 and the ST011 are both this
-silicon carrying somebody's program, and the program is what makes them
-different from each other. So the parts are named here as what runs on each
-processor, and the programs themselves belong to whoever wrote them and are
-never carried here.
+This package is the processor and nothing that was built around one. A module
+somebody soldered onto a board is that board's business: what it was called, what
+program was masked into it and what machine it plugged into are all outside the
+part. Naming any of that here would make a processor package a catalogue of one
+system's cartridges, and the processor is not that system's.
 """
 
 from __future__ import annotations
@@ -34,7 +34,6 @@ class Model:
         counter_bits: int,
         table_bits: int,
         pointer_bits: int,
-        parts: Iterable[str],
         stack_levels: int,
         aliases: Iterable[str] = (),
     ) -> None:
@@ -44,7 +43,6 @@ class Model:
         self.table_bits = table_bits
         self.pointer_bits = pointer_bits
         self.stack_levels = stack_levels
-        self.parts = tuple(parts)
         self.aliases = tuple(aliases)
 
     @property
@@ -95,7 +93,6 @@ _CATALOGUE = (
         table_bits=10,
         pointer_bits=8,
         stack_levels=4,
-        parts=("dsp1", "dsp1a", "dsp1b", "dsp2", "dsp3", "dsp4"),
         aliases=("7725", "upd77c25", "77c25", "necupd7725"),
     ),
     Model(
@@ -109,7 +106,6 @@ _CATALOGUE = (
         table_bits=11,
         pointer_bits=11,
         stack_levels=8,
-        parts=("st010", "st011"),
         aliases=("96050", "upd96050gf", "necupd96050"),
     ),
 )
@@ -152,12 +148,3 @@ def describe(name: str) -> Model:
     raise UnknownModelError(
         f"{name} is not a processor this package covers; it has {', '.join(sorted(MODELS))}"
     )
-
-
-def carrying(part: str) -> Model:
-    """The processor a named cartridge part runs on."""
-    wanted = _normalise(part)
-    for found in _CATALOGUE:
-        if wanted in found.parts:
-            return found
-    raise UnknownModelError(f"{part} is not a part this package knows how to run")

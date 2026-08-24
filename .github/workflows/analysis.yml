@@ -3,7 +3,7 @@
 # CodeQL reads the code as a graph and asks questions a linter cannot: whether a
 # value from outside reaches something that trusts it, whether a path exists that
 # leaves state half-written. Very little of that applies to a processor model,
-# which takes integers and returns integers. What does apply is the firmware
+# which takes integers and returns integers. What does apply is the program
 # loader and the manifest reader, which are the only places in the project that
 # open a file somebody else supplied.
 #

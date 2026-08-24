@@ -26,7 +26,7 @@ and filing them privately only slows the fix.
 ## What this repository will not do
 
 It does not fetch anything at runtime, and nothing here downloads a cartridge, a
-patch, or a firmware image. Any file it reads is one already on the machine
+patch, or a program image. Any file it reads is one already on the machine
 because somebody put it there. That is a deliberate limit rather than an
 omission: a tool that fetches on your behalf is a tool that decides for you what
 you are allowed to be given.

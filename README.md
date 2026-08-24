@@ -17,7 +17,7 @@
 
 </div>
 
-**2** parts · **1,002,240** instructions compared and **1,120** encodings walked field by field, **0** disagreements · **703** tests · **100%** statement and branch coverage · no dependencies
+**2** parts · **1,002,240** instructions compared and **1,120** encodings walked field by field, **0** disagreements · **609** tests · **100%** statement and branch coverage · no dependencies
 
 ```python
 from upd7725 import Cpu
@@ -61,7 +61,6 @@ Everything a caller touches. Nothing else is public.
 | `cpu.irq()` | Offers the interrupt line and acts on it now. A call to 100H when the enable bit is set | `True` if taken |
 | `identify(image)` | Names an image from its digest, with no machine to run it in | an `Identity` |
 | `describe(model)` | The part behind a name, before building one | a `Model` |
-| `carrying(part)` | The part a given coprocessor module was built on | a `Model` |
 
 | Pin or attribute | Is |
 |:--|:--|
@@ -125,18 +124,18 @@ print(cpu.registers.pc)
 
 On this part a cycle boundary and an instruction boundary are the same place, because NEC states it executes an instruction in one external clock cycle. So `Clock` buys the same interface as the sibling packages rather than finer resolution, and `step()` is the right call when a caller wants speed.
 
-It is not free. An instruction is an ordinary call stack and Python cannot suspend one, so the clock runs the part on a thread and lets it block where the cycle is spent, which is what ares and bsnes do.
+It is not free. An instruction is an ordinary call stack and Python cannot suspend one, so the clock runs the part on a thread and lets it block where the cycle is spent, which is what full-system emulators do.
 
 ## Models
 
 One instruction set, two sizes. Every store is exactly as long as the register that addresses it, which is why the two differ in capacity and in nothing else this package can measure.
 
-| Build it with | Program store | Table | Scratch | Stack | Modules built on it |
-|:--|--:|--:|--:|--:|:--|
-| `Cpu("upd7725")` | 2048 x 24 bits | 1024 x 16 | 256 x 16 | 4 | DSP-1, DSP-1A, DSP-1B, DSP-2, DSP-3, DSP-4 |
-| `Cpu("upd96050")` | 16384 x 24 bits | 2048 x 16 | 2048 x 16 | 8 | ST010, ST011 |
+| Build it with | Program store | Table | Scratch | Stack |
+|:--|--:|--:|--:|--:|
+| `Cpu("upd7725")` | 2048 x 24 bits | 1024 x 16 | 256 x 16 | 4 |
+| `Cpu("upd96050")` | 16384 x 24 bits | 2048 x 16 | 2048 x 16 | 8 |
 
-The last column is the one to be careful with. NEC published a data sheet and a data book for the smaller part; **no document for the larger one was located**, so its four figures rest on secondary sources, it carries `verified: false` in the record, and the gap is written up in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).
+The larger part is the one to be careful with. NEC published a data sheet and a data book for the smaller one; **no document for the larger was located**, so its four figures rest on secondary sources, it carries `verified: false` in the record, and the gap is written up in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).
 
 Each answers to the numbers NEC sold it under. Case and separators do not matter.
 
@@ -147,22 +146,6 @@ Each answers to the numbers NEC sold it under. Case and separators do not matter
 
 A part number nothing here implements is refused rather than resolved to something close, so `Cpu("upd7720")` raises `UnknownModelError` instead of handing back a part missing instructions the caller asked for.
 
-## Reading without running
-
-An image on disk has nothing but its bytes, so identifying and running are separate halves.
-
-```python
-from upd7725 import firmware
-
-identity = firmware.identify(open("dsp1b.bin", "rb").read())
-print(identity.part, identity.revision, identity.processor)
-```
-
-```
-dsp1b DSP-1B upd7725
-```
-
-An image whose length is right but whose content is not raises `Corrupt` with the digest it actually has, rather than loading something that will run wrong. This package carries no image and never will: each belongs to whoever wrote it. [`upd7725/artifacts.manifest.json`](upd7725/artifacts.manifest.json) says what each one is and the digest that identifies it, so a copy you already own can be confirmed before it is run.
 
 ## Nothing starts clean
 
@@ -228,7 +211,6 @@ upd7725/
   registers.py     the register file, and the status word
   flags.py         one accumulator's six bits
   ports.py         the two addresses the host sees, and the handshake
-  firmware.py      naming an image from its digest
 conformance/
   pinned.json      which corpus, from which reference, at which commit
   instructions.py  every encoding, walked field by field

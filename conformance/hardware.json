@@ -19,7 +19,7 @@
           "kind": "Advance Product Information",
           "date": "1987-08",
           "readOn": "2026-08-20",
-          "note": "Covers the uPD77C25 mask-ROM part and the uPD77P25 UVEPROM part, described in the document as functionally identical. This is the part Nintendo shipped as the DSP-1, DSP-2, DSP-3 and DSP-4.",
+          "note": "Covers the uPD77C25 mask-ROM part and the uPD77P25 UVEPROM part, described in the document as functionally identical.",
           "sha256": "d043be18d5cd21d90960ffb7e068e3b9a81647c8534a142f29eb11015733d042",
           "pdfPages": 36,
           "pageNumbering": "The printed number is one less than the position in the file: printed page 1 is the second page.",
@@ -348,7 +348,7 @@
           "dataRomWords": 2048,
           "dataRamWords": 2048,
           "stackLevels": 8,
-          "why": "The three memory sizes are corroborated by the images themselves: an ST010 firmware file is exactly 16384 program words of three bytes plus 2048 table words of two bytes, so a wrong size would not load. The stack depth has no such corroboration. Eight is used because it is what the secondary sources say and because it is the smallest value consistent with them; the measurement in the sibling project shows no microcode in the family reaching past slot three, so the exposure of being wrong here is small but it is not zero."
+          "why": "The three memory sizes are corroborated by the programs written for the part: a published image for the larger one is exactly 16384 program words of three bytes plus 2048 table words of two bytes, so a wrong size would not load it. The stack depth has no such corroboration. Eight is used because it is what the secondary sources say and because it is the smallest value consistent with them; no program measured for this family reaches past stack slot three, so the exposure of being wrong here is small but it is not zero."
         },
         "howToSettleIt": "A NEC data book covering the uPD96050, or a decapped part. Until one is read, this entry stays marked unverified and the README says so."
       }

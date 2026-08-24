@@ -1,6 +1,6 @@
 """The two addresses the console sees, and the handshake across them.
 
-This is the whole of what a Super Nintendo can observe of this part. One address
+This is the whole of what a host can observe of this part. One address
 is a data register and the other is a status word, and the only thing the console
 learns about the program running inside is one bit: whether the part is waiting
 for it.

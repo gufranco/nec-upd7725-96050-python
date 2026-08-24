@@ -12,7 +12,7 @@ of an instruction to stop in. A caller wanting speed uses `step` or `run_for`; a
 caller driving several parts against one wall uses this and gets the same shape
 everywhere.
 
-The mechanism is the one ares and bsnes use, and it is kept identical to the
+The mechanism is the one full-system emulators use, and it is kept identical to the
 sibling packages so the three behave the same: the part runs on a thread of its
 own and blocks where the cycle is spent, rather than the instruction code
 learning it can be interrupted. A cycle costs a pair of handoffs between two

@@ -16,14 +16,6 @@ class CatalogueTest(unittest.TestCase):
 
         self.assertEqual((found.counter_bits, found.table_bits, found.pointer_bits), (11, 10, 8))
 
-    def test_the_larger_part_is_wider_in_all_three(self) -> None:
-        smaller = models.describe("upd7725")
-        larger = models.describe("upd96050")
-
-        self.assertGreater(larger.counter_bits, smaller.counter_bits)
-        self.assertGreater(larger.table_bits, smaller.table_bits)
-        self.assertGreater(larger.pointer_bits, smaller.pointer_bits)
-
     def test_each_store_is_exactly_as_long_as_its_register_can_reach(self) -> None:
         for found in models.MODELS.values():
             self.assertEqual(found.program_words, 1 << found.counter_bits, found.name)
@@ -33,17 +25,6 @@ class CatalogueTest(unittest.TestCase):
     def test_a_model_name_is_matched_however_it_is_written(self) -> None:
         for written in ("UPD7725", "upd-7725", "uPD_7725", "7725"):
             self.assertEqual(models.describe(written).name, "upd7725")
-
-    def test_a_model_says_which_cartridge_parts_run_on_it(self) -> None:
-        self.assertIn("st011", models.describe("upd96050").parts)
-
-    def test_and_the_family_the_other_one_carries(self) -> None:
-        self.assertIn("dsp1", models.describe("upd7725").parts)
-
-    def test_every_part_named_belongs_to_exactly_one_processor(self) -> None:
-        seen = [part for found in models.MODELS.values() for part in found.parts]
-
-        self.assertEqual(len(seen), len(set(seen)))
 
     def test_a_processor_the_package_does_not_have_is_refused_by_name(self) -> None:
         with self.assertRaises(errors.UnknownModelError):
@@ -55,11 +36,27 @@ class CatalogueTest(unittest.TestCase):
 
         self.assertIn("reference", str(raised.exception))
 
-    def test_a_name_that_is_no_part_at_all_lists_what_is_available(self) -> None:
+    def test_a_name_nothing_here_recognises_is_refused_with_the_list(self) -> None:
+        """Neither an alias nor a part named as deliberately unmodelled.
+
+        The two refusals read differently on purpose: one says why a known part
+        is absent, and this one says what the package does have, because a caller
+        who typed something unrecognisable needs the list rather than a reason.
+        """
         with self.assertRaises(errors.UnknownModelError) as raised:
-            models.describe("nonsense")
+            models.describe("nothing-like-a-part-number")
 
         self.assertIn("upd7725", str(raised.exception))
+        self.assertIn("upd96050", str(raised.exception))
+
+    def test_the_stack_pointer_follows_from_the_depth(self) -> None:
+        """A four-level stack is reached by two bits, an eight-level one by three.
+
+        It is derived rather than declared so the two cannot disagree, which is
+        worth a check because a second number is exactly what would drift.
+        """
+        self.assertEqual(models.describe("upd7725").stack_pointer_bits, 2)
+        self.assertEqual(models.describe("upd96050").stack_pointer_bits, 3)
 
     def test_every_refusal_carries_a_reason(self) -> None:
         for name, why in models.NOT_MODELLED.items():
@@ -73,18 +70,6 @@ class CatalogueTest(unittest.TestCase):
 
     def test_a_model_says_what_it_is(self) -> None:
         self.assertTrue(models.describe("upd7725").summary)
-
-
-class CarryingTest(unittest.TestCase):
-    def test_a_cartridge_part_names_the_processor_it_runs_on(self) -> None:
-        self.assertEqual(models.carrying("st011").name, "upd96050")
-
-    def test_and_the_family_the_other_processor_carries(self) -> None:
-        self.assertEqual(models.carrying("DSP-4").name, "upd7725")
-
-    def test_a_part_no_processor_here_carries_is_refused(self) -> None:
-        with self.assertRaises(errors.UnknownModelError):
-            models.carrying("cx4")
 
 
 class BuildTest(unittest.TestCase):

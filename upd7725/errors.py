@@ -21,18 +21,6 @@ class ClockClosed(Exception):
     """The clock driving this part has been closed and cannot be advanced."""
 
 
-class Corrupt(Exception):
-    pass
-
-
-class Unrecognised(Exception):
-    pass
-
-
-class WrongShape(Exception):
-    pass
-
-
 class NotWholeWords(Exception):
     pass
 

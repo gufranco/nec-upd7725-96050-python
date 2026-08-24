@@ -12,7 +12,7 @@ compute any one of them without walking to it, and the model computes only the
 handful an instruction actually touches.
 
 The instruction words are generated rather than quoted. That is what makes this
-evidence complete without any firmware present: a processor is settled by walking
+evidence complete without any program present: a processor is settled by walking
 its own encoding, and an encoding belongs to nobody.
 
 Usage:

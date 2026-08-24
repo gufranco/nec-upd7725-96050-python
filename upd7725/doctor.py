@@ -1,17 +1,12 @@
 """Look at this machine and say what is actually here, so a report can be believed.
 
-This package runs somebody else's program on a processor. That means almost
-everything that goes wrong with it is one of two things: the processor is fine
-and the image is not the one it was supposed to be, or there is no image at all.
-Both look identical from outside, and neither is visible in a traceback.
+Almost everything that goes wrong with a package like this is the part not being
+the one the reporter thinks it is. Two processors share one instruction set here
+and differ in how wide their registers and stores are, so a result that looks
+wrong is very often the right answer from the other one.
 
 So this looks, and prints what it found in a form that can be pasted into an
 issue as it stands.
-
-The digest of every image present is the line that matters most. Two people
-running the same part and getting different answers are almost always running
-different files, and the whole point of publishing digests is that the question
-can be settled in one glance instead of a round trip.
 
 Two rules shape the rest. Nothing is hidden: a check that fails says what it saw,
 and a check that itself throws is caught and reported as what it threw, named by
@@ -24,17 +19,15 @@ from __future__ import annotations
 
 import platform
 import sys
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
-from . import firmware, models
+from . import models
 from .version import VERSION
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Callable, Iterable, Sequence
+    from collections.abc import Callable, Sequence
 
     from .core import Cpu
-    from .firmware import Identity
 
 OLDEST_PYTHON = (3, 12)
 
@@ -109,100 +102,12 @@ def _processor(name: str, build: Callable[[str], Cpu]) -> Finding:
     )
 
 
-def _where() -> Finding:
-    return Finding(
-        "looking in",
-        True,
-        ", ".join(str(one) for one in firmware.directories()),
-        None,
-    )
-
-
-def _declared(read: Callable[[], dict[str, Any]] = firmware.manifest) -> Finding:
-    """What the manifest declares, or why it could not be read.
-
-    The manifest sits beside the package rather than inside it, so an installed
-    copy does not carry one. That is the ordinary case rather than a fault, and
-    it is also the case this runs in most often: somebody who installed the
-    package and is filling in an issue. Letting it raise here would hand that
-    person a traceback in place of the report they were asked for.
-    """
-    try:
-        held = read()["artifacts"]
-    except OSError:
-        return Finding(
-            "declared",
-            True,
-            "no manifest beside the package, which is the normal state of an install",
-        )
-    except Exception as trouble:
-        return Finding(
-            "declared",
-            False,
-            f"{type(trouble).__name__}: {trouble}",
-            "the manifest is here but could not be read; the line above is what it said",
-        )
-    return Finding(
-        "declared", bool(held), f"{len(held)} images: " + ", ".join(one["part"] for one in held)
-    )
-
-
-def _images(search: Callable[[], Iterable[tuple[Identity, Path]]]) -> list[Finding]:
-    """Every image on this machine, each with the digest that identifies it."""
-    try:
-        found = list(search())
-    except Exception as trouble:
-        return [
-            Finding(
-                "images",
-                False,
-                f"{type(trouble).__name__}: {trouble}",
-                "the search itself failed rather than finding nothing; the line above"
-                " is what it said",
-            )
-        ]
-    if not found:
-        return [
-            Finding(
-                "images",
-                True,
-                "no images are here, which is the normal state of a fresh checkout",
-                None,
-            )
-        ]
-    lines = [Finding("images", True, f"{len(found)} present")]
-    for identity, path in sorted(found, key=lambda one: one[0].part):
-        digest = _digest_of(path)
-        lines.append(
-            Finding(
-                f"image {identity.part}",
-                True,
-                f"{identity.processor}, {Path(path).name}, sha256 {digest}",
-            )
-        )
-    return lines
-
-
-def _digest_of(path: Path | str) -> str:
-    """The digest of the file that is here, which is what settles a report."""
-    import hashlib
-
-    try:
-        return hashlib.sha256(Path(path).read_bytes()).hexdigest()
-    except OSError as trouble:
-        return f"could not be read: {trouble}"
-
-
 def examine(
     build: Callable[[str], Cpu] = _default_build,
-    search: Callable[[], Iterable[tuple[Identity, Path]]] = firmware.search,
 ) -> list[Finding]:
     """Everything worth looking at on this machine, in the order a reader wants it."""
     found = [_python(), _package()]
     found.extend(_processor(name, build) for name in sorted(models.MODELS))
-    found.append(_where())
-    found.append(_declared())
-    found.extend(_images(search))
     return found
 
 

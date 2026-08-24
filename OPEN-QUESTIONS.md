@@ -49,7 +49,7 @@ emulators, which is the weakest evidence this project accepts for a fact a
 manufacturer would have printed.
 
 **What holds it up anyway.** Three of the four figures have a second witness that
-is not an emulator. An ST010 firmware image is exactly 16384 program words of
+is not an emulator. A published image for the larger part is exactly 16384 program words of
 three bytes plus 2048 table words of two bytes, so a wrong size would fail to
 load. That is the artifact corroborating itself. The stack depth has no such
 witness and rests on the secondary source alone.
@@ -58,21 +58,6 @@ witness and rests on the secondary source alone.
 push past eight levels on a real part and see where the return address comes
 from.
 
-### How long the console takes to reach this part.
-
-**The document says.** Nothing. That is a property of the cartridge board and the
-console bus, not of the DSP.
-
-**What this project does.** Nothing here. The figure belongs to
-`snes-mapper-python`, where every implementation costs an access to the
-coprocessor region at twelve master cycles, and where it is marked unverified for
-the same reason: Nintendo's Book I lists two bus speeds and not a third.
-
-**Why it is named here.** Somebody timing a DSP-1 routine uses both packages and
-should not pick the mark up from only one of them.
-
-**What would settle it.** A passage in Nintendo's Book I or Book II giving the
-access time for that region, or a measurement on real hardware.
 
 ## Where the source is a recording rather than a part
 
@@ -138,9 +123,9 @@ So the boundary is visible rather than implied:
   and the file is pinned by digest so a later reader checks the same scan.
 - Two independent implementations are stepped against one corpus and compared on
   the whole processor state after every instruction.
-- A firmware image is held to loading at exactly the sizes the record declares,
-  which is the artifact corroborating the record rather than a source repeating
-  it.
+- A published program image for the larger part loads at exactly the sizes the
+  record declares, which is an artifact corroborating the record rather than a
+  source repeating it.
 
 ## What is deliberately not modelled
 

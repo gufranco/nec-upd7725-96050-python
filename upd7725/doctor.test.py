@@ -1,8 +1,7 @@
 import sys
 import unittest
-from collections.abc import Callable
 from pathlib import Path
-from typing import Any, NoReturn
+from typing import NoReturn
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -71,30 +70,6 @@ class ExamineTest(unittest.TestCase):
         for model in models.MODELS:
             self.assertIn(model, names, model)
 
-    def test_and_where_it_looks_for_images(self) -> None:
-        self.assertIn("looking in", [one.name for one in doctor.examine()])
-
-    def test_and_what_the_manifest_declares(self) -> None:
-        self.assertIn("declared", [one.name for one in doctor.examine()])
-
-    def test_an_absent_manifest_is_reported_rather_than_raised(self) -> None:
-        def missing() -> NoReturn:
-            raise FileNotFoundError(2, "No such file or directory")
-
-        found = doctor._declared(missing)
-
-        self.assertTrue(found.ok)
-        self.assertIn("normal state of an install", found.detail)
-
-    def test_a_manifest_that_will_not_parse_is_reported_rather_than_hidden(self) -> None:
-        def broken() -> NoReturn:
-            raise Complaint("the manifest exploded")
-
-        found = doctor._declared(broken)
-
-        self.assertFalse(found.ok)
-        self.assertIn("Complaint: the manifest exploded", found.detail)
-
     def test_every_finding_carries_a_detail(self) -> None:
         for one in doctor.examine():
             self.assertTrue(one.detail, one.name)
@@ -115,100 +90,6 @@ class ExamineTest(unittest.TestCase):
 
         self.assertIn("the core exploded", text)
         self.assertIn("Complaint", text)
-
-
-class ImageTest(unittest.TestCase):
-    def test_a_machine_with_no_image_says_so_rather_than_listing_none(self) -> None:
-        found = doctor.examine(search=lambda: [])
-
-        self.assertIn("no images", " ".join(one.detail for one in found))
-
-    def test_and_that_is_not_treated_as_a_failure(self) -> None:
-        found = doctor.examine(search=lambda: [])
-
-        held = [one for one in found if one.name == "images"]
-        self.assertTrue(held)
-        self.assertTrue(held[0].ok)
-
-    def test_a_search_that_itself_throws_is_reported(self) -> None:
-        def boom() -> NoReturn:
-            raise Complaint("the search exploded")
-
-        text = "\n".join(one.report for one in doctor.examine(search=boom))
-
-        self.assertIn("the search exploded", text)
-
-
-class PresentImageTest(unittest.TestCase):
-    """That an image being present is examined on machines that hold none.
-
-    Nobody who does not already own these parts can put one here, so most
-    machines that ever run this report hold nothing at all. Leaving the
-    present-image checks to whatever happens to be on the machine means they are
-    exercised where it is convenient and nowhere else, and a check that only runs
-    on one person's laptop is not a check.
-    """
-
-    def _one(self, where: Path) -> Callable[[], list[tuple[Any, Path]]]:
-        from upd7725 import firmware
-
-        return lambda: [(firmware.Identity("dsp1", "upd7725", "MADE UP", 8, 8), where)]
-
-    def _made_up(self) -> Path:
-        import tempfile
-
-        where = Path(tempfile.mkdtemp()) / "made-up.bin"
-        where.write_bytes(b"nothing anybody owns")
-        return where
-
-    def test_an_image_that_is_here_is_counted(self) -> None:
-        found = doctor.examine(search=self._one(self._made_up()))
-
-        held = [one for one in found if one.name == "images"]
-        self.assertIn("1 present", held[0].detail)
-
-    def test_and_reported_under_its_own_name(self) -> None:
-        found = doctor.examine(search=self._one(self._made_up()))
-
-        self.assertIn("image dsp1", [one.name for one in found])
-
-    def test_and_carries_the_digest_of_the_file_that_is_actually_here(self) -> None:
-        import hashlib
-
-        found = doctor.examine(search=self._one(self._made_up()))
-
-        digest = hashlib.sha256(b"nothing anybody owns").hexdigest()
-        self.assertIn(digest, " ".join(one.detail for one in found))
-
-    def test_and_the_processor_it_belongs_to(self) -> None:
-        found = doctor.examine(search=self._one(self._made_up()))
-
-        for one in found:
-            if one.name == "image dsp1":
-                self.assertIn("upd7725", one.detail)
-
-    def test_a_file_that_went_away_between_finding_and_reading_says_so(self) -> None:
-        found = doctor.examine(search=self._one(Path("/nowhere/at/all.bin")))
-
-        self.assertIn("could not be read", " ".join(one.detail for one in found))
-
-
-class DigestTest(unittest.TestCase):
-    def test_a_file_that_is_here_reports_its_digest(self) -> None:
-        import hashlib
-        import tempfile
-
-        where = Path(tempfile.mkdtemp()) / "made-up.bin"
-        where.write_bytes(b"nothing anybody owns")
-
-        self.assertEqual(
-            doctor._digest_of(where), hashlib.sha256(b"nothing anybody owns").hexdigest()
-        )
-
-    def test_a_file_that_cannot_be_read_says_so_rather_than_going_quiet(self) -> None:
-        found = doctor._digest_of(Path("/nowhere/at/all.bin"))
-
-        self.assertIn("could not be read", found)
 
 
 class ReportTest(unittest.TestCase):

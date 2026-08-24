@@ -25,21 +25,18 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import clock, core, errors, firmware, flags, memory, models, ports, registers
+from . import clock, core, errors, flags, memory, models, ports, registers
 from .clock import Clock
 from .errors import (
     ClockClosed,
-    Corrupt,
     NeverReady,
     NotWholeWords,
     RunLimit,
     TooLarge,
     UnknownModelError,
-    Unrecognised,
-    WrongShape,
 )
 from .memory import UNSET_SEED, Store, Stores, scramble
-from .models import MODELS, carrying, describe
+from .models import MODELS, describe
 from .version import VERSION
 
 __version__ = VERSION
@@ -64,7 +61,6 @@ __all__ = [
     "UNSET_SEED",
     "Clock",
     "ClockClosed",
-    "Corrupt",
     "Cpu",
     "NeverReady",
     "NotWholeWords",
@@ -73,15 +69,11 @@ __all__ = [
     "Stores",
     "TooLarge",
     "UnknownModelError",
-    "Unrecognised",
-    "WrongShape",
     "__version__",
-    "carrying",
     "clock",
     "core",
     "describe",
     "errors",
-    "firmware",
     "flags",
     "memory",
     "models",

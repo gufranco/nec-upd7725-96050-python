@@ -5,11 +5,14 @@ This file is for a coding agent. A person reading it will not be harmed, but
 
 ## What this project is, in one paragraph
 
-A model of the NEC uPD7725 and uPD96050, the processor that a shelf of Super
-several coprocessor modules turn out to contain. It is a model of silicon,
-not of a program: every instruction is settled by generating instruction words,
-so the whole gate runs on a machine holding nothing anybody licensed. Firmware is
-never carried here and never will be.
+A model of the NEC uPD7725 and uPD96050 digital signal processors. It is a model
+of silicon and not of any program written for one: every instruction is settled
+by generating instruction words, so the whole gate runs on a machine holding
+nothing anybody licensed. No program image is carried here and none ever will be.
+
+What was built around one of these parts is not this package's business. A module
+somebody soldered onto a board, what it was called and what machine it plugged
+into all belong to whoever models that board.
 
 ## The authority ladder
 
@@ -96,13 +99,6 @@ clearing one.
 
 **Run the suite as a machine that holds nothing.** A test that reaches a default
 which opens a real file passes on a workstation holding that file and fails on a
-runner that does not, and the local run gives no hint. Point the firmware
-directory somewhere empty and run everything before pushing:
-
-```bash
-EMPTY=$(mktemp -d)
-for f in upd7725/*.test.py conformance/*.test.py; do
-  UPD7725_FIRMWARE_DIR="$EMPTY" python3 "$f" || echo "FAILED $f"
 done
 ```
 
@@ -110,20 +106,6 @@ Every test that could reach a real image supplies its own path or its own stand-
 A default is for a person at a command line, never for a test.
 
 **Coverage that depends on what the machine holds is not coverage.** A test that
-only runs where a firmware image happens to be present is a test that reports a
-pass on a machine that ran nothing. Tests that need a file supply their own.
-
-**The two implementations are deliberately shaped differently.** The package
-branches through named conditions; `conformance/reference.py` dispatches through
-tables. Do not refactor one towards the other. Implementations that share a shape
-share a mistake, and the whole value of the comparison is that these two do not.
-
-**`conformance/reference.py` is a transcription.** It was ported from a widely
-used emulator's core, and its structure, its names and its mixed-case fields come
-from there. Keep them. Declaring a field explicitly so the checker can see it is
-fine; restructuring the logic makes the port harder to re-derive and weakens the
-claim that it is independent.
-
 ## Conventions that are not negotiable
 
 | Thing | Rule |
@@ -137,7 +119,7 @@ claim that it is independent.
 | Types | `mypy` at strict, plus every optional error class the version offers |
 | Commits | [Conventional Commits](https://www.conventionalcommits.org/); subject under 50 characters |
 | Releases | semantic-release from `main`; never tag by hand |
-| Firmware | Never committed, never vendored, never encoded, never generated |
+| A program image | Never committed, never vendored, never encoded, never generated |
 
 Docstrings explain why, not what. A docstring restating the function name is
 worse than none, because it takes space a reason could have used.
@@ -151,18 +133,15 @@ upd7725/
   registers.py    the register file, at each part's own widths
   memory.py       program, table and scratch, filled rather than cleared
   ports.py        the console side: the handshake and both transfer widths
-  firmware.py     identifying an image somebody else supplied
-  models.py       the two parts, and which cartridge chip ran on each
+  models.py       the two parts, and what separates them
   doctor.py       what this machine actually has
 conformance/
   reference.py        an independent implementation, ported, table-driven
   oracle.py           one case through it, in the shape the recordings are in
   instructions.py     the gate: every form, against the recordings
   differential.py     the two implementations against each other, unbounded
-  against_firmware.py the opt-in runner that needs an image you already own
   corpus.json         22,240 recorded states
   pinned.json         which implementation, at which commit
-firmware/         where a user's own copies go; nothing here is ever committed
 ```
 
 ## Adding a part to the family
