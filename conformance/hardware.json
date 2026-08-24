@@ -222,7 +222,9 @@
             "XCHG": ["indefinite", "affected", "reset", "affected", "reset", "reset"]
           },
           "whatItSettles": "Which flags each ALU operation touches, from the manufacturer rather than from the recording. It confirms the split this model already made: only the one-bit shifts take the carry from the bit shifted out, while the two-bit and four-bit shifts, the exchange, the complement and the three logic operations reset it.",
-          "whatItLeavesOpen": "The auxiliary sign flag is declared indefinite for the logic operations, the complement, the exchange and every shift. This model gives it a definite value there, following the recording, because a model has to answer something. That is a choice this project makes and not a figure the manufacturer gives."
+          "whatItLeavesOpen": "The auxiliary sign flag is declared indefinite for the logic operations, the complement, the exchange and every shift. This model gives it a definite value there, following the recording, because a model has to answer something. That is a choice this project makes and not a figure the manufacturer gives.",
+          "filePage": 82,
+          "headerOnThatPage": "uPD77C25/77P25"
         },
         "clockCycleNanoseconds": {
           "typical": 122,
@@ -267,10 +269,16 @@
         "sha256": "2f0190523de99938cc1da1c138f2c5b7f71573eb11bcb3b0dcdd1da1267e85ce",
         "pdfPages": 388,
         "readOn": "2026-08-24",
-        "pageNumbering": "Printed numbers are per section, as 2-33. The uPD77C25 section runs from file page 76.",
+        "pageNumbering": "Printed numbers are per section, as 2-33. The uPD77C25 section runs from file page 76 to file page 99, and printed page 2-33 is file page 82.",
         "readVia": "nec-dsp-data-book-1989.pdf, read twice as the other document is. The flag matrix was read from the page image at 900 dots per inch, cropped to the table, because the text layer loses the column alignment and renders the affected symbol as a digit.",
         "whyItMatters": "The data sheet this project was built on is Advance Product Information and states no flag rules. This is the full data book for the same part, and its Table 6 gives, for every one of the sixteen ALU operations, which flags are affected, which are reset, which are held and which the manufacturer declines to define. That is the manufacturer speaking about behaviour the project had taken from a recording.",
-        "pinnedIn": "the References section of README.md"
+        "pinnedIn": "the References section of README.md",
+        "sectionPages": {
+          "from": 76,
+          "to": 99,
+          "why": "This book covers a dozen parts and several are close relatives that print the same table under the same name with the same column headings. The uPD77810 in this very book has a flag table with the identical six bits under identical names. A quote taken from it would read as perfectly sourced and would be about a different part, so every fact citing this document names the file page it came from and that page has to fall inside these.",
+          "howItWasFound": "The running header was read off every file page from 76 onward until it changed: 76 through 99 read uPD77C25/77P25 and 100 begins the uPD77220."
+        }
       }
     },
     {
