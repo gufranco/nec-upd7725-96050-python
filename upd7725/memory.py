@@ -50,6 +50,15 @@ def scramble(size: int, seed: int = UNSET_SEED) -> list[int]:
 class Store:
     """A run of words of one width, addressed within its own length."""
 
+    __slots__ = (
+        "_fill",
+        "_written",
+        "bits",
+        "mask",
+        "source",
+        "words",
+    )
+
     def __init__(
         self,
         words: int,
@@ -98,6 +107,12 @@ class Store:
 
 class Stores:
     """The program store, the constant table and the scratch the part shares."""
+
+    __slots__ = (
+        "program",
+        "scratch",
+        "table",
+    )
 
     def __init__(
         self,

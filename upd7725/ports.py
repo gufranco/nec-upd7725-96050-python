@@ -33,6 +33,8 @@ DEFAULT_LIMIT = 200000
 class Console:
     """The console's side of the two registers, and the waiting between them."""
 
+    __slots__ = ("chip",)
+
     def __init__(self, chip: Cpu) -> None:
         self.chip = chip
 

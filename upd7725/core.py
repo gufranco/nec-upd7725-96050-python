@@ -238,7 +238,26 @@ def _superseded(asl: int, destination: int) -> bool:
 
 
 class Cpu:
-    """One processor, its registers, its flags and its three stores."""
+    """One processor, its registers, its flags and its three stores.
+    The slots are the point rather than a saving. Without them a name this class
+    does not have is accepted in silence: the caller sets a stray attribute, the
+    one they meant keeps whatever it held, and nothing reports that the write went
+    nowhere. A sibling package shipped exactly that, where two parts spell the
+    interrupt disable flag differently and reaching for the wrong one did nothing
+    at all.
+    """
+
+    __slots__ = (
+        "cycles",
+        "flags_a",
+        "flags_b",
+        "irq_line",
+        "model",
+        "on_cycle",
+        "registers",
+        "steps",
+        "stores",
+    )
 
     model: Model
     registers: Registers

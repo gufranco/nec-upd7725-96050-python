@@ -27,6 +27,16 @@ if TYPE_CHECKING:  # pragma: no cover
 class Model:
     """One processor: how far it reaches, and what shipped running on it."""
 
+    __slots__ = (
+        "aliases",
+        "counter_bits",
+        "name",
+        "pointer_bits",
+        "stack_levels",
+        "summary",
+        "table_bits",
+    )
+
     def __init__(
         self,
         name: str,
