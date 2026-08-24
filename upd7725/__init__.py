@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import clock, core, errors, flags, memory, models, ports, registers
+from . import clock, core, errors, flags, memory, models, opcodes, ports, registers
 from .clock import Clock
 from .errors import (
     ClockClosed,
@@ -37,6 +37,7 @@ from .errors import (
 )
 from .memory import UNSET_SEED, Store, Stores, scramble
 from .models import MODELS, describe
+from .opcodes import Instruction, decode, disassemble
 from .version import VERSION
 
 __version__ = VERSION
@@ -62,6 +63,7 @@ __all__ = [
     "Clock",
     "ClockClosed",
     "Cpu",
+    "Instruction",
     "NeverReady",
     "NotWholeWords",
     "RunLimit",
@@ -72,11 +74,14 @@ __all__ = [
     "__version__",
     "clock",
     "core",
+    "decode",
     "describe",
+    "disassemble",
     "errors",
     "flags",
     "memory",
     "models",
+    "opcodes",
     "ports",
     "registers",
     "scramble",

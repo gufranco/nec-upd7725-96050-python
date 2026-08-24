@@ -17,7 +17,7 @@
 
 </div>
 
-**2** parts · **1,120** encodings walked field by field · **22,240** instructions compared, **0** disagreements · **613** tests · **100%** statement and branch coverage · no dependencies
+**2** parts · **1,120** encodings walked field by field · **22,240** instructions compared, **0** disagreements · **625** tests · **100%** statement and branch coverage · no dependencies
 
 ```python
 from upd7725 import Cpu
@@ -60,6 +60,7 @@ Everything a caller touches. Nothing else is public.
 | `cpu.held()` | Whether the part has stopped advancing the program | `bool`, always false: this part has no halt |
 | `cpu.irq()` | Offers the interrupt line and acts on it now. A call to 100H when the enable bit is set | `True` if taken |
 | `identify(image)` | Names an image from its digest, with no machine to run it in | an `Identity` |
+| `disassemble(words, address)` | Reads program words with no machine to run them in | `Instruction` objects with `.text` |
 | `describe(model)` | The part behind a name, before building one | a `Model` |
 
 | Pin or attribute | Is |
@@ -147,6 +148,25 @@ Each answers to the numbers NEC sold it under. Case and separators do not matter
 A part number nothing here implements is refused rather than resolved to something close, so `Cpu("upd7720")` raises `UnknownModelError` instead of handing back a part missing instructions the caller asked for.
 
 
+## Reading without running
+
+A program somebody else wrote has nothing but its words, so reading and running are separate halves.
+
+```python
+from upd7725 import disassemble
+
+for found in disassemble([0xC00A81, 0x910040, 0x400000], 0x100):
+    print(f"{found.address:04X}  {found.text}")
+```
+
+```
+0100  ld $002A,a
+0101  jnza $0010
+0102  rt
+```
+
+Words rather than bytes, because the program store is addressed by word and a caller holding an image has already had to decide how three bytes become one. Every one of the sixteen million words is a valid instruction of one of four forms, so nothing here raises and there is no undefined case to report.
+
 ## Nothing starts clean
 
 Registers and stores hold a reproducible scrambled pattern. There is no parameter that clears the registers and there will not be one: a part that has been powered and not reset holds rubbish on real silicon, and a model that starts at zero turns a missing reset into a passing test.
@@ -211,6 +231,7 @@ upd7725/
   registers.py     the register file, and the status word
   flags.py         one accumulator's six bits
   ports.py         the two addresses the host sees, and the handshake
+  opcodes.py       naming the fields of a word, without running it
 conformance/
   pinned.json      which corpus, from which reference, at which commit
   instructions.py  every encoding, walked field by field
