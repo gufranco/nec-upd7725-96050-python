@@ -38,19 +38,21 @@ class DocumentTest(unittest.TestCase):
             if not one["verified"]:
                 continue
             for named in ("publisher", "title", "kind", "date", "readOn"):
-                self.assertIn(named, one["document"], one["part"])
+                self.assertIn(named, one["documents"]["dataSheet"], one["part"])
 
     def test_and_pins_it_by_digest_so_the_reading_can_be_repeated(self) -> None:
         for one in declared()["parts"]:
             if not one["verified"]:
                 continue
-            self.assertRegex(one["document"]["sha256"], r"^[0-9a-f]{64}$", one["part"])
+            self.assertRegex(
+                one["documents"]["dataSheet"]["sha256"], r"^[0-9a-f]{64}$", one["part"]
+            )
 
     def test_and_says_how_the_printed_number_relates_to_the_file(self) -> None:
         for one in declared()["parts"]:
             if not one["verified"]:
                 continue
-            self.assertIn("pageNumbering", one["document"], one["part"])
+            self.assertIn("pageNumbering", one["documents"]["dataSheet"], one["part"])
 
     def test_every_fact_carries_the_words_it_came_from(self) -> None:
         for name, fact in facts_for("upd7725").items():
@@ -64,7 +66,7 @@ class DocumentTest(unittest.TestCase):
         section instead. Either answers the only question that matters, which is
         where a reader goes to check the sentence.
         """
-        pages = declared()["parts"][0]["document"]["pdfPages"]
+        pages = declared()["parts"][0]["documents"]["dataSheet"]["pdfPages"]
         for name, fact in facts_for("upd7725").items():
             if isinstance(fact.get("section"), str):
                 continue
@@ -76,7 +78,7 @@ class DocumentTest(unittest.TestCase):
         for one in declared()["parts"]:
             if one["verified"]:
                 continue
-            self.assertIsNone(one["document"], one["part"])
+            self.assertEqual(one["documents"], {}, one["part"])
             self.assertIn("howToSettleIt", one["unverified"], one["part"])
 
     def test_the_authority_order_is_written_down(self) -> None:

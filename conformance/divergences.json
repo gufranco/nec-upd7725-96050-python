@@ -1,9 +1,10 @@
 {
   "comment": "Every place a source is weaker than it looks, and every place this package deliberately claims nothing. The facts themselves live in hardware.json; this file is about their standing, and it is the file a reader of any sibling repository looks in for that.",
   "sources": {
-    "document": "NEC uPD77C25/uPD77P25 Digital Signal Processor Data Sheet, August 1987. Pinned in hardware.json. It covers the part Nintendo shipped as the DSP-1 through DSP-4.",
+    "document": "dataSheet",
     "corpus": "conformance/corpus.json, recorded from an emulator named in pinned.json. Good evidence for behaviour nobody documented, poor evidence for anything a manufacturer printed.",
-    "artifact": "The firmware images themselves, which corroborate a size when a wrong size would fail to load."
+    "artifact": "The firmware images themselves, which corroborate a size when a wrong size would fail to load.",
+    "section": "in hardware.json. It covers the part Nintendo shipped as the DSP-1 through DSP-4."
   },
   "divergences": [
     {

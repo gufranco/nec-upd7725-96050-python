@@ -12,18 +12,41 @@
     {
       "part": "upd7725",
       "verified": true,
-      "document": {
-        "publisher": "NEC Electronics Inc.",
-        "title": "uPD77C25/uPD77P25 Digital Signal Processor Data Sheet",
-        "kind": "Advance Product Information",
-        "date": "1987-08",
-        "readOn": "2026-08-20",
-        "note": "Covers the uPD77C25 mask-ROM part and the uPD77P25 UVEPROM part, described in the document as functionally identical. This is the part Nintendo shipped as the DSP-1, DSP-2, DSP-3 and DSP-4.",
-        "sha256": "d043be18d5cd21d90960ffb7e068e3b9a81647c8534a142f29eb11015733d042",
-        "pdfPages": 36,
-        "pageNumbering": "The printed number is one less than the position in the file: printed page 1 is the second page.",
-        "readVia": "upd77c25.pdf, 36 pages, read twice. Vision read every page rendered at 300 dots per inch, and pdftotext read the layer the scan already carried. Neither is sufficient alone: the embedded layer prints lhe for the and OP for DP, while the image read misses a faint line outright, which is how the data RAM sentence came to be absent from one reading and present in the other. Every page below is one both readings agree on, or one confirmed by reading the page itself.",
-        "pinnedIn": "the References section of README.md, and locally by digest as docs/manufacturer/upd77c25.pdf"
+      "documents": {
+        "dataSheet": {
+          "publisher": "NEC Electronics Inc.",
+          "title": "uPD77C25/uPD77P25 Digital Signal Processor Data Sheet",
+          "kind": "Advance Product Information",
+          "date": "1987-08",
+          "readOn": "2026-08-20",
+          "note": "Covers the uPD77C25 mask-ROM part and the uPD77P25 UVEPROM part, described in the document as functionally identical. This is the part Nintendo shipped as the DSP-1, DSP-2, DSP-3 and DSP-4.",
+          "sha256": "d043be18d5cd21d90960ffb7e068e3b9a81647c8534a142f29eb11015733d042",
+          "pdfPages": 36,
+          "pageNumbering": "The printed number is one less than the position in the file: printed page 1 is the second page.",
+          "readVia": "upd77c25.pdf, 36 pages, read twice. Vision read every page rendered at 300 dots per inch, and pdftotext read the layer the scan already carried. Neither is sufficient alone: the embedded layer prints lhe for the and OP for DP, while the image read misses a faint line outright, which is how the data RAM sentence came to be absent from one reading and present in the other. Every page below is one both readings agree on, or one confirmed by reading the page itself.",
+          "pinnedIn": "the References section of README.md, and locally by digest as docs/manufacturer/upd77c25.pdf",
+          "file": "upd77c25.pdf"
+        },
+        "dataBook": {
+          "publisher": "NEC Electronics Inc.",
+          "title": "Digital Signal Processor (DSP) and Speech Processor Products Data Book",
+          "documentNumber": "50052",
+          "date": "1989",
+          "sha256": "2f0190523de99938cc1da1c138f2c5b7f71573eb11bcb3b0dcdd1da1267e85ce",
+          "pdfPages": 388,
+          "readOn": "2026-08-24",
+          "pageNumbering": "Printed numbers are per section, as 2-33. The uPD77C25 section runs from file page 76 to file page 99, and printed page 2-33 is file page 82.",
+          "readVia": "nec-dsp-data-book-1989.pdf, read twice as the other document is. The flag matrix was read from the page image at 900 dots per inch, cropped to the table, because the text layer loses the column alignment and renders the affected symbol as a digit.",
+          "whyItMatters": "The data sheet this project was built on is Advance Product Information and states no flag rules. This is the full data book for the same part, and its Table 6 gives, for every one of the sixteen ALU operations, which flags are affected, which are reset, which are held and which the manufacturer declines to define. That is the manufacturer speaking about behaviour the project had taken from a recording.",
+          "pinnedIn": "the References section of README.md",
+          "sectionPages": {
+            "from": 76,
+            "to": 99,
+            "why": "This book covers a dozen parts and several are close relatives that print the same table under the same name with the same column headings. The uPD77810 in this very book has a flag table with the identical six bits under identical names. A quote taken from it would read as perfectly sourced and would be about a different part, so every fact citing this document names the file page it came from and that page has to fall inside these.",
+            "howItWasFound": "The running header was read off every file page from 76 onward until it changed: 76 through 99 read uPD77C25/77P25 and 100 begins the uPD77220."
+          },
+          "file": "nec-dsp-data-book-1989.pdf"
+        }
       },
       "facts": {
         "clocksPerInstruction": {
@@ -192,7 +215,7 @@
           "note": "So a sixteen-bit data register is moved a byte at a time, which is what DRS tracks."
         },
         "aluFlagMatrix": {
-          "document": "secondDocument",
+          "document": "dataBook",
           "quote": "Notes: May be affected, depending on the results; Previous status can be held; Reset; Indefinite",
           "assembled": true,
           "section": "printed page 2-33, Table 6. ALU Field",
@@ -258,33 +281,15 @@
         "quote": "Instruction cycle   122 ns ... 244 ns",
         "assembled": true,
         "page": 3,
-        "document": "the comparison table on printed page 3, which sets the two parts side by side",
-        "why": "Recorded because a reader who finds a 250 ns instruction cycle quoted for this family has found the earlier part. Taking that figure for this one would halve the rate at which it runs."
-      },
-      "secondDocument": {
-        "publisher": "NEC Electronics Inc.",
-        "title": "Digital Signal Processor (DSP) and Speech Processor Products Data Book",
-        "documentNumber": "50052",
-        "date": "1989",
-        "sha256": "2f0190523de99938cc1da1c138f2c5b7f71573eb11bcb3b0dcdd1da1267e85ce",
-        "pdfPages": 388,
-        "readOn": "2026-08-24",
-        "pageNumbering": "Printed numbers are per section, as 2-33. The uPD77C25 section runs from file page 76 to file page 99, and printed page 2-33 is file page 82.",
-        "readVia": "nec-dsp-data-book-1989.pdf, read twice as the other document is. The flag matrix was read from the page image at 900 dots per inch, cropped to the table, because the text layer loses the column alignment and renders the affected symbol as a digit.",
-        "whyItMatters": "The data sheet this project was built on is Advance Product Information and states no flag rules. This is the full data book for the same part, and its Table 6 gives, for every one of the sixteen ALU operations, which flags are affected, which are reset, which are held and which the manufacturer declines to define. That is the manufacturer speaking about behaviour the project had taken from a recording.",
-        "pinnedIn": "the References section of README.md",
-        "sectionPages": {
-          "from": 76,
-          "to": 99,
-          "why": "This book covers a dozen parts and several are close relatives that print the same table under the same name with the same column headings. The uPD77810 in this very book has a flag table with the identical six bits under identical names. A quote taken from it would read as perfectly sourced and would be about a different part, so every fact citing this document names the file page it came from and that page has to fall inside these.",
-          "howItWasFound": "The running header was read off every file page from 76 onward until it changed: 76 through 99 read uPD77C25/77P25 and 100 begins the uPD77220."
-        }
+        "document": "dataSheet",
+        "why": "Recorded because a reader who finds a 250 ns instruction cycle quoted for this family has found the earlier part. Taking that figure for this one would halve the rate at which it runs.",
+        "section": "the comparison table on printed page 3, which sets the two parts side by side"
       }
     },
     {
       "part": "upd96050",
       "verified": false,
-      "document": null,
+      "documents": {},
       "unverified": {
         "note": "No manufacturer document for this part was located. Everything asserted about it below therefore rests on secondary sources, and secondary sources for this family are emulators, which is the weakest kind of evidence this project accepts for a fact the manufacturer would have printed. It is recorded as unverified rather than quietly adopted.",
         "whatIsAsserted": {
