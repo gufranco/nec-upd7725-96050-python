@@ -46,7 +46,7 @@ jobs:
       - name: Install the formatter
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Check that every JSON file is formatted
+      - name: Check that every JSON and YAML file is formatted
         run: pnpm run format:check
 
       # The workflows are the one thing here nothing else checks, and a mistake
