@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from upd7725 import models, ports
+from upd7725 import errors, models, ports
 
 ALWAYS_ASKING = 3 << 22 | 6
 """A store full of loads into the data register, so the part keeps asking."""
@@ -115,7 +115,7 @@ class SettleTest(unittest.TestCase):
     def test_a_part_that_never_asks_gives_up_rather_than_running_forever(self) -> None:
         found = a_console()
 
-        with self.assertRaises(ports.NeverReady):
+        with self.assertRaises(errors.NeverReady):
             found.settle(limit=50)
 
     def test_a_part_that_asks_after_a_while_settles_when_it_does(self) -> None:

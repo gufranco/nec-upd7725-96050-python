@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .errors import NeverReady
+
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable
 
@@ -26,10 +28,6 @@ DATA = 0
 STATUS = 1
 
 DEFAULT_LIMIT = 200000
-
-
-class NeverReady(Exception):
-    pass
 
 
 class Console:

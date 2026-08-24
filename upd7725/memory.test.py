@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from upd7725 import memory
+from upd7725 import errors, memory
 
 
 class ShapeTest(unittest.TestCase):
@@ -173,25 +173,25 @@ class LoadTest(unittest.TestCase):
     def test_a_program_longer_than_the_store_is_refused_rather_than_trimmed(self) -> None:
         found = memory.Stores(program_words=1, table_words=1, scratch_words=1)
 
-        with self.assertRaises(memory.TooLarge):
+        with self.assertRaises(errors.TooLarge):
             found.load_program(bytes(6))
 
     def test_and_so_is_a_table(self) -> None:
         found = memory.Stores(program_words=1, table_words=1, scratch_words=1)
 
-        with self.assertRaises(memory.TooLarge):
+        with self.assertRaises(errors.TooLarge):
             found.load_table(bytes(4))
 
     def test_a_program_that_does_not_divide_into_words_is_refused(self) -> None:
         found = memory.Stores(program_words=4, table_words=4, scratch_words=4)
 
-        with self.assertRaises(memory.NotWholeWords):
+        with self.assertRaises(errors.NotWholeWords):
             found.load_program(bytes(4))
 
     def test_and_a_table_that_does_not_divide_into_words_either(self) -> None:
         found = memory.Stores(program_words=4, table_words=4, scratch_words=4)
 
-        with self.assertRaises(memory.NotWholeWords):
+        with self.assertRaises(errors.NotWholeWords):
             found.load_table(bytes(3))
 
     def test_a_short_program_leaves_the_rest_of_the_store_as_it_was(self) -> None:

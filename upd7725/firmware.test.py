@@ -10,7 +10,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from upd7725 import firmware, models
+from upd7725 import errors, firmware, models
 
 
 def an_image(program_words: int = 2048, data_words: int = 1024, filler: int = 0xAB) -> bytes:
@@ -166,7 +166,7 @@ class IdentifyTest(unittest.TestCase):
             ]
         }
 
-        with self.assertRaises(firmware.Unrecognised) as raised:
+        with self.assertRaises(errors.Unrecognised) as raised:
             firmware.identify(an_image(), catalogue)
 
         self.assertIn("altered", str(raised.exception))
@@ -174,13 +174,13 @@ class IdentifyTest(unittest.TestCase):
     def test_an_image_of_no_size_the_manifest_knows_says_that_instead(self) -> None:
         catalogue: dict[str, list[object]] = {"artifacts": []}
 
-        with self.assertRaises(firmware.Unrecognised) as raised:
+        with self.assertRaises(errors.Unrecognised) as raised:
             firmware.identify(b"\x00" * 7, catalogue)
 
         self.assertIn("7", str(raised.exception))
 
     def test_the_report_always_carries_the_digest_that_was_computed(self) -> None:
-        with self.assertRaises(firmware.Unrecognised) as raised:
+        with self.assertRaises(errors.Unrecognised) as raised:
             firmware.identify(b"\x00" * 7, {"artifacts": []})
 
         self.assertIn(hashlib.sha256(b"\x00" * 7).hexdigest(), str(raised.exception))
@@ -255,7 +255,7 @@ class RepairTest(unittest.TestCase):
     def test_the_diagnosis_names_the_repair_rather_than_the_length(self) -> None:
         image = an_image()
 
-        with self.assertRaises(firmware.Unrecognised) as raised:
+        with self.assertRaises(errors.Unrecognised) as raised:
             firmware.identify(b"H" * 512 + image, a_catalogue(image))
 
         self.assertIn("512", str(raised.exception))
@@ -279,7 +279,7 @@ class BadDumpTest(unittest.TestCase):
             badDumps=[{"sha256": hashlib.sha256(broken).hexdigest(), "why": "truncated"}],
         )
 
-        with self.assertRaises(firmware.Unrecognised) as raised:
+        with self.assertRaises(errors.Unrecognised) as raised:
             firmware.identify(broken, catalogue)
 
         self.assertIn("known bad dump", str(raised.exception))
@@ -293,7 +293,7 @@ class BadDumpTest(unittest.TestCase):
             badDumps=[{"sha256": hashlib.sha256(broken).hexdigest()}],
         )
 
-        with self.assertRaises(firmware.Unrecognised) as raised:
+        with self.assertRaises(errors.Unrecognised) as raised:
             firmware.identify(broken, catalogue)
 
         self.assertIn("dsp9", str(raised.exception))
@@ -301,7 +301,7 @@ class BadDumpTest(unittest.TestCase):
     def test_an_undeclared_file_is_not_called_a_bad_dump(self) -> None:
         image = an_image()
 
-        with self.assertRaises(firmware.Unrecognised) as raised:
+        with self.assertRaises(errors.Unrecognised) as raised:
             firmware.identify(an_image(filler=0x00), a_catalogue(image))
 
         self.assertNotIn("known bad dump", str(raised.exception))
@@ -362,7 +362,7 @@ class CrossCheckTest(unittest.TestCase):
             ]
         }
 
-        with self.assertRaises(firmware.Corrupt) as raised:
+        with self.assertRaises(errors.Corrupt) as raised:
             firmware.identify(image, catalogue)
 
         self.assertIn("crc32", str(raised.exception))
@@ -402,7 +402,7 @@ class CrossCheckTest(unittest.TestCase):
                 ]
             }
 
-            with self.assertRaises(firmware.Corrupt):
+            with self.assertRaises(errors.Corrupt):
                 firmware.identify(image, catalogue)
 
     def test_an_image_the_manifest_only_partly_describes_is_still_accepted(self) -> None:
@@ -452,7 +452,7 @@ class LoadTest(unittest.TestCase):
     def test_an_image_that_does_not_match_the_processor_is_refused(self) -> None:
         chip = models.describe("upd7725").build(fill=0)
 
-        with self.assertRaises(firmware.WrongShape):
+        with self.assertRaises(errors.WrongShape):
             firmware.load(chip, bytes(53248))
 
 

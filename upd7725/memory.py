@@ -18,6 +18,8 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING
 
+from .errors import NotWholeWords, TooLarge
+
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
 
@@ -43,14 +45,6 @@ def scramble(size: int, seed: int = UNSET_SEED) -> list[int]:
     """
     source = random.Random(seed)
     return [source.getrandbits(32) for _ in range(size)]
-
-
-class TooLarge(Exception):
-    pass
-
-
-class NotWholeWords(Exception):
-    pass
 
 
 class Store:

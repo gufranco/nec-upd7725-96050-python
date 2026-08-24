@@ -28,11 +28,19 @@ from typing import TYPE_CHECKING, Any
 from . import clock, core, errors, firmware, flags, memory, models, ports, registers
 from .clock import Clock
 from .core import Core
-from .errors import ClockClosed, RunLimit, UnknownModelError
-from .firmware import Corrupt, Unrecognised, WrongShape
-from .memory import UNSET_SEED, NotWholeWords, Store, Stores, TooLarge, scramble
+from .errors import (
+    ClockClosed,
+    Corrupt,
+    NeverReady,
+    NotWholeWords,
+    RunLimit,
+    TooLarge,
+    UnknownModelError,
+    Unrecognised,
+    WrongShape,
+)
+from .memory import UNSET_SEED, Store, Stores, scramble
 from .models import MODELS, carrying, describe
-from .ports import NeverReady
 from .version import VERSION
 
 __version__ = VERSION

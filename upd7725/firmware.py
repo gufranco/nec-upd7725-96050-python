@@ -25,6 +25,8 @@ import zlib
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, override
 
+from .errors import Corrupt, Unrecognised, WrongShape
+
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Iterable, Iterator, Mapping
 
@@ -58,18 +60,6 @@ DIGESTS = ("crc32", "md5", "sha1", "sha256")
 DECIDES = "sha256"
 
 DIGEST_WIDTHS = {"crc32": 8, "md5": 32, "sha1": 40, "sha256": 64}
-
-
-class Unrecognised(Exception):
-    pass
-
-
-class WrongShape(Exception):
-    pass
-
-
-class Corrupt(Exception):
-    pass
 
 
 def digests_of(image: bytes) -> dict[str, str]:
