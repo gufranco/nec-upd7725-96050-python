@@ -192,8 +192,14 @@
           "value": ["multiply", "data move", "arithmetic", "pointer modification", "return"],
           "quote": "To control the execution of instructions, the external 8 MHz clock is divided into phases for internal execution. The various elements of the 24-bit instruction word are executed in a set order. Multiplication automatically begins first. Also, data moves from source to destination before other elements of the instruction. Data being moved on the internal data bus (IDB) is available for use in ALU operations (if P-select of the instruction specifies IDB).",
           "page": 12,
-          "andAlso": "Pointer modifications occur at the end of the instruction cycle after their values have been used for data moves. The result of multiplication is available at the end of the instruction cycle for possible use in the next instruction. If a return is specified as part of an OP instruction, it is executed last.",
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "alsoSays": [
+            {
+              "quote": "Pointer modifications occur at the end of the instruction cycle after their values have been used for data moves. The result of multiplication is available at the end of the instruction cycle for possible use in the next instruction. If a return is specified as part of an OP instruction, it is executed last.",
+              "page": 12,
+              "note": "The same paragraph continued. It was held under a key nothing searched, so a passage quoted verbatim from the data sheet was never checked against it. Every quote here carries its own page for that reason."
+            }
+          ]
         },
         "arithmeticSupersededByItsOwnDestination": {
           "value": true,
