@@ -40,10 +40,29 @@ class DocumentTest(unittest.TestCase):
             for named in ("publisher", "title", "kind", "date", "readOn"):
                 self.assertIn(named, one["document"], one["part"])
 
+    def test_and_pins_it_by_digest_so_the_reading_can_be_repeated(self) -> None:
+        for one in declared()["parts"]:
+            if not one["verified"]:
+                continue
+            self.assertRegex(one["document"]["sha256"], r"^[0-9a-f]{64}$", one["part"])
+
+    def test_and_says_how_the_printed_number_relates_to_the_file(self) -> None:
+        for one in declared()["parts"]:
+            if not one["verified"]:
+                continue
+            self.assertIn("pageNumbering", one["document"], one["part"])
+
     def test_every_fact_carries_the_words_it_came_from(self) -> None:
         for name, fact in facts_for("upd7725").items():
             self.assertIn("quote", fact, name)
             self.assertGreater(len(fact["quote"]), 20, name)
+
+    def test_and_the_page_those_words_are_printed_on(self) -> None:
+        pages = declared()["parts"][0]["document"]["pdfPages"]
+        for name, fact in facts_for("upd7725").items():
+            self.assertIsInstance(fact.get("page"), int, name)
+            self.assertGreaterEqual(fact["page"], 1, name)
+            self.assertLess(fact["page"], pages, name)
 
     def test_an_unverified_part_says_so_and_says_what_would_settle_it(self) -> None:
         for one in declared()["parts"]:

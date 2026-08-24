@@ -18,105 +18,132 @@
         "kind": "Advance Product Information",
         "date": "1987-08",
         "readOn": "2026-08-20",
-        "note": "Covers the uPD77C25 mask-ROM part and the uPD77P25 UVEPROM part, described in the document as functionally identical. This is the part Nintendo shipped as the DSP-1, DSP-2, DSP-3 and DSP-4."
+        "note": "Covers the uPD77C25 mask-ROM part and the uPD77P25 UVEPROM part, described in the document as functionally identical. This is the part Nintendo shipped as the DSP-1, DSP-2, DSP-3 and DSP-4.",
+        "sha256": "d043be18d5cd21d90960ffb7e068e3b9a81647c8534a142f29eb11015733d042",
+        "pdfPages": 36,
+        "pageNumbering": "The printed number is one less than the position in the file: printed page 1 is the second page.",
+        "readVia": "upd77c25.pdf, 36 pages, read twice. Vision read every page rendered at 300 dots per inch, and pdftotext read the layer the scan already carried. Neither is sufficient alone: the embedded layer prints lhe for the and OP for DP, while the image read misses a faint line outright, which is how the data RAM sentence came to be absent from one reading and present in the other. Every page below is one both readings agree on, or one confirmed by reading the page itself.",
+        "pinnedIn": "the References section of README.md, and locally by digest as docs/manufacturer/upd77c25.pdf"
       },
       "facts": {
         "clocksPerInstruction": {
           "value": 1,
-          "quote": "Since the 77C25 executes an instruction in one external clock cycle (versus two cycles of the same 8.192 MHz clock for 77C20A), the 77C25 may be substituted for a 77C20A (or 7720A or 77P20) in a circuit without modification of that circuit."
+          "quote": "Since the 77C25 executes an instruction in one external clock cycle (versus two cycles of the same 8.192 MHz clock for 77C20A), the 77C25 may be substituted for a 77C20A (or 7720A or 77P20) in a circuit without modification of that circuit.",
+          "page": 3
         },
         "everyInstructionSameLength": {
           "value": true,
-          "quote": "All instructions execute in one instruction cycle"
+          "quote": "All instructions execute in one instruction cycle",
+          "page": 1
         },
         "instructionCycleNanoseconds": {
           "value": 122,
           "atClockHz": 8192000,
-          "quote": "Fast instruction execution: 122 ns with 8.192 MHz clock."
+          "quote": "Fast instruction execution: 122 ns with 8.192 MHz clock.",
+          "page": 1
         },
         "maximumClockHz": {
           "value": 8300000,
-          "quote": "The external clock frequency (8.3 MHz maximum) remains the same as for 7720/77C20 while the internal instruction execution speed is doubled."
+          "quote": "The external clock frequency (8.3 MHz maximum) remains the same as for 7720/77C20 while the internal instruction execution speed is doubled.",
+          "page": 1
         },
         "programWords": {
           "value": 2048,
           "wordBits": 24,
-          "quote": "Program ROM (2048 x 24 bits)"
+          "quote": "Program ROM (2048 x 24 bits)",
+          "page": 2
         },
         "programCounterBits": {
           "value": 11,
-          "quote": "The 2048 x 24-bit words of instruction ROM are addressed by the 11-bit program counter that can be modified by an external reset, interrupt, call, jump, or return instruction."
+          "quote": "The 2048 x 24-bit words of instruction ROM are addressed by the 11-bit program counter that can be modified by an external reset, interrupt, call, jump, or return instruction.",
+          "page": 7
         },
         "dataRomWords": {
           "value": 1024,
           "wordBits": 16,
-          "quote": "The data ROM is organized in 1024 x 16-bit words that are addressed through a 10-bit ROM pointer (RP register)."
+          "quote": "The data ROM is organized in 1024 x 16-bit words that are addressed through a 10-bit ROM pointer (RP register).",
+          "page": 8
         },
         "romPointerBits": {
           "value": 10,
-          "quote": "addressed through a 10-bit ROM pointer (RP register)"
+          "quote": "addressed through a 10-bit ROM pointer (RP register)",
+          "page": 8
         },
         "dataRamWords": {
           "value": 256,
           "wordBits": 16,
-          "quote": "The data RAM is 256 x 16-bit words and is addressed through an 8-bit data pointer (DP register)."
+          "quote": "The data RAM is 256 x 16-bit words and is addressed through an 8-bit data pointer (DP register).",
+          "page": 8
         },
         "dataPointerBits": {
           "value": 8,
-          "quote": "addressed through an 8-bit data pointer (DP register)"
+          "quote": "addressed through an 8-bit data pointer (DP register)",
+          "page": 8
         },
         "stackLevels": {
           "value": 4,
           "quote": "The SPI+ contains a four-level program stack for efficient program usage and interrupt handling.",
+          "page": 9,
           "corroboration": "The block diagram on page 7 draws the stack as four slots, labelled 0, 1, 2 and 3.",
           "notStated": "What happens on a fifth consecutive call is not stated in this document. A two-bit pointer wrapping to slot zero is the consequence of the width the document gives, and the model takes that, but it is an inference from the width rather than a figure the document prints."
         },
         "accumulators": {
           "value": 2,
           "bits": 16,
-          "quote": "Dual 16-bit accumulators"
+          "quote": "Dual 16-bit accumulators",
+          "page": 2
         },
         "flagsPerAccumulator": {
           "value": ["SA1", "SA0", "CA", "ZA", "OVA1", "OVA0"],
-          "quote": "In addition to zero result, sign, carry, and overflow flags, the SPI+ incorporates auxiliary overflow and sign flags (SA1, SB1, OVA1, OVB1). These flags enable the detection of an overflow condition and maintain the correct sign after as many as three successive additions or subtractions."
+          "quote": "In addition to zero result, sign, carry, and overflow flags, the SPI+ incorporates auxiliary overflow and sign flags (SA1, SB1, OVA1, OVB1). These flags enable the detection of an overflow condition and maintain the correct sign after as many as three successive additions or subtractions.",
+          "page": 8
         },
         "multiplier": {
           "inputBits": 16,
           "productBits": 31,
-          "quote": "Thirty-one-bit results are developed by a 16 x 16-bit two's complement multiplier in 122 ns. The result is automatically latched to two 16-bit registers, M and N, at the end of each instruction cycle. The sign bit and 15 higher bits are in M and the 16 lower bits are in N; the LSB in N is zero. A new product is available for use after every instruction cycle"
+          "quote": "Thirty-one-bit results are developed by a 16 x 16-bit two's complement multiplier in 122 ns. The result is automatically latched to two 16-bit registers, M and N, at the end of each instruction cycle. The sign bit and 15 higher bits are in M and the 16 lower bits are in N; the LSB in N is zero. A new product is available for use after every instruction cycle",
+          "page": 9
         },
         "aluOperations": {
           "value": 16,
-          "quote": "The ALU is a 16-bit two's complement unit capable of executing 16 distinct operations on data routed via the P and Q ALU inputs."
+          "quote": "The ALU is a 16-bit two's complement unit capable of executing 16 distinct operations on data routed via the P and Q ALU inputs.",
+          "page": 8
         },
         "interruptVector": {
           "value": 256,
-          "quote": "A low-to-high transition on this pin executes a call instruction to location 100H, if interrupts were previously enabled."
+          "quote": "A low-to-high transition on this pin executes a call instruction to location 100H, if interrupts were previously enabled.",
+          "page": 5
         },
         "resetSetsProgramCounterTo": {
           "value": 0,
-          "quote": "This input initializes the SPI+ internal logic and sets the PC to 0."
+          "quote": "This input initializes the SPI+ internal logic and sets the PC to 0.",
+          "page": 5
         },
         "hostInterfaceBusBits": {
           "value": 8,
-          "quote": "Host CPU Interface   8-bit bus"
+          "quote": "Host CPU Interface   8-bit bus",
+          "page": 3
         },
         "statusDataRegisterSelect": {
-          "quote": "A0 [Status Data Register Select] This input selects data register for read/write (low) or status register for read (high)."
+          "quote": "A0 [Status Data Register Select] This input selects data register for read/write (low) or status register for read (high).",
+          "page": 5
         },
         "serialNanosecondsPerBit": {
           "value": 244,
           "quote": "Serial: 8- or 16-bit (244 ns/bit)",
+          "page": 2,
           "note": "Two instruction cycles per serial bit at 8.192 MHz. Nothing in a cartridge uses the serial port."
         },
         "instructionElementOrder": {
           "value": ["multiply", "data move", "arithmetic", "pointer modification", "return"],
           "quote": "To control the execution of instructions, the external 8 MHz clock is divided into phases for internal execution. The various elements of the 24-bit instruction word are executed in a set order. Multiplication automatically begins first. Also, data moves from source to destination before other elements of the instruction. Data being moved on the internal data bus (IDB) is available for use in ALU operations (if P-select of the instruction specifies IDB).",
+          "page": 12,
           "andAlso": "Pointer modifications occur at the end of the instruction cycle after their values have been used for data moves. The result of multiplication is available at the end of the instruction cycle for possible use in the next instruction. If a return is specified as part of an OP instruction, it is executed last."
         },
         "arithmeticSupersededByItsOwnDestination": {
           "value": true,
           "quote": "However, if the accumulator specified in the ASL field is also specified as the destination of the data move, the ALU operation becomes a NOP, as the data move supersedes the ALU operation.",
+          "page": 12,
           "consequence": "A NOP is the one operation that leaves the flags alone: \"These flags ... are updated at the end of each arithmetic instruction (except NOP)\", and the ALU table gives NOP no flag effects at all. So the arithmetic must not run, rather than run and be overwritten. A model that overwrites holds the right accumulator and the wrong flags, and the next conditional branch reads those flags.",
           "foundBy": "Reading this page. Both implementations here ran the arithmetic and let the move overwrite it, and so does the emulator the corpus was recorded from: 581 of the 22,240 recorded cases changed when it was fixed."
         },
@@ -135,24 +162,29 @@
             "P0": 0
           },
           "quote": "Figure 3. Status Register (SR): bit 15 RQM, 14 USF1, 13 USF0, 12 DRS, 11 DMA, 10 DRC, 9 SOC, 8 SIC, 7 EI, bits 6 to 2 zero, 1 P1, 0 P0",
+          "page": 11,
           "note": "Checked against both implementations here and they already matched, bit for bit."
         },
         "requestBitSemantics": {
           "quote": "RQM (Request for Master): A read or write form DR to IDB sets RQM = 1, An external read (write) resets RQM = 0.",
+          "page": 12,
           "note": "The part raises it when its own program touches the data register; the console clears it by reading or writing. Checked against the implementation here and it already matched."
         },
         "transferHalfSemantics": {
           "quote": "DRS (DR Status): For 16-bit DR transfers (DRC = 0), DRS = 1 after first 8 bits have been transferred. DRS = 0 after all 16 bits have been transferred.",
+          "page": 12,
           "note": "Already matched."
         },
         "statusReadWidth": {
           "value": 8,
           "quote": "Eight MSBs of SR are output to D0-D7",
+          "page": 11,
           "andWriting": "Illegal (SR is read only)",
           "note": "The read width already matched. A write to the status port does nothing here, which is the least surprising reading of illegal."
         },
         "parallelInterfaceIsEightBit": {
           "quote": "Host CPU Interface   8-bit bus",
+          "page": 3,
           "note": "So a sixteen-bit data register is moved a byte at a time, which is what DRS tracks."
         }
       },

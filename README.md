@@ -438,6 +438,22 @@ identifies images and reconstructs nothing, and that is the furthest this goes.
 
 </details>
 
+## References
+
+This repository carries no documents. Every claim about the uPD77C25 is traced to the data sheet below, listed here so a reader can fetch the same file and check the same page. The row gives the page count and the first sixteen characters of the file's SHA-256, because vendor links move and a link that has rotted into a different scan is easy to follow without noticing. Compute the full digest with `shasum -a 256 <file>`.
+
+The document is copyrighted and not redistributable, which is why it is not in this repository. Individual sentences are quoted in [`conformance/hardware.json`](conformance/hardware.json) with the page they are printed on.
+
+| Document | Date | Pages | SHA-256 | Redistributable |
+|:---------|:-----|------:|:--------|:----------------|
+| [NEC Electronics, *uPD77C25/uPD77P25 Digital Signal Processor Data Sheet*, Advance Product Information](https://www.cryptomuseum.com/df/telefunken/e2000/files/uPD77C25.pdf) | 1987-08 | 36 | `d043be18d5cd21d9…` | No |
+
+The scan is a photograph of a printed book, so it was read twice: once from page images rendered at 300 dots per inch, and once from the text layer the file already carried. Neither is reliable alone. The embedded layer prints `lhe` for `the` and `OP` for `DP`; the image read misses a faint line outright. A page recorded beside a quote is one both readings agree on, or one confirmed by reading that page directly.
+
+The printed page number is one less than the position in the file, so printed page 1 is the second page.
+
+**No document for the uPD96050 was located.** Everything asserted about that part rests on secondary sources, it carries `verified: false` in the record, and the gap is written up in [`OPEN-QUESTIONS.md`](OPEN-QUESTIONS.md).
+
 ## Contributing
 
 Measurements first. If you have a part, a cartridge, or a machine this has not

@@ -11,6 +11,7 @@
       "parts": ["upd96050"],
       "severity": "high",
       "status": "open",
+      "topic": "There is no document for the uPD96050.",
       "documentSays": "Nothing. No manufacturer document for this part was located.",
       "referenceDoes": "Secondary sources give 16384 program words, 2048 data ROM words, 2048 data RAM words and eight stack levels.",
       "packageFollows": "reference",
@@ -22,6 +23,7 @@
       "parts": ["upd77c25", "upd96050"],
       "severity": "high",
       "status": "open",
+      "topic": "Every flag rule the data sheet does not state.",
       "documentSays": "Widths, stack depth, cycles per instruction and memory sizes for the uPD77C25. It does not specify every flag rule, every undefined encoding, or the result of every field combination.",
       "referenceDoes": "Answers all of those, because a recording answers whatever it was asked.",
       "packageFollows": "corpus",
@@ -33,6 +35,7 @@
       "parts": ["upd77c25", "upd96050"],
       "severity": "medium",
       "status": "open",
+      "topic": "How long the console takes to reach this part.",
       "documentSays": "Nothing about how long the console takes to reach this part. That is a property of the cartridge board and the console bus, not of the DSP.",
       "referenceDoes": "Every implementation costs an access to the coprocessor region at twelve master cycles.",
       "packageFollows": "reference",
@@ -44,11 +47,13 @@
       "parts": ["upd77c25", "upd96050"],
       "severity": "low",
       "status": "notADisagreement",
+      "topic": "The two parts are treated as one instruction set with different sizes.",
       "documentSays": "The uPD77C25 and uPD77P25 are functionally identical, one mask ROM and one UVEPROM.",
       "referenceDoes": "Treats the uPD96050 as the same instruction set with more memory.",
       "packageFollows": "neither",
       "reasoning": "The instruction set is modelled once and the sizes differ per model. That is a decision this package makes rather than a fact either source states, and it would be wrong if the larger part turned out to differ in behaviour rather than only in capacity.",
       "wouldSettleIt": "The missing uPD96050 data sheet, which would either confirm the instruction set or name a difference."
     }
-  ]
+  ],
+  "writtenUpIn": "OPEN-QUESTIONS.md, which names every entry that is not closed"
 }

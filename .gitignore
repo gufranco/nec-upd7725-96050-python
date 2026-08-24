@@ -18,3 +18,4 @@ firmware/*
 .mypy_cache/
 .ruff_cache/
 docs/
+uv.lock
