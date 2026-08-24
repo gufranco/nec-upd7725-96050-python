@@ -339,7 +339,7 @@ def load(path: Path | str | None = None) -> dict[str, Any]:
 
 def record(cases: int | None = None) -> dict[str, Any]:
     """Ask the reference for every case, and write down what it answered."""
-    import oracle
+    from conformance import oracle
 
     total = cases or SETTLED + DEFAULT_RANDOM_CASES
     answered = oracle.answers([case_for(index) for index in range(total)])

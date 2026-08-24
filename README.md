@@ -17,7 +17,7 @@
 
 </div>
 
-**2** parts · **1,002,240** instructions compared and **1,120** encodings walked field by field, **0** disagreements · **609** tests · **100%** statement and branch coverage · no dependencies
+**2** parts · **1,120** encodings walked field by field · **22,240** instructions compared, **0** disagreements · **609** tests · **100%** statement and branch coverage · no dependencies
 
 ```python
 from upd7725 import Cpu
@@ -170,7 +170,7 @@ Rubbish derived from the seed, the same every time, and not zero. The part has s
 
 ## Is it right
 
-Every encoding is walked field by field and every instruction is compared against a recorded corpus that states the whole processor state after each one, not merely the answer: **1,002,240 instructions, no disagreements**. Two independent implementations are stepped against that one corpus.
+Every encoding is walked field by field and every instruction is compared against a recorded corpus that states the whole processor state after each one, not merely the answer: **22,240 instructions, no disagreements**. Two independent implementations are stepped against that one corpus.
 
 ```bash
 python3 -m conformance.instructions
