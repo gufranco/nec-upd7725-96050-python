@@ -117,9 +117,16 @@ def available(where: Path | str | None = None) -> "Present":
 
 
 def booted(identity: Any, path: Path) -> "ports.Console":
-    """A part carrying that image, run until it first waits for the console."""
+    """A part carrying that image, reset, and run until it first waits.
+
+    The reset is the console's, not a convenience. A part that has been powered
+    and not yet reset holds a scrambled counter and would run rubbish from a
+    rubbish address, so a board pulls the reset line before it expects the
+    program to start, and so does this.
+    """
     chip = models.describe(identity.processor).build(fill=0)
     firmware.load(chip, path.read_bytes(), identity)
+    chip.reset()
     console = ports.Console(chip)
     console.settle(SETTLE_LIMIT)
     return console
@@ -186,7 +193,7 @@ def lines_for(present: "Present", instructions: int) -> tuple[str, ...]:
     found: list[str] = []
     for identity, path in present:
         console = booted(identity, path)
-        console.chip.run(instructions)
+        console.chip.run_for(instructions)
         found.append(
             f"  {identity.part:6s} {identity.revision:7s} on {identity.processor}:"
             f" {instructions:,} instructions, still inside its own program store"

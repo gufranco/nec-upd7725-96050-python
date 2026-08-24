@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .errors import RunLimit
 from .flags import (
     Flags,
     record_addition,
@@ -24,8 +25,13 @@ from .flags import (
     record_result,
     record_right_shift,
 )
-from .memory import Stores
+from .memory import UNSET_SEED, Stores, scramble
 from .registers import Registers
+
+WORD_MASK = 0xFFFF
+
+DEFAULT_LIMIT = 1_000_000
+"""How long a bounded run waits before deciding the condition will never hold."""
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
@@ -222,12 +228,15 @@ class Core:
     flags_a: Flags
     flags_b: Flags
     cycles: int
+    steps: int
+    on_cycle: Callable[[], None] | None
 
     def __init__(
         self,
         model: Model,
         fill: int | None = 0,
         sources: dict[str, Callable[[int], int]] | None = None,
+        seed: int = UNSET_SEED,
     ) -> None:
         self.model = model
         self.registers = Registers(
@@ -246,9 +255,83 @@ class Core:
         self.flags_a = Flags()
         self.flags_b = Flags()
         self.cycles = 0
+        self.steps = 0
+        self.on_cycle = None
+        self.power_on(seed)
 
-    def step(self) -> None:
+    def power_on(self, seed: int = UNSET_SEED) -> None:
+        """The state the part is in when the rail comes up and nothing else has.
+
+        Every register holds something derived from the seed, the program counter
+        included, so a newly built part steps rubbish from a rubbish address
+        exactly as the silicon would. This is where scrambling belongs; reset
+        does not do it, because a reset defines a few things and leaves the rest
+        holding whatever they held.
+        """
+        undefined = scramble(12, seed)
+        registers = self.registers
+        registers.pc = undefined[0]
+        registers.rp = undefined[1]
+        registers.dp = undefined[2]
+        registers.sp = undefined[3]
+        registers.k = undefined[4]
+        registers.l = undefined[5]
+        registers.m = undefined[6]
+        registers.n = undefined[7]
+        registers.a = undefined[8]
+        registers.b = undefined[9]
+        registers.tr = undefined[10] & WORD_MASK
+        registers.dr = undefined[11] & WORD_MASK
+        for slot in range(len(registers.stack)):
+            registers.stack[slot] = undefined[slot % len(undefined)] & registers.counter_mask
+
+    def reset(self) -> Core:
+        """What the document says a reset does, and nothing beyond it.
+
+        "This input initializes the SPI+ internal logic and sets the PC to 0."
+        The accumulators, the pointers and the stores keep whatever they were
+        holding, because the page does not say a reset touches them and this
+        model does not invent an event the part does not perform.
+
+        It costs no cycles, because the data sheet gives the reset pin a sentence
+        and no timing. Spending a plausible number here would be inventing one,
+        so the tally is left alone and the gap is written up in
+        OPEN-QUESTIONS.md.
+
+        Returns the part, so a caller can build and reset in one expression
+        without losing the reference.
+        """
+        self.registers.pc = 0
+        self.steps = 0
+        return self
+
+    def spend(self) -> None:
+        """One cycle: counted once, and announced once.
+
+        Every path that costs the part a cycle comes through here. A count kept
+        in one method and a watcher called from another drift the first time
+        somebody adds a cycle to only one of them, and nothing catches it.
+        """
+        self.cycles += 1
+        if self.on_cycle is not None:
+            self.on_cycle()
+
+    def held(self) -> bool:
+        """Whether the part has stopped advancing the program.
+
+        Always false here. The data sheet gives this part no halt, no wait and no
+        stop instruction: every encoding advances the counter. The method exists
+        because the family promises it, and answering honestly is better than
+        leaving a caller to find out this one repository omits it.
+        """
+        return False
+
+    def step(self) -> int:
         """One instruction, and the multiply that follows every one of them.
+
+        Returns the cycles it cost, which on this part is always one. A host that
+        cannot ask what an instruction cost cannot pace anything, so the figure is
+        returned rather than left for the caller to assume.
 
         One instruction is one cycle on this part, so the count kept here is a
         cycle count and not merely an instruction count. That is the
@@ -271,11 +354,36 @@ class Core:
             self._load(opcode)
 
         self._multiply()
-        self.cycles += 1
+        before = self.cycles
+        self.spend()
+        self.steps += 1
+        return self.cycles - before
 
-    def run(self, instructions: int) -> None:
-        for _ in range(instructions):
-            self.step()
+    def run_for(self, cycles: int) -> int:
+        """Run a budget of cycles and report what was really spent.
+
+        An instruction is not divisible, so the last one can carry the run past
+        the budget. The overshoot is returned rather than hidden, so a host
+        subtracts it from the next slice and a long run does not drift.
+        """
+        spent = 0
+        while spent < cycles:
+            spent += self.step()
+        return spent
+
+    def run_until(self, check: Callable[[Core], bool], limit: int = DEFAULT_LIMIT) -> int:
+        """Step until the condition holds, and report the cycles it took.
+
+        The limit is a guard against a program that never reaches it, and it
+        raises rather than returning quietly, because a caller who asked to run
+        until something happens has no reason to check a count.
+        """
+        spent = 0
+        while not check(self):
+            if spent >= limit:
+                raise RunLimit(f"still not met after {spent} cycles")
+            spent += self.step()
+        return spent
 
     def _multiply(self) -> None:
         product = self.registers.k * self.registers.l

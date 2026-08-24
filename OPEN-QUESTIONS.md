@@ -74,6 +74,22 @@ should not pick the mark up from only one of them.
 **What would settle it.** A passage in Nintendo's Book I or Book II giving the
 access time for that region, or a measurement on real hardware.
 
+### How many cycles a reset costs.
+
+**The document says.** That a reset happens and what it leaves behind, and
+nothing about how long it takes. The pin gets one sentence.
+
+**What this project does.** `reset()` spends no cycles.
+
+**Why that is not a claim.** No silicon resets instantaneously. Zero here is the
+absence of a figure rather than a figure. Spending a plausible number would put
+an invented one into every tally that crosses a reset, and a caller pacing
+against a wall would be pacing partly against this package's guess.
+
+**What would settle it.** A timing figure for the reset pin in an NEC document,
+or a measurement on a real part: hold the pin low, release it, and count clocks
+until the first program fetch.
+
 ## Where the source is a recording rather than a part
 
 ### Every flag rule the data sheet does not state.

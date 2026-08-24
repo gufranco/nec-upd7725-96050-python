@@ -53,6 +53,18 @@
       "packageFollows": "neither",
       "reasoning": "The instruction set is modelled once and the sizes differ per model. That is a decision this package makes rather than a fact either source states, and it would be wrong if the larger part turned out to differ in behaviour rather than only in capacity.",
       "wouldSettleIt": "The missing uPD96050 data sheet, which would either confirm the instruction set or name a difference."
+    },
+    {
+      "id": "no-reset-timing",
+      "parts": ["upd77c25", "upd96050"],
+      "severity": "low",
+      "status": "open",
+      "topic": "How many cycles a reset costs.",
+      "documentSays": "That a reset happens and what it leaves behind, and nothing about how long it takes. The pin gets one sentence.",
+      "referenceDoes": "Nothing to compare against: the corpus records instruction behaviour and never resets the part.",
+      "packageFollows": "neither",
+      "reasoning": "reset() spends no cycles. That is not a claim that a reset is instantaneous, which no silicon is; it is the absence of a figure. Spending a plausible number would put an invented one into every tally that crosses a reset, and a caller pacing against a wall would be pacing partly against this package's guess.",
+      "wouldSettleIt": "A timing figure for the reset pin in an NEC document, or a measurement on a real part: hold the pin low, release it, and count clocks until the first program fetch."
     }
   ],
   "writtenUpIn": "OPEN-QUESTIONS.md, which names every entry that is not closed"

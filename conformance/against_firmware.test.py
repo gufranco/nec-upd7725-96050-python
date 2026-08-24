@@ -70,7 +70,7 @@ class BootTest(unittest.TestCase):
     def test_every_image_present_runs_without_leaving_its_own_stores(self) -> None:
         for identity, path in PRESENT:
             console = against_firmware.booted(identity, path)
-            console.chip.run(against_firmware.DEFAULT_INSTRUCTIONS)
+            console.chip.run_for(against_firmware.DEFAULT_INSTRUCTIONS)
 
             self.assertLess(
                 console.chip.registers.pc, len(console.chip.stores.program), identity.part

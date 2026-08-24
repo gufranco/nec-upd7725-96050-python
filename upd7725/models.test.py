@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from upd7725 import models
+from upd7725 import errors, models
 
 
 class CatalogueTest(unittest.TestCase):
@@ -46,17 +46,17 @@ class CatalogueTest(unittest.TestCase):
         self.assertEqual(len(seen), len(set(seen)))
 
     def test_a_processor_the_package_does_not_have_is_refused_by_name(self) -> None:
-        with self.assertRaises(models.UnknownModelError):
+        with self.assertRaises(errors.UnknownModelError):
             models.describe("upd7720")
 
     def test_and_the_refusal_says_why_rather_than_only_that(self) -> None:
-        with self.assertRaises(models.UnknownModelError) as raised:
+        with self.assertRaises(errors.UnknownModelError) as raised:
             models.describe("upd7720")
 
         self.assertIn("reference", str(raised.exception))
 
     def test_a_name_that_is_no_part_at_all_lists_what_is_available(self) -> None:
-        with self.assertRaises(models.UnknownModelError) as raised:
+        with self.assertRaises(errors.UnknownModelError) as raised:
             models.describe("nonsense")
 
         self.assertIn("upd7725", str(raised.exception))
@@ -83,7 +83,7 @@ class CarryingTest(unittest.TestCase):
         self.assertEqual(models.carrying("DSP-4").name, "upd7725")
 
     def test_a_part_no_processor_here_carries_is_refused(self) -> None:
-        with self.assertRaises(models.UnknownModelError):
+        with self.assertRaises(errors.UnknownModelError):
             models.carrying("cx4")
 
 

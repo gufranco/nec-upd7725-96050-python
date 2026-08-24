@@ -15,6 +15,7 @@ them is waste, and a store that computes them on demand is the same store.
 
 from __future__ import annotations
 
+import random
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -28,7 +29,20 @@ PROGRAM_BYTES_PER_WORD = 3
 
 TABLE_BYTES_PER_WORD = 2
 
+UNSET_SEED = 0x5A5A5A5A
+"""The seed a part is scrambled with when the caller names none."""
+
 DEFAULT_FILL = 0
+
+
+def scramble(size: int, seed: int = UNSET_SEED) -> list[int]:
+    """A deterministic fill that is nothing like a cleared machine.
+
+    Reproducible from the seed, so a differential run stays comparable, and
+    obviously not clean, so a read of something never written shows up.
+    """
+    source = random.Random(seed)
+    return [source.getrandbits(32) for _ in range(size)]
 
 
 class TooLarge(Exception):

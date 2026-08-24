@@ -23,7 +23,7 @@
   <a href="https://github.com/gufranco/nec-upd7725-python/issues">Issues</a>
 </p>
 
-**2** parts · **4** instruction forms · **1,120** encodings walked field by field · **1,002,240** instructions compared against the reference, **0** disagreements · **561** tests · **100%** statement and branch coverage · **strict** types throughout · **zero** firmware, ever
+**2** parts · **4** instruction forms · **1,120** encodings walked field by field · **1,002,240** instructions compared against the reference, **0** disagreements · **594** tests · **100%** statement and branch coverage · **strict** types throughout · **zero** firmware, ever
 
 ```python
 from upd7725 import Processor
@@ -125,6 +125,48 @@ python3 conformance/instructions.py
 ```
 
 That runs with nothing else on your disk. It is the gate.
+
+### Driving a part
+
+```python
+from upd7725 import Processor
+
+chip = Processor("upd7725")  # powers up holding rubbish, counter included
+chip.reset()  # the only thing that defines the counter
+
+chip.step()  # one instruction, returns the cycles it cost
+chip.run_for(1000)  # a budget of cycles, returns what was spent
+chip.run_until(lambda part: part.registers.sr.rqm)  # steps until it asks
+chip.held()  # whether it has stopped advancing the program
+
+chip.cycles  # cycles since power on, across resets
+chip.steps  # instructions since the last reset
+```
+
+The constructor never resets, because no board offers a part that arrives reset.
+A part that has been powered and not reset holds a scrambled counter and steps
+rubbish from a rubbish address, which is what the silicon does.
+
+One instruction is one cycle on this part, so `cycles` and `steps` move together
+until a reset, which returns the counter to zero and leaves the cycle tally
+alone. A reset costs nothing here because the data sheet gives the pin no
+timing, which is recorded in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) rather than
+filled with a guess.
+
+For a host driving several parts against one wall, `Clock` advances one cycle at
+a time on a thread, the same way it does in the sibling packages:
+
+```python
+from upd7725 import Clock
+
+with Clock(chip) as clock:
+    clock.tick()  # exactly one cycle
+    clock.run_for(100)  # exactly one hundred, no overshoot
+```
+
+On this part a cycle boundary and an instruction boundary are the same place, so
+the clock buys the same interface rather than finer resolution. It is much
+slower than `step`, and `step` is the right call when a caller wants speed.
 
 ## The instruction set
 

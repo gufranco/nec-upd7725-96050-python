@@ -172,7 +172,7 @@ class CycleTest(unittest.TestCase):
     def test_and_a_run_of_many_is_that_many_cycles(self) -> None:
         chip = models.describe("upd7725").build(fill=0)
 
-        chip.run(1000)
+        chip.run_for(1000)
 
         self.assertEqual(chip.cycles, 1000)
 

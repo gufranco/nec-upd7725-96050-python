@@ -118,7 +118,7 @@ def timed(
     for _ in range(repeats):
         chip = model.build(fill=0)
         at = clock()
-        chip.run(instructions)
+        chip.run_for(instructions)
         seconds.append(clock() - at)
     return Timed(part, instructions, seconds)
 

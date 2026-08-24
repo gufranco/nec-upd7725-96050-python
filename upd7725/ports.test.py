@@ -11,7 +11,23 @@ ALWAYS_ASKING = 3 << 22 | 6
 
 
 def a_console(fill: int = 0) -> "ports.Console":
-    return ports.Console(models.describe("upd7725").build(fill=fill))
+    """A console around a settled part, because these are interface tests.
+
+    Construction scrambles every register, which the power-on tests check. What
+    is under test here is what the console sees through the two addresses, so
+    the part is reset and its registers put to a known value first rather than
+    left holding whatever the seed produced.
+    """
+    chip = models.describe("upd7725").build(fill=fill).reset()
+    registers = chip.registers
+    registers.rp = registers.dp = registers.sp = 0
+    registers.k = registers.l = registers.m = registers.n = 0
+    registers.a = registers.b = 0
+    registers.tr = registers.trb = registers.dr = 0
+    registers.si = registers.so = 0
+    for slot in range(len(registers.stack)):
+        registers.stack[slot] = 0
+    return ports.Console(chip)
 
 
 class StatusTest(unittest.TestCase):

@@ -5,11 +5,28 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from upd7725 import core, models
+from upd7725 import core, errors, models
 
 
 def a_processor(**options: Any) -> "core.Core":
-    return core.Core(models.describe("upd96050"), fill=0, **options)
+    """A part in a stated starting state, because these are instruction tests.
+
+    Construction scrambles every register, which is what the silicon does and
+    what the power-on tests check. An instruction test that started there would
+    be asserting against whatever the seed produced, so this settles the part
+    first and says so: reset defines the counter, and everything an instruction
+    reads is put to a known value here rather than assumed to arrive as one.
+    """
+    found = core.Core(models.describe("upd96050"), fill=0, **options).reset()
+    registers = found.registers
+    registers.rp = registers.dp = registers.sp = 0
+    registers.k = registers.l = registers.m = registers.n = 0
+    registers.a = registers.b = 0
+    registers.tr = registers.trb = registers.dr = 0
+    registers.si = registers.so = 0
+    for slot in range(len(registers.stack)):
+        registers.stack[slot] = 0
+    return found
 
 
 def an_operation(
@@ -56,14 +73,14 @@ class RunTest(unittest.TestCase):
     def test_running_takes_as_many_instructions_as_it_was_asked_for(self) -> None:
         found = a_processor()
 
-        found.run(5)
+        found.run_for(5)
 
         self.assertEqual(found.registers.pc, 5)
 
     def test_running_none_takes_none(self) -> None:
         found = a_processor()
 
-        found.run(0)
+        found.run_for(0)
 
         self.assertEqual(found.registers.pc, 0)
 
@@ -530,6 +547,145 @@ class NarrowPartTest(unittest.TestCase):
         found.registers.dp = 0xFFFF
 
         self.assertEqual(found.registers.dp, 0xFF)
+
+
+class PowerOnTest(unittest.TestCase):
+    """That a part arrives holding rubbish, and that a reset is the caller's."""
+
+    def test_a_newly_built_part_does_not_start_at_zero(self) -> None:
+        found = core.Core(models.describe("upd96050"), fill=0)
+
+        settled = [found.registers.pc, found.registers.a, found.registers.b]
+
+        self.assertNotEqual(settled, [0, 0, 0])
+
+    def test_the_same_seed_gives_the_same_rubbish_twice(self) -> None:
+        one = core.Core(models.describe("upd96050"), fill=0, seed=7)
+        other = core.Core(models.describe("upd96050"), fill=0, seed=7)
+
+        self.assertEqual(one.registers.pc, other.registers.pc)
+
+    def test_a_different_seed_gives_different_rubbish(self) -> None:
+        one = core.Core(models.describe("upd96050"), fill=0, seed=7)
+        other = core.Core(models.describe("upd96050"), fill=0, seed=8)
+
+        self.assertNotEqual(one.registers.pc, other.registers.pc)
+
+    def test_the_stack_holds_rubbish_too(self) -> None:
+        found = core.Core(models.describe("upd96050"), fill=0)
+
+        self.assertNotEqual(list(found.registers.stack), [0] * len(found.registers.stack))
+
+    def test_a_reset_puts_the_counter_at_zero(self) -> None:
+        found = core.Core(models.describe("upd96050"), fill=0)
+
+        found.reset()
+
+        self.assertEqual(found.registers.pc, 0)
+
+    def test_and_returns_the_part_so_it_can_be_built_and_reset_at_once(self) -> None:
+        found = core.Core(models.describe("upd96050"), fill=0).reset()
+
+        self.assertIsInstance(found, core.Core)
+
+    def test_a_reset_leaves_the_accumulators_holding_what_they_held(self) -> None:
+        found = core.Core(models.describe("upd96050"), fill=0)
+        before = found.registers.a
+
+        found.reset()
+
+        self.assertEqual(found.registers.a, before)
+
+    def test_a_reset_costs_no_cycles_because_the_document_names_none(self) -> None:
+        found = a_processor()
+        before = found.cycles
+
+        found.reset()
+
+        self.assertEqual(found.cycles, before)
+
+
+class TallyTest(unittest.TestCase):
+    """That the part reports what it spent, the way the family says it must."""
+
+    def test_a_step_reports_the_cycle_it_cost(self) -> None:
+        found = a_processor()
+
+        self.assertEqual(found.step(), 1)
+
+    def test_the_cycle_count_is_cumulative(self) -> None:
+        found = a_processor()
+
+        found.run_for(4)
+
+        self.assertEqual(found.cycles, 4)
+
+    def test_and_survives_a_reset(self) -> None:
+        found = a_processor()
+        found.run_for(4)
+
+        found.reset()
+
+        self.assertEqual(found.cycles, 4)
+
+    def test_the_instruction_count_starts_again_at_a_reset(self) -> None:
+        found = a_processor()
+        found.run_for(4)
+
+        found.reset()
+
+        self.assertEqual(found.steps, 0)
+
+    def test_a_budget_reports_what_it_really_spent(self) -> None:
+        found = a_processor()
+
+        self.assertEqual(found.run_for(3), 3)
+
+    def test_a_budget_of_nothing_spends_nothing(self) -> None:
+        found = a_processor()
+
+        self.assertEqual(found.run_for(0), 0)
+
+    def test_every_cycle_passes_through_the_one_place(self) -> None:
+        found = a_processor()
+        seen: list[int] = []
+        found.on_cycle = lambda: seen.append(found.cycles)
+
+        found.run_for(3)
+
+        self.assertEqual(seen, [1, 2, 3])
+
+    def test_a_part_with_no_watcher_still_counts(self) -> None:
+        found = a_processor()
+
+        found.spend()
+
+        self.assertEqual(found.cycles, 1)
+
+    def test_this_part_never_stops_advancing_the_program(self) -> None:
+        found = a_processor()
+
+        self.assertFalse(found.held())
+
+
+class BoundedRunTest(unittest.TestCase):
+    def test_a_run_stops_when_the_condition_holds(self) -> None:
+        found = a_processor()
+
+        spent = found.run_until(lambda chip: chip.registers.pc >= 3)
+
+        self.assertEqual(spent, 3)
+
+    def test_a_condition_already_true_costs_nothing(self) -> None:
+        found = a_processor()
+
+        self.assertEqual(found.run_until(lambda chip: True), 0)
+
+    def test_a_condition_that_never_holds_gives_up_rather_than_hanging(self) -> None:
+        found = a_processor()
+
+        with self.assertRaises(errors.RunLimit):
+            found.run_until(lambda chip: False, limit=5)
 
 
 if __name__ == "__main__":

@@ -2,10 +2,10 @@
 
     from upd7725 import Processor
 
-    chip = Processor("upd96050")
+    chip = Processor("upd96050").reset()
     chip.stores.load_program(program)
     chip.stores.load_table(table)
-    chip.run(1000)
+    chip.run_for(1000)
 
 One instruction set, two widths, and a console that can see two addresses. Nintendo
 shipped four different microcodes on the smaller part under the DSP name, and Seta
@@ -25,9 +25,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from . import core, firmware, flags, memory, models, ports, registers
+from . import clock, core, errors, firmware, flags, memory, models, ports, registers
+from .clock import Clock
 from .core import Core
-from .models import MODELS, UnknownModelError, carrying, describe
+from .errors import ClockClosed, RunLimit, UnknownModelError
+from .models import MODELS, carrying, describe
 from .version import VERSION
 
 __version__ = VERSION
@@ -45,13 +47,18 @@ def Processor(model: str = DEFAULT_MODEL, **options: Any) -> Core:  # noqa: N802
 
 __all__ = [
     "MODELS",
+    "Clock",
+    "ClockClosed",
     "Core",
     "Processor",
+    "RunLimit",
     "UnknownModelError",
     "__version__",
     "carrying",
+    "clock",
     "core",
     "describe",
+    "errors",
     "firmware",
     "flags",
     "memory",
