@@ -17,6 +17,39 @@ def an_image(program_words: int = 2048, data_words: int = 1024, filler: int = 0x
     return bytes([filler]) * (program_words * 3 + data_words * 2)
 
 
+class ShippedManifestTest(unittest.TestCase):
+    """That the manifest travels with the package rather than beside it.
+
+    `identify` is the whole of the public reading interface and it cannot answer
+    anything without the manifest. Kept at the top of the repository the file is
+    not part of the distribution, so every install had an `identify` that raised
+    FileNotFoundError instead of naming the image, and the readme example that
+    calls it could not run for anybody who installed the package the way the
+    readme says to.
+
+    A test on the path is what catches that. Running `identify` from a checkout
+    passes either way, because from a checkout the file is there.
+    """
+
+    def test_the_manifest_lives_inside_the_package(self) -> None:
+        package = Path(firmware.__file__).resolve().parent
+
+        self.assertEqual(Path(firmware.MANIFEST).resolve().parent, package)
+
+    def test_and_the_packaging_declares_it_as_package_data(self) -> None:
+        pyproject = (Path(firmware.__file__).resolve().parent.parent / "pyproject.toml").read_text()
+
+        self.assertIn('upd7725 = ["artifacts.manifest.json"]', pyproject)
+
+    def test_and_identify_needs_nothing_outside_the_package(self) -> None:
+        package = Path(firmware.__file__).resolve().parent
+
+        reached = Path(firmware.MANIFEST).resolve()
+
+        self.assertTrue(reached.is_relative_to(package))
+        self.assertTrue(reached.exists())
+
+
 class ManifestTest(unittest.TestCase):
     def test_the_manifest_names_every_part_the_package_can_run(self) -> None:
         named = {entry["part"] for entry in firmware.manifest()["artifacts"]}

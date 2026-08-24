@@ -35,6 +35,9 @@ packages = ["upd7725"]
 [tool.setuptools.dynamic]
 version = { attr = "upd7725.version.VERSION" }
 
+[tool.setuptools.package-data]
+upd7725 = ["artifacts.manifest.json"]
+
 [tool.setuptools.exclude-package-data]
 upd7725 = ["*.test.py"]
 

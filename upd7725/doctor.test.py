@@ -70,6 +70,24 @@ class ExamineTest(unittest.TestCase):
     def test_and_what_the_manifest_declares(self) -> None:
         self.assertIn("declared", [one.name for one in doctor.examine()])
 
+    def test_an_absent_manifest_is_reported_rather_than_raised(self) -> None:
+        def missing() -> NoReturn:
+            raise FileNotFoundError(2, "No such file or directory")
+
+        found = doctor._declared(missing)
+
+        self.assertTrue(found.ok)
+        self.assertIn("normal state of an install", found.detail)
+
+    def test_a_manifest_that_will_not_parse_is_reported_rather_than_hidden(self) -> None:
+        def broken() -> NoReturn:
+            raise Complaint("the manifest exploded")
+
+        found = doctor._declared(broken)
+
+        self.assertFalse(found.ok)
+        self.assertIn("Complaint: the manifest exploded", found.detail)
+
     def test_every_finding_carries_a_detail(self) -> None:
         for one in doctor.examine():
             self.assertTrue(one.detail, one.name)

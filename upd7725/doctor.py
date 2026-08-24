@@ -25,7 +25,7 @@ from __future__ import annotations
 import platform
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from . import firmware, models
 from .version import VERSION
@@ -112,8 +112,30 @@ def _where() -> Finding:
     )
 
 
-def _declared() -> Finding:
-    held = firmware.manifest()["artifacts"]
+def _declared(read: Callable[[], dict[str, Any]] = firmware.manifest) -> Finding:
+    """What the manifest declares, or why it could not be read.
+
+    The manifest sits beside the package rather than inside it, so an installed
+    copy does not carry one. That is the ordinary case rather than a fault, and
+    it is also the case this runs in most often: somebody who installed the
+    package and is filling in an issue. Letting it raise here would hand that
+    person a traceback in place of the report they were asked for.
+    """
+    try:
+        held = read()["artifacts"]
+    except OSError:
+        return Finding(
+            "declared",
+            True,
+            "no manifest beside the package, which is the normal state of an install",
+        )
+    except Exception as trouble:
+        return Finding(
+            "declared",
+            False,
+            f"{type(trouble).__name__}: {trouble}",
+            "the manifest is here but could not be read; the line above is what it said",
+        )
     return Finding(
         "declared", bool(held), f"{len(held)} images: " + ", ".join(one["part"] for one in held)
     )

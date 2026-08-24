@@ -17,7 +17,7 @@
 
 </div>
 
-**2** parts · **1,002,240** instructions compared and **1,120** encodings walked field by field, **0** disagreements · **637** tests · **100%** statement and branch coverage · no dependencies
+**2** parts · **1,002,240** instructions compared and **1,120** encodings walked field by field, **0** disagreements · **642** tests · **100%** statement and branch coverage · no dependencies
 
 ```python
 from upd7725 import Cpu
@@ -162,7 +162,7 @@ print(identity.part, identity.revision, identity.processor)
 dsp1b DSP-1B upd7725
 ```
 
-An image whose length is right but whose content is not raises `Corrupt` with the digest it actually has, rather than loading something that will run wrong. This package carries no image and never will: each belongs to whoever wrote it. [`artifacts.manifest.json`](artifacts.manifest.json) says what each one is and the digest that identifies it, so a copy you already own can be confirmed before it is run.
+An image whose length is right but whose content is not raises `Corrupt` with the digest it actually has, rather than loading something that will run wrong. This package carries no image and never will: each belongs to whoever wrote it. [`upd7725/artifacts.manifest.json`](upd7725/artifacts.manifest.json) says what each one is and the digest that identifies it, so a copy you already own can be confirmed before it is run.
 
 ## Nothing starts clean
 

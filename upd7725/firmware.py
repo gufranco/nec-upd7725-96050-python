@@ -32,7 +32,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 ROOT = Path(__file__).resolve().parent.parent
 
-MANIFEST = ROOT / "artifacts.manifest.json"
+MANIFEST = Path(__file__).resolve().parent / "artifacts.manifest.json"
 
 DIRECTORY_VARIABLE = "UPD7725_FIRMWARE_DIR"
 
