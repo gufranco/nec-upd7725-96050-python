@@ -1,4 +1,5 @@
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -7,6 +8,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from conformance import instructions
+
+ROOT = Path(__file__).resolve().parent.parent
 
 
 class WordTest(unittest.TestCase):
@@ -109,6 +112,40 @@ class ReplayTest(unittest.TestCase):
         counters = {int(instructions.replay(seed, 1, 0)[0:4], 16) for seed in range(1, 200)}
 
         self.assertTrue(any(counter >= 1 << 11 for counter in counters))
+
+
+class ClaimedCountTest(unittest.TestCase):
+    """That the two figures the readme advertises are the ones there are.
+
+    Both were bare claims: the encoding count appeared in no file but the readme,
+    and the instruction count appeared in the corpus but nothing compared them.
+    A figure nothing derives is a figure that drifts.
+    """
+
+    def readme(self) -> str:
+        return (ROOT / "README.md").read_text()
+
+    def test_the_readme_advertises_the_number_of_encodings_walked(self) -> None:
+        claimed = re.search(r"\*\*([\d,]+)\*\* encodings walked", self.readme())
+
+        assert claimed is not None
+        self.assertEqual(
+            int(claimed.group(1).replace(",", "")), len(instructions._settled_opcodes())
+        )
+
+    def test_and_the_number_of_instructions_the_corpus_holds(self) -> None:
+        held = json.loads((ROOT / "conformance" / "corpus.json").read_text())
+        claimed = re.search(r"\*\*([\d,]+)\*\* instructions compared", self.readme())
+
+        assert claimed is not None
+        self.assertEqual(int(claimed.group(1).replace(",", "")), held["cases"])
+
+    def test_and_says_the_same_number_where_it_says_what_they_settled(self) -> None:
+        held = json.loads((ROOT / "conformance" / "corpus.json").read_text())
+        claimed = re.search(r"\*\*([\d,]+) instructions, no disagreements\*\*", self.readme())
+
+        assert claimed is not None
+        self.assertEqual(int(claimed.group(1).replace(",", "")), held["cases"])
 
 
 class CorpusTest(unittest.TestCase):
