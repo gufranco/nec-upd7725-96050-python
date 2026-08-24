@@ -62,8 +62,8 @@ INPUTS = (
 )
 
 
-def settled() -> "core.Core":
-    found = core.Core(models.describe("upd7725"), fill=0).reset()
+def settled() -> "core.Cpu":
+    found = core.Cpu(models.describe("upd7725"), fill=0).reset()
     registers = found.registers
     registers.rp = registers.dp = registers.sp = 0
     registers.k = registers.l = registers.m = registers.n = 0
@@ -75,7 +75,7 @@ def an_operation(alu: int, pselect: int = 1, asl: int = 0, src: int = 0) -> int:
     return pselect << 20 | alu << 16 | asl << 15 | src << 4
 
 
-def loaded(alu: int, left: int, right: int, carry: bool) -> "core.Core":
+def loaded(alu: int, left: int, right: int, carry: bool) -> "core.Cpu":
     """A part holding a stated starting state, with one operation ready to run."""
     chip = settled()
     chip.registers.a = left

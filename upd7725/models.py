@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any, override
 from .errors import UnknownModelError
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .core import Core
+    from .core import Cpu
 
 
 class Model:
@@ -68,10 +68,10 @@ class Model:
     def scratch_words(self) -> int:
         return 1 << self.pointer_bits
 
-    def build(self, *arguments: Any, **options: Any) -> Core:
-        from .core import Core
+    def build(self, *arguments: Any, **options: Any) -> Cpu:
+        from .core import Cpu
 
-        return Core(self, *arguments, **options)
+        return Cpu(self, *arguments, **options)
 
     @override
     def __repr__(self) -> str:

@@ -30,7 +30,7 @@ from .errors import Corrupt, Unrecognised, WrongShape
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Iterable, Iterator, Mapping
 
-    from .core import Core
+    from .core import Cpu
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -254,7 +254,7 @@ def _diagnosis(image: bytes, digest: str, entries: list[dict[str, Any]]) -> str:
     )
 
 
-def load(chip: Core, image: bytes, identity: Identity | None = None) -> Core:
+def load(chip: Cpu, image: bytes, identity: Identity | None = None) -> Cpu:
     """Put an image into a processor, program first and table second."""
     program_words = identity.program_words if identity else len(chip.stores.program)
     data_words = identity.data_words if identity else len(chip.stores.table)

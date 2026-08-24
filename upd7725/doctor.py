@@ -33,7 +33,7 @@ from .version import VERSION
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Iterable, Sequence
 
-    from .core import Core
+    from .core import Cpu
     from .firmware import Identity
 
 OLDEST_PYTHON = (3, 12)
@@ -84,11 +84,11 @@ def _package() -> Finding:
     return Finding("package", True, f"upd7725 {VERSION}")
 
 
-def _default_build(name: str) -> Core:
+def _default_build(name: str) -> Cpu:
     return models.describe(name).build()
 
 
-def _processor(name: str, build: Callable[[str], Core]) -> Finding:
+def _processor(name: str, build: Callable[[str], Cpu]) -> Finding:
     """Whether that processor builds, saying exactly what stopped it if not."""
     try:
         core = build(name)
@@ -194,7 +194,7 @@ def _digest_of(path: Path | str) -> str:
 
 
 def examine(
-    build: Callable[[str], Core] = _default_build,
+    build: Callable[[str], Cpu] = _default_build,
     search: Callable[[], Iterable[tuple[Identity, Path]]] = firmware.search,
 ) -> list[Finding]:
     """Everything worth looking at on this machine, in the order a reader wants it."""

@@ -182,7 +182,7 @@ JUMP_HIGH = 0x101
 CALL_LOW = 0x140
 CALL_HIGH = 0x141
 
-BRANCHES: dict[int, Callable[[Core], bool]] = {
+BRANCHES: dict[int, Callable[[Cpu], bool]] = {
     JUMP_IF_NO_CARRY_A: lambda chip: not chip.flags_a.c,
     JUMP_IF_CARRY_A: lambda chip: chip.flags_a.c,
     JUMP_IF_NO_CARRY_B: lambda chip: not chip.flags_b.c,
@@ -237,7 +237,7 @@ def _superseded(asl: int, destination: int) -> bool:
     return destination == (TO_B if asl else TO_A)
 
 
-class Core:
+class Cpu:
     """One processor, its registers, its flags and its three stores."""
 
     model: Model
@@ -317,7 +317,7 @@ class Core:
         for slot in range(len(registers.stack)):
             registers.stack[slot] = undefined[slot % len(undefined)] & registers.counter_mask
 
-    def reset(self) -> Core:
+    def reset(self) -> Cpu:
         """What the document says a reset does, and nothing beyond it.
 
         "This input initializes the SPI+ internal logic and sets the PC to 0."
@@ -436,7 +436,7 @@ class Core:
             spent += self.step()
         return spent
 
-    def run_until(self, check: Callable[[Core], bool], limit: int | None = None) -> Core:
+    def run_until(self, check: Callable[[Cpu], bool], limit: int | None = None) -> Cpu:
         """Step until the condition holds.
 
         `limit` bounds the number of instructions and raises when it is reached.

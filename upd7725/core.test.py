@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from upd7725 import core, errors, models
 
 
-def a_processor(**options: Any) -> "core.Core":
+def a_processor(**options: Any) -> "core.Cpu":
     """A part in a stated starting state, because these are instruction tests.
 
     Construction scrambles every register, which is what the silicon does and
@@ -17,7 +17,7 @@ def a_processor(**options: Any) -> "core.Core":
     first and says so: reset defines the counter, and everything an instruction
     reads is put to a known value here rather than assumed to arrive as one.
     """
-    found = core.Core(models.describe("upd96050"), fill=0, **options).reset()
+    found = core.Cpu(models.describe("upd96050"), fill=0, **options).reset()
     registers = found.registers
     registers.rp = registers.dp = registers.sp = 0
     registers.k = registers.l = registers.m = registers.n = 0
@@ -535,14 +535,14 @@ class ReturnTest(unittest.TestCase):
 
 class NarrowPartTest(unittest.TestCase):
     def test_the_smaller_part_has_a_narrower_counter(self) -> None:
-        found = core.Core(models.describe("upd7725"), fill=0)
+        found = core.Cpu(models.describe("upd7725"), fill=0)
 
         found.registers.pc = 0xFFFF
 
         self.assertEqual(found.registers.pc, 0x7FF)
 
     def test_and_a_narrower_pointer(self) -> None:
-        found = core.Core(models.describe("upd7725"), fill=0)
+        found = core.Cpu(models.describe("upd7725"), fill=0)
 
         found.registers.dp = 0xFFFF
 
@@ -553,43 +553,43 @@ class PowerOnTest(unittest.TestCase):
     """That a part arrives holding rubbish, and that a reset is the caller's."""
 
     def test_a_newly_built_part_does_not_start_at_zero(self) -> None:
-        found = core.Core(models.describe("upd96050"), fill=0)
+        found = core.Cpu(models.describe("upd96050"), fill=0)
 
         settled = [found.registers.pc, found.registers.a, found.registers.b]
 
         self.assertNotEqual(settled, [0, 0, 0])
 
     def test_the_same_seed_gives_the_same_rubbish_twice(self) -> None:
-        one = core.Core(models.describe("upd96050"), fill=0, seed=7)
-        other = core.Core(models.describe("upd96050"), fill=0, seed=7)
+        one = core.Cpu(models.describe("upd96050"), fill=0, seed=7)
+        other = core.Cpu(models.describe("upd96050"), fill=0, seed=7)
 
         self.assertEqual(one.registers.pc, other.registers.pc)
 
     def test_a_different_seed_gives_different_rubbish(self) -> None:
-        one = core.Core(models.describe("upd96050"), fill=0, seed=7)
-        other = core.Core(models.describe("upd96050"), fill=0, seed=8)
+        one = core.Cpu(models.describe("upd96050"), fill=0, seed=7)
+        other = core.Cpu(models.describe("upd96050"), fill=0, seed=8)
 
         self.assertNotEqual(one.registers.pc, other.registers.pc)
 
     def test_the_stack_holds_rubbish_too(self) -> None:
-        found = core.Core(models.describe("upd96050"), fill=0)
+        found = core.Cpu(models.describe("upd96050"), fill=0)
 
         self.assertNotEqual(list(found.registers.stack), [0] * len(found.registers.stack))
 
     def test_a_reset_puts_the_counter_at_zero(self) -> None:
-        found = core.Core(models.describe("upd96050"), fill=0)
+        found = core.Cpu(models.describe("upd96050"), fill=0)
 
         found.reset()
 
         self.assertEqual(found.registers.pc, 0)
 
     def test_and_returns_the_part_so_it_can_be_built_and_reset_at_once(self) -> None:
-        found = core.Core(models.describe("upd96050"), fill=0).reset()
+        found = core.Cpu(models.describe("upd96050"), fill=0).reset()
 
-        self.assertIsInstance(found, core.Core)
+        self.assertIsInstance(found, core.Cpu)
 
     def test_a_reset_leaves_the_accumulators_holding_what_they_held(self) -> None:
-        found = core.Core(models.describe("upd96050"), fill=0)
+        found = core.Cpu(models.describe("upd96050"), fill=0)
         before = found.registers.a
 
         found.reset()
@@ -705,7 +705,7 @@ class BoundedRunTest(unittest.TestCase):
 class InterruptTest(unittest.TestCase):
     """That the pin is a line the part reads, not a method that acts."""
 
-    def enabled(self) -> "core.Core":
+    def enabled(self) -> "core.Cpu":
         found = a_processor()
         found.registers.sr.ei = True
         return found

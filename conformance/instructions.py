@@ -241,10 +241,10 @@ def _start(seed: int, name: str, place: int, stack_mask: int) -> int:
     return value & REGISTER_MASKS.get(name, 0xFFFF)
 
 
-def prepared(seed: int, part: int) -> core.Core:
+def prepared(seed: int, part: int) -> core.Cpu:
     """A processor holding what that seed says it holds, before any instruction."""
     model = models.describe(PARTS[part])
-    chip = core.Core(model, sources=_sources(seed))
+    chip = core.Cpu(model, sources=_sources(seed))
 
     registers = chip.registers
     for place, name in enumerate(REGISTER_ORDER):
@@ -266,7 +266,7 @@ def prepared(seed: int, part: int) -> core.Core:
     return chip
 
 
-def state_of(chip: core.Core) -> str:
+def state_of(chip: core.Cpu) -> str:
     """The processor's whole state, in the shape the recordings are in."""
     registers = chip.registers
     changed = chip.stores.scratch.changed()

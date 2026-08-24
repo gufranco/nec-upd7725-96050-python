@@ -21,7 +21,7 @@ from .errors import NeverReady
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable
 
-    from .core import Core
+    from .core import Cpu
 
 DATA = 0
 
@@ -33,7 +33,7 @@ DEFAULT_LIMIT = 200000
 class Console:
     """The console's side of the two registers, and the waiting between them."""
 
-    def __init__(self, chip: Core) -> None:
+    def __init__(self, chip: Cpu) -> None:
         self.chip = chip
 
     @property
