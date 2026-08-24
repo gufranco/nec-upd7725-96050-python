@@ -81,7 +81,7 @@ jobs:
       # The gate proper. Every field of every instruction form against states
       # recorded from the reference, on an interpreter nobody has tested this on.
       - name: Settle every instruction again
-        run: python conformance/instructions.py
+        run: python -m conformance.instructions
 
       # The corpus is a fixed size because a recording has to be stored. This is
       # not stored, so it can go as far as it is given time for, and it starts
@@ -92,6 +92,6 @@ jobs:
       - name: Model against reference, on ground the corpus never covered
         run: |
           week=$(date -u +%V)
-          python conformance/differential.py \
+          python -m conformance.differential \
             --from "$((week * 1000000))" --cases 2000000 --seconds 900
         shell: bash

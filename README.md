@@ -190,8 +190,8 @@ Rubbish derived from the seed, the same every time, and not zero. The part has s
 Every encoding is walked field by field and every instruction is compared against a recorded corpus that states the whole processor state after each one, not merely the answer: **1,002,240 instructions, no disagreements**. Two independent implementations are stepped against that one corpus.
 
 ```bash
-python conformance/instructions.py
-python conformance/differential.py --from 70000000 --cases 4000
+python3 -m conformance.instructions
+python3 -m conformance.differential --from 70000000 --cases 4000
 python conformance/alu_flags.test.py
 ```
 

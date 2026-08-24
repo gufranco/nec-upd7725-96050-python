@@ -124,13 +124,13 @@ jobs:
       # somebody running it with the data sheet on disk gets a real answer, and
       # that a run without it cannot be mistaken for one.
       - name: Every quoted sentence, against the document it came from
-        run: python conformance/quotes.py
+        run: python -m conformance.quotes
 
       # Uninstrumented, and deliberately after the coverage run rather than
       # inside it. A coverage tracer costs about ten times what the model does, so
       # a throughput check under one measures the tracer.
       - name: The model has not become several times slower
-        run: python conformance/speed.py
+        run: python -m conformance.speed
 
   conformance:
     name: Conformance against the reference
@@ -145,14 +145,14 @@ jobs:
       # Every field of every instruction form, against states recorded from the
       # reference. This needs no firmware at all, and it is the gate.
       - name: Settle every instruction
-        run: python conformance/instructions.py
+        run: python -m conformance.instructions
 
       # Live against the ported reference rather than against the recordings, on
       # a small slice. The recordings are the authority and the step above is the
       # gate; this catches a disagreement on ground the recordings do not cover,
       # cheaply enough to run on every push. The long sweep is on the schedule.
       - name: Model against reference, on a slice the corpus does not cover
-        run: python conformance/differential.py --from 70000000 --cases 4000
+        run: python -m conformance.differential --from 70000000 --cases 4000
 
   firmware:
     name: Against firmware, when any is present
@@ -169,7 +169,7 @@ jobs:
       # them every one reports as skipped rather than as quietly passed.
       - name: Run the parts themselves
         run: |
-          python conformance/against_firmware.py | tee report.txt
+          python -m conformance.against_firmware | tee report.txt
           python conformance/against_firmware.test.py -v 2>&1 | tee -a report.txt
         shell: bash
 

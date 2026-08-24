@@ -4,9 +4,8 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import against_firmware
+from conformance import against_firmware
 
 PRESENT = against_firmware.available()
 

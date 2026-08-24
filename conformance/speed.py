@@ -26,7 +26,7 @@ not catch anything. So the tests here check the measuring, with a clock they
 control, and the measurement itself is a step of its own.
 
 Usage:
-    python3 conformance/speed.py [--repeats N] [--instructions N]
+    python3 -m conformance.speed [--repeats N] [--instructions N]
 """
 
 from __future__ import annotations
@@ -38,7 +38,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, override
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from upd7725 import models
 

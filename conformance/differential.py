@@ -34,12 +34,10 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import instructions
-import oracle
-from instructions import PARTS, case_for
+from conformance import instructions, oracle
+from conformance.instructions import PARTS, case_for
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable, Sequence

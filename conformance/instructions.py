@@ -16,7 +16,7 @@ evidence complete without any firmware present: a processor is settled by walkin
 its own encoding, and an encoding belongs to nobody.
 
 Usage:
-    python3 conformance/instructions.py [--cases N] [--record]
+    python3 -m conformance.instructions [--cases N] [--record]
 """
 
 import base64

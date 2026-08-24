@@ -46,8 +46,8 @@ mypy                                                   # types, strict
 pnpm run format:check                                  # every JSON file
 for f in upd7725/*.test.py conformance/*.test.py; do python3 "$f"; done
 python3 -m coverage report                             # fails below 100%
-python3 conformance/instructions.py                    # the gate
-python3 conformance/differential.py                    # unbounded, optional locally
+python3 -m conformance.instructions                    # the gate
+python3 -m conformance.differential                    # unbounded, optional locally
 ```
 
 Coverage is collected by running each test file under `coverage run -a`, not by a

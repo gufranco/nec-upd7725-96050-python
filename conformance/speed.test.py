@@ -4,10 +4,9 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import speed
+from conformance import speed
 
 
 def ticking(*seconds: float) -> Any:

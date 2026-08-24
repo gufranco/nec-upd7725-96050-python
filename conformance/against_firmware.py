@@ -12,7 +12,7 @@ leave it alone and every check reports as skipped, which is the honest state of 
 check that cannot run rather than a pass it did not earn.
 
 Usage:
-    python3 conformance/against_firmware.py [--instructions N]
+    python3 -m conformance.against_firmware [--instructions N]
 """
 
 import sys

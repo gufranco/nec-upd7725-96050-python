@@ -4,11 +4,10 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import differential
-from instructions import PARTS, case_for
+from conformance import differential
+from conformance.instructions import PARTS, case_for
 
 
 def agreeing(_seed: int, _part: int, _opcode: int) -> str:

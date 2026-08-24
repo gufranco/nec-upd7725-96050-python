@@ -4,12 +4,10 @@ import unittest
 from pathlib import Path
 from typing import Any, override
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import reference
-
 import upd7725
+from conformance import reference
 from upd7725 import models
 from upd7725.flags import Flags
 

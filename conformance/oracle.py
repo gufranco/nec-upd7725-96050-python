@@ -11,14 +11,9 @@ side existed. Every state this file produces is checked against those recordings
 which is what turns the port from a claim into a measurement.
 """
 
-import sys
 from collections.abc import Iterable
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-import instructions
-import reference
+from conformance import instructions, reference
 
 REVISIONS = (reference.UPD7725, reference.UPD96050)
 
