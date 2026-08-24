@@ -75,7 +75,13 @@ def _python() -> Finding:
 
 
 def _package() -> Finding:
-    return Finding("upd7725", True, f"version {VERSION}")
+    """The distribution, labelled so it cannot be mistaken for the part.
+
+    This package and one of the parts it models share the name `upd7725`, so
+    labelling both with it puts two different things under one word in a report
+    somebody else has to read.
+    """
+    return Finding("package", True, f"upd7725 {VERSION}")
 
 
 def _default_build(name: str) -> Core:

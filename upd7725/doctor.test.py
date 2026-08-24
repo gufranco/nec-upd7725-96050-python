@@ -54,7 +54,14 @@ class ExamineTest(unittest.TestCase):
         self.assertIn("python", [one.name for one in doctor.examine()])
 
     def test_and_the_version_of_this_package(self) -> None:
-        self.assertIn("upd7725", [one.name for one in doctor.examine()])
+        found = [one for one in doctor.examine() if one.name == "package"]
+
+        self.assertIn("upd7725", found[0].detail)
+
+    def test_the_package_line_is_not_confused_with_the_part_of_the_same_name(self) -> None:
+        names = [one.name for one in doctor.examine()]
+
+        self.assertEqual(names.count("upd7725"), 1)
 
     def test_and_one_finding_per_processor_it_covers(self) -> None:
         from upd7725 import models
