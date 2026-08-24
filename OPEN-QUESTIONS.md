@@ -117,6 +117,19 @@ a choice taken from an emulator rather than a figure from NEC.
 **What would settle it.** A sentence in an NEC document about what a multi-bit
 shift shifts in, or a measurement on a real part.
 
+**Where that sentence is not.** The 1989 data book has been read end to end for
+it. Inside the µPD77C25/77P25 section every occurrence of the word outside
+Table 6 is about the serial port's shift registers, and the table names the two
+operations without saying what arrives in the vacated bits.
+
+**A near miss worth naming, so it is not mistaken for an answer later.** The
+same book documents the µPD7281 shifting zeros in, in a labelled figure, and
+carries a µPD77810 whose flag table has the same six bits under the same names
+and marks the same two operations carry-reset. Neither is this part. The 7281 is
+a dataflow processor with a different architecture, and a sibling agreeing about
+flags is not a sibling agreeing about fill bits. Reading either across would
+turn a documented unknown into an undocumented assumption that looks sourced.
+
 ## What is not in question
 
 So the boundary is visible rather than implied:
