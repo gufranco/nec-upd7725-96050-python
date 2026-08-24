@@ -29,8 +29,10 @@ from . import clock, core, errors, firmware, flags, memory, models, ports, regis
 from .clock import Clock
 from .core import Core
 from .errors import ClockClosed, RunLimit, UnknownModelError
+from .firmware import Corrupt, Unrecognised, WrongShape
 from .memory import UNSET_SEED, NotWholeWords, Store, Stores, TooLarge, scramble
 from .models import MODELS, carrying, describe
+from .ports import NeverReady
 from .version import VERSION
 
 __version__ = VERSION
@@ -59,13 +61,17 @@ __all__ = [
     "Clock",
     "ClockClosed",
     "Core",
+    "Corrupt",
     "Cpu",
+    "NeverReady",
     "NotWholeWords",
     "RunLimit",
     "Store",
     "Stores",
     "TooLarge",
     "UnknownModelError",
+    "Unrecognised",
+    "WrongShape",
     "__version__",
     "carrying",
     "clock",
