@@ -86,7 +86,7 @@ are held and which the manufacturer declines to define. Every one of those is
 recorded in [`conformance/hardware.json`](conformance/hardware.json) with the
 quote it came from, and driven against a run.
 
-**Not settled: 4 things**, each named in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md)
+**Not settled: 3 things**, each named in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md)
 with the measurement that would close it. The largest is that one of the two
 parts has no manufacturer document at all, so what is asserted about it rests on
 secondary sources, and secondary sources for this family are emulators. Do not
