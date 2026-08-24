@@ -160,7 +160,36 @@ class Registers:
     behaviour: it holds two accumulators, two multiplicands and the two halves of
     a product as signed values, and a model that keeps them unsigned agrees with
     the part until the first negative multiply.
+
+    The slots finish that reasoning for writes. Declaring every register stopped a
+    misspelt read from answering zero; without slots a misspelt write is still
+    accepted in silence, setting a stray attribute while the register meant keeps
+    whatever it held. Both halves of the mistake now raise.
     """
+
+    __slots__ = (
+        "_a",
+        "_b",
+        "_dp",
+        "_k",
+        "_l",
+        "_m",
+        "_n",
+        "_pc",
+        "_rp",
+        "_sp",
+        "counter_mask",
+        "dr",
+        "pointer_mask",
+        "si",
+        "so",
+        "sr",
+        "stack",
+        "stack_mask",
+        "table_mask",
+        "tr",
+        "trb",
+    )
 
     def __init__(
         self,
