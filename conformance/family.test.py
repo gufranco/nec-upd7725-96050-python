@@ -30,7 +30,6 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 import upd7725  # noqa: E402
-from upd7725 import MODELS  # noqa: E402
 
 FAMILY = (ROOT / "FAMILY.md").read_text()
 
@@ -428,31 +427,67 @@ class SharedFileTest(unittest.TestCase):
         self.assertEqual(missing, [])
 
     def test_and_there_is_something_to_check(self) -> None:
+        """Or a standard naming no file would pass for one every member kept."""
         rows = re.findall(r"^\| `([^`]+)` \|", FAMILY, re.M)
 
         self.assertGreater(len([row for row in rows if row.endswith(".md")]), 0)
 
 
-class DocumentedModelTest(unittest.TestCase):
-    """That the readme shows how to build every part the package accepts.
+VARIANTS: dict[str, Any] = dict(getattr(PACKAGE, "MODELS", {}))
+"""Every variant this package accepts, read from the package rather than listed.
 
-    A model nobody can find in the readme is a model nobody uses. The check is
-    for the constructor call rather than the bare name, because a name in prose
-    tells a reader the part exists and a call tells them how to reach it, and the
-    second is what they came for.
+A member that has a catalogue publishes it as `MODELS`, whatever the variants
+are: three parts of a processor family, four cartridge layouts, two clocks. A
+member that has none does not publish the name at all, and the checks below say
+they were skipped rather than passing in silence.
+
+Inferring the absence from an empty mapping is safe here, and it is not safe for
+the machine names further down, because this one is read out of the package at
+run time. An empty answer means the package publishes no catalogue. It cannot
+mean somebody forgot to fill a list in, because there is no list to fill.
+"""
+
+
+def built(name: str, readme: str) -> bool:
+    """Whether the readme shows that variant being passed to a call.
+
+    A call rather than the bare name, because a name in prose tells a reader the
+    variant exists and a call tells them how to reach it, and the second is what
+    they came for.
+
+    Which call it is differs between members and is deliberately not pinned. A
+    clocked part hands back a `Cpu`, a board hands back a description of a
+    layout, and a check that demanded one spelling would be describing one
+    implementation rather than the promise every member makes.
+    """
+    return re.search(rf"""\w\(\s*["']{re.escape(name)}["']""", readme) is not None
+
+
+@unittest.skipUnless(VARIANTS, "this package names no variants")
+class DocumentedModelTest(unittest.TestCase):
+    """That the readme shows how to reach every variant the package accepts.
+
+    A variant nobody can find in the readme is a variant nobody uses.
     """
 
     def test_every_model_has_a_worked_construction(self) -> None:
-        undocumented = [name for name in MODELS if f'Cpu("{name}")' not in README]
+        undocumented = [name for name in VARIANTS if not built(name, README)]
 
         self.assertEqual(undocumented, [])
 
     def test_and_every_alias_is_named_beside_it(self) -> None:
         unnamed = [
-            alias for model in MODELS.values() for alias in model.aliases if alias not in README
+            alias for model in VARIANTS.values() for alias in model.aliases if alias not in README
         ]
 
         self.assertEqual(unnamed, [])
+
+    def test_the_reader_of_that_tells_a_call_from_a_mention(self) -> None:
+        """Driven both ways, because one that matched everything would also pass."""
+        self.assertTrue(built("a-part", 'describe("a-part")'))
+        self.assertTrue(built("a-part", "Cpu('a-part')"))
+        self.assertFalse(built("a-part", "the a-part is covered here"))
+        self.assertFalse(built("a-part", "`a-part`"))
 
 
 class ClaimedCountTest(unittest.TestCase):
