@@ -124,10 +124,28 @@ class CheckerTest(unittest.TestCase):
 
         self.assertEqual(mismatched(examples(readme)), [("2", "1")])
 
+    def test_and_a_later_example_is_still_checked_after_an_earlier_one_failed(self) -> None:
+        """The loop has to keep going, and one crafted example cannot show that.
+
+        A single mismatching example proves the report is produced and nothing
+        about what happens next. Two of them, with the failure first, is the only
+        arrangement where continuing after a failure is observable.
+        """
+        readme = (
+            "```python\nprint(1)\n```\n\n```\n2\n```\n\n```python\nprint(3)\n```\n\n```\n3\n```\n"
+        )
+
+        self.assertEqual(mismatched(examples(readme)), [("2", "1")])
+
     def test_an_example_with_no_stated_output_is_only_run(self) -> None:
         readme = "```python\nprint(1)\n```\n"
 
         self.assertEqual(mismatched(examples(readme)), [])
+
+    def test_every_example_is_run_and_none_is_skipped(self) -> None:
+        found = examples()
+
+        self.assertEqual(len([body for body, _ in found if body.strip()]), len(found))
 
 
 if __name__ == "__main__":
