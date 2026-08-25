@@ -4,6 +4,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+
+import upd7725
 from upd7725 import errors, models
 
 
@@ -82,6 +84,49 @@ class BuildTest(unittest.TestCase):
         built = models.describe("upd7725").build(fill=0xABCD)
 
         self.assertEqual(built.stores.scratch[0], 0xABCD)
+
+
+class QuietStoreTest(unittest.TestCase):
+    """`fill`, which is the one spelling across this family for a store of one byte.
+
+    This part had it before the others did, and the others each needed a
+    different keyword, so a check written against any one of them reported the
+    rest as broken. The spelling here is the one the family took.
+    """
+
+    def test_a_fill_puts_that_byte_everywhere(self) -> None:
+        part = upd7725.Cpu(upd7725.DEFAULT_MODEL, fill=0)
+
+        self.assertEqual({part.stores.read_byte(at) for at in range(0x40)}, {0})
+
+    def test_and_this_part_defaults_to_a_cleared_store_where_its_siblings_scramble(
+        self,
+    ) -> None:
+        """A difference worth pinning rather than leaving for somebody to trip on.
+
+        The siblings hand over scrambled memory because that is what a board
+        does. All three of this part's stores are on the die and two of them are
+        mask ROM, so there is no board to hand anything over: a store here holds
+        what a program was loaded into it, and nothing is read before one is.
+        """
+        part = upd7725.Cpu(upd7725.DEFAULT_MODEL)
+
+        self.assertEqual({part.stores.read_byte(at) for at in range(0x40)}, {0})
+
+    def test_and_this_part_offers_no_scrambled_store_at_all(self) -> None:
+        """Which follows from the same fact, and is worth saying out loud.
+
+        A store here answers one byte everywhere until something is written to
+        it, so there is nothing to scramble and asking for none is the same as
+        asking for zero.
+        """
+        asked = upd7725.Cpu(upd7725.DEFAULT_MODEL, fill=None)
+        cleared = upd7725.Cpu(upd7725.DEFAULT_MODEL, fill=0)
+
+        self.assertEqual(
+            {asked.stores.read_byte(at) for at in range(0x40)},
+            {cleared.stores.read_byte(at) for at in range(0x40)},
+        )
 
 
 if __name__ == "__main__":
