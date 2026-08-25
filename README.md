@@ -17,7 +17,7 @@
 
 </div>
 
-**2** parts · **1,120** encodings walked field by field · **22,240** instructions compared, **0** disagreements · **721** tests · **100%** statement and branch coverage · no dependencies
+**2** parts · **1,120** encodings walked field by field · **22,240** instructions compared, **0** disagreements · **740** tests · **100%** statement and branch coverage · no dependencies
 
 ```python
 from upd7725 import Cpu
@@ -216,7 +216,7 @@ done
 python -m coverage report
 ```
 
-`python -m upd7725.doctor` says what is actually on this machine: the parts, what makes each one different, and whether the files this repository cannot carry are here and whole. It is what an issue asks for, because a report is only as good as what it says about the machine that produced it.
+`python3 upd7725/doctor.py` says what is actually on this machine: the parts, what makes each one different, and whether the firmware this repository cannot carry is here. It is run as a file rather than with `-m` so that it still runs when the package itself will not import, which is the case it exists for. Its report is what an issue asks for, because a report is only as good as what it says about the machine that produced it.
 
 Tests sit beside the module they cover, named `<module>.test.py`. Coverage is 100% of statements and branches, enforced. Types are `mypy` at strict. Commits follow [Conventional Commits](https://www.conventionalcommits.org/), and releases are cut by [semantic-release](https://semantic-release.gitbook.io/).
 

@@ -1,5 +1,7 @@
 {
   "note": "What the manufacturer's own documentation says this silicon is. Every figure here was read out of the document named below rather than taken from an implementation of it, and each one carries the sentence or table row it came from so a later reader can check the reading rather than trusting it. This file is the authority on what the part IS. corpus.json is the authority on what the part DOES where the document is silent. When an implementation disagrees with this file, the implementation is wrong, no matter how widely used it is.",
+  "documents": {},
+  "documentsNote": "Empty on purpose. The two parts here are backed by different papers, so each part declares its own block beside itself under parts[].documents rather than sharing one at the top. The keys across those blocks form one namespace and every citation names one of them.",
   "authority": {
     "order": [
       "hardware.json, for anything the manufacturer states: widths, stack depth, cycles per instruction, memory sizes",

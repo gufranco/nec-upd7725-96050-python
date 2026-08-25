@@ -1,5 +1,9 @@
+import importlib
+import re
 import sys
+import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 from typing import NoReturn
 
@@ -132,6 +136,37 @@ class EntryTest(unittest.TestCase):
         doctor.main([], say=said.append)
 
         self.assertIn("upd7725", " ".join(said))
+
+
+class PathTest(unittest.TestCase):
+    """That the doctor puts the repository on the path when nothing else has.
+
+    Run as a file it has no package to be relative to, so it inserts the
+    repository itself. Under the test suite the path is already set, so the line
+    never runs and nothing would report it broken.
+    """
+
+    def test_the_repository_is_put_on_the_path_when_it_is_not_already_there(self) -> None:
+        held = [one for one in sys.path if one != str(doctor.ROOT)]
+
+        with unittest.mock.patch.object(sys, "path", held):
+            importlib.reload(doctor)
+
+            self.assertIn(str(doctor.ROOT), held)
+
+    def test_the_version_is_read_out_of_the_file_rather_than_imported(self) -> None:
+        found = re.search(
+            r'VERSION[^"\']*"([^"]+)"', (doctor.ROOT / "upd7725" / "version.py").read_text()
+        )
+        assert found is not None
+
+        self.assertEqual(doctor.VERSION, found.group(1))
+
+    def test_a_version_file_naming_nothing_reads_as_unknown(self) -> None:
+        where = Path(tempfile.mkdtemp()) / "version.py"
+        where.write_text("NOTHING = 1\n")
+
+        self.assertEqual(doctor._version(where), "unknown")
 
 
 if __name__ == "__main__":

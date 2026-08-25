@@ -18,11 +18,34 @@ looked at just now rather than something that ought to be true.
 from __future__ import annotations
 
 import platform
+import re
 import sys
+from pathlib import Path
 from typing import TYPE_CHECKING, override
 
-from . import models
-from .version import VERSION
+
+def _version(where: Path | None = None) -> str:
+    """The package version, read out of the file beside this one.
+
+    Read rather than imported. Importing it would go through the package, and a
+    package that will not import is one of the things this exists to report.
+    """
+    found = re.search(
+        r"""VERSION\s*[:=][^"']*["']([^"']+)["']""",
+        (where or Path(__file__).resolve().parent / "version.py").read_text(),
+    )
+    return found.group(1) if found else "unknown"
+
+
+ROOT = Path(__file__).resolve().parent.parent
+
+VERSION = _version()
+
+
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from upd7725 import models  # noqa: E402
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Sequence
