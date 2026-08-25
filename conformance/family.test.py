@@ -104,7 +104,12 @@ class Part(Protocol):
 
 
 def a_part() -> Part:
-    part: Part = upd7725.Cpu(upd7725.DEFAULT_MODEL)
+    """One part, built the way the standard says every member builds one.
+
+    A member that is not a clocked part has no `Cpu` at all, and the checks
+    that call this are skipped there.
+    """
+    part: Part = PACKAGE.Cpu(PACKAGE.DEFAULT_MODEL)
     return part
 
 
@@ -115,7 +120,7 @@ def a_running_part() -> Part:
     and useless for testing a limit. NOP is all zeroes here, so a zeroed store is
     already a field of them and the reset that follows points the counter at it.
     """
-    part = upd7725.Cpu(upd7725.DEFAULT_MODEL, fill=0)
+    part = PACKAGE.Cpu(PACKAGE.DEFAULT_MODEL, fill=0)
     part.reset()
     checked: Part = part
     return checked
@@ -208,7 +213,7 @@ class PromisedBehaviourTest(unittest.TestCase):
     def test_a_bounded_run_gives_up_rather_than_hanging(self) -> None:
         part = a_running_part()
 
-        with self.assertRaises(upd7725.RunLimit):
+        with self.assertRaises(PACKAGE.RunLimit):
             part.run_until(lambda _: False, limit=32)
 
     def test_a_running_part_is_not_held(self) -> None:
@@ -279,8 +284,8 @@ class PublishedSurfaceTest(unittest.TestCase):
 
     @unittest.skipUnless(CLOCKED, "not a clocked part")
     def test_the_memory_type_is_reachable_without_a_private_import(self) -> None:
-        self.assertIn("Stores", upd7725.__all__)
-        self.assertIn("Store", upd7725.__all__)
+        self.assertIn("Stores", PACKAGE.__all__)
+        self.assertIn("Store", PACKAGE.__all__)
 
     def test_and_so_is_everything_it_can_raise(self) -> None:
         """Read from the errors module rather than a list somebody keeps in step.
@@ -303,12 +308,21 @@ class PublishedSurfaceTest(unittest.TestCase):
         self.assertEqual([name for name in public if name not in PACKAGE.__all__], [])
 
     def test_nothing_is_promised_that_is_not_there(self) -> None:
-        absent = [name for name in upd7725.__all__ if not hasattr(upd7725, name)]
+        absent = [name for name in PACKAGE.__all__ if not hasattr(PACKAGE, name)]
 
         self.assertEqual(absent, [])
 
 
-PACKAGE = upd7725
+PACKAGE: Any = upd7725
+"""The package under test, deliberately untyped.
+
+What a member publishes depends on what it models: a clocked part has a `Cpu`,
+a `Memory` and a `RunLimit`, and a board, a format or a tool has none of them.
+A checker cannot know which of those it is looking at, so naming the attributes
+here would make it refuse a repository the standard never asked for one from.
+The checks that reach for those attributes are skipped on members without them,
+and every assertion below is made against the value at run time.
+"""
 
 
 class OneDefinitionTest(unittest.TestCase):
