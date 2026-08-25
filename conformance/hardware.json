@@ -8,7 +8,11 @@
       "corpus.json, for instruction-level behaviour the document does not specify: exact flag rules, undefined encodings, the result of every field combination",
       "neither overrides the other, because they answer different questions"
     ],
-    "why": "corpus.json was recorded from an emulator, named in pinned.json. An emulator is a good source for behaviour nobody documented and a poor one for facts the manufacturer printed. Where the two disagree the document wins, and the recording is retaken."
+    "why": "corpus.json was recorded from an emulator, named in pinned.json. An emulator is a good source for behaviour nobody documented and a poor one for facts the manufacturer printed. Where the two disagree the document wins, and the recording is retaken.",
+    "comparedAgainst": {
+      "runner": "conformance/reference.py",
+      "what": "A per-encoding corpus recorded from an independent implementation, with conformance/differential.py and conformance/oracle.py driving it."
+    }
   },
   "parts": [
     {
