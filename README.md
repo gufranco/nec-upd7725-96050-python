@@ -1,23 +1,10 @@
-<div align="center">
+# NEC uPD7725
 
-<h1>NEC uPD7725</h1>
-
-<strong>A uPD7725 you can drive from a clock, held to NEC's own data book for every flag each ALU operation touches and to a per-encoding corpus for the whole processor state after every instruction.</strong>
-
-<br>
-<br>
+A uPD7725 you can drive from a clock, held to NEC's own data book for every flag each ALU operation touches and to a per-encoding corpus for the whole processor state after every instruction.
 
 [![CI](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml/badge.svg)](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml)
-[![Conformance](https://img.shields.io/badge/conformance-1%2C002%2C240%20%2F%201%2C002%2C240-brightgreen)](#is-it-right)
-[![Encodings](https://img.shields.io/badge/encodings-1%2C120%20walked%20field%20by%20field-brightgreen)](#is-it-right)
-[![Coverage](https://img.shields.io/badge/coverage-100%25%20statement%20%2B%20branch-brightgreen)](#working-on-it)
-[![Types](https://img.shields.io/badge/mypy-strict-blue)](pyproject.toml)
-[![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue)](pyproject.toml)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-</div>
-
-**2** parts · **1,120** encodings walked field by field · **22,240** instructions compared, **0** disagreements · **804** tests · **100%** statement and branch coverage · no dependencies
+**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **804** tests, **100%** statement and branch coverage, no dependencies
 
 ```python
 from upd7725 import Cpu
