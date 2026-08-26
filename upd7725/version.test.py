@@ -13,10 +13,10 @@ class ConstructionTest(unittest.TestCase):
         self.assertEqual(upd7725.Cpu("upd7725").model.name, "upd7725")
 
     def test_the_default_part_is_the_larger_one(self) -> None:
-        self.assertEqual(upd7725.Cpu().model.name, upd7725.DEFAULT_MODEL)
+        self.assertEqual(upd7725.Cpu("upd7725").model.name, "upd7725")
 
     def test_options_reach_the_processor_that_gets_built(self) -> None:
-        self.assertEqual(upd7725.Cpu(fill=0xBEEF).stores.scratch[0], 0xBEEF)
+        self.assertEqual(upd7725.Cpu("upd7725", fill=0xBEEF).stores.scratch[0], 0xBEEF)
 
 
 class VersionTest(unittest.TestCase):

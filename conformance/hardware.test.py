@@ -103,33 +103,33 @@ class WidthTest(unittest.TestCase):
         facts = facts_for("upd7725")
 
         self.assertEqual(
-            models.describe("upd7725").counter_bits, facts["programCounterBits"]["value"]
+            models.lookup("upd7725").counter_bits, facts["programCounterBits"]["value"]
         )
 
     def test_and_addresses_as_many_words(self) -> None:
         facts = facts_for("upd7725")
 
-        self.assertEqual(models.describe("upd7725").program_words, facts["programWords"]["value"])
+        self.assertEqual(models.lookup("upd7725").program_words, facts["programWords"]["value"])
 
     def test_the_table_pointer_is_as_wide_as_the_document_says(self) -> None:
         facts = facts_for("upd7725")
 
-        self.assertEqual(models.describe("upd7725").table_bits, facts["romPointerBits"]["value"])
+        self.assertEqual(models.lookup("upd7725").table_bits, facts["romPointerBits"]["value"])
 
     def test_and_addresses_as_many_table_words(self) -> None:
         facts = facts_for("upd7725")
 
-        self.assertEqual(models.describe("upd7725").table_words, facts["dataRomWords"]["value"])
+        self.assertEqual(models.lookup("upd7725").table_words, facts["dataRomWords"]["value"])
 
     def test_the_scratch_pointer_is_as_wide_as_the_document_says(self) -> None:
         facts = facts_for("upd7725")
 
-        self.assertEqual(models.describe("upd7725").pointer_bits, facts["dataPointerBits"]["value"])
+        self.assertEqual(models.lookup("upd7725").pointer_bits, facts["dataPointerBits"]["value"])
 
     def test_and_addresses_as_many_scratch_words(self) -> None:
         facts = facts_for("upd7725")
 
-        self.assertEqual(models.describe("upd7725").scratch_words, facts["dataRamWords"]["value"])
+        self.assertEqual(models.lookup("upd7725").scratch_words, facts["dataRamWords"]["value"])
 
 
 class StackTest(unittest.TestCase):
@@ -138,15 +138,15 @@ class StackTest(unittest.TestCase):
     def test_the_stack_is_as_deep_as_the_document_says(self) -> None:
         facts = facts_for("upd7725")
 
-        self.assertEqual(models.describe("upd7725").stack_levels, facts["stackLevels"]["value"])
+        self.assertEqual(models.lookup("upd7725").stack_levels, facts["stackLevels"]["value"])
 
     def test_the_reference_holds_the_same_depth_as_the_model(self) -> None:
         self.assertEqual(
-            reference.STACK_LEVELS[reference.UPD7725], models.describe("upd7725").stack_levels
+            reference.STACK_LEVELS[reference.UPD7725], models.lookup("upd7725").stack_levels
         )
 
     def test_a_pointer_that_wide_reaches_every_slot_and_no_further(self) -> None:
-        model = models.describe("upd7725")
+        model = models.lookup("upd7725")
 
         self.assertEqual(1 << model.stack_pointer_bits, model.stack_levels)
 
@@ -154,9 +154,9 @@ class StackTest(unittest.TestCase):
         self.assertIn("notStated", facts_for("upd7725")["stackLevels"])
 
     def test_the_larger_part_holds_more_and_is_not_claimed_as_verified(self) -> None:
-        larger = models.describe("upd96050")
+        larger = models.lookup("upd96050")
 
-        self.assertGreater(larger.stack_levels, models.describe("upd7725").stack_levels)
+        self.assertGreater(larger.stack_levels, models.lookup("upd7725").stack_levels)
         for one in declared()["parts"]:
             if one["part"] == "upd96050":
                 self.assertFalse(one["verified"])
@@ -172,21 +172,21 @@ class CycleTest(unittest.TestCase):
         self.assertTrue(facts_for("upd7725")["everyInstructionSameLength"]["value"])
 
     def test_so_one_step_is_one_cycle(self) -> None:
-        chip = models.describe("upd7725").build(fill=0)
+        chip = models.lookup("upd7725").build(fill=0)
 
         chip.step()
 
         self.assertEqual(chip.cycles, 1)
 
     def test_and_a_run_of_many_is_that_many_cycles(self) -> None:
-        chip = models.describe("upd7725").build(fill=0)
+        chip = models.lookup("upd7725").build(fill=0)
 
         chip.run_for(1000)
 
         self.assertEqual(chip.cycles, 1000)
 
     def test_a_part_that_has_run_nothing_has_spent_no_cycles(self) -> None:
-        self.assertEqual(models.describe("upd7725").build(fill=0).cycles, 0)
+        self.assertEqual(models.lookup("upd7725").build(fill=0).cycles, 0)
 
     def test_the_cycle_time_and_the_clock_it_belongs_to_agree(self) -> None:
         facts = facts_for("upd7725")
@@ -216,7 +216,7 @@ class SupersededArithmeticTest(unittest.TestCase):
     """
 
     def _run(self, destination: int, asl: int = 0) -> Any:
-        chip = models.describe("upd7725").build(fill=0)
+        chip = models.lookup("upd7725").build(fill=0)
         registers = chip.registers
         registers.a = 0x7FFF
         registers.b = 0x7FFF
@@ -266,7 +266,7 @@ class MultiplierTest(unittest.TestCase):
         self.assertEqual(facts_for("upd7725")["multiplier"]["productBits"], 31)
 
     def test_and_the_low_word_carries_a_zero_in_its_lowest_bit(self) -> None:
-        chip = models.describe("upd7725").build(fill=0)
+        chip = models.lookup("upd7725").build(fill=0)
         chip.registers.k = 0x7FFF
         chip.registers.l = 0x7FFF
 
@@ -328,7 +328,7 @@ def overclaimed(facts: dict[str, Any], widths: dict[str, str]) -> list[str]:
         holding = {
             part
             for part in upd7725.MODELS
-            if getattr(upd7725.describe(part), attribute) == fact["value"]
+            if getattr(upd7725.models.lookup(part), attribute) == fact["value"]
         }
         if set(fact["appliesTo"]) != holding:
             found.append(f"{name}: claims {fact['appliesTo']}, holds for {sorted(holding)}")

@@ -243,7 +243,7 @@ def _start(seed: int, name: str, place: int, stack_mask: int) -> int:
 
 def prepared(seed: int, part: int) -> core.Cpu:
     """A processor holding what that seed says it holds, before any instruction."""
-    model = models.describe(PARTS[part])
+    model = models.lookup(PARTS[part])
     chip = core.Cpu(model, sources=_sources(seed))
 
     registers = chip.registers

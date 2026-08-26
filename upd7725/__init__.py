@@ -43,28 +43,25 @@ from .errors import (
     UnknownModelError,
 )
 from .memory import UNSET_SEED, Store, Stores, scramble
-from .models import MODELS, describe
+from .models import MODELS
 from .opcodes import Instruction, decode, disassemble
 from .version import VERSION
 
 __version__ = VERSION
 
-DEFAULT_MODEL = "upd96050"
-
 
 def Cpu(  # noqa: N802
-    model: str = DEFAULT_MODEL, memory: Any = None, **options: Any
+    model: str | None = None, memory: Any = None, **options: Any
 ) -> core.Cpu:
     """A part of the named model, however the name happens to be written.
 
     Named and shaped the way the sibling packages name and shape theirs, so a
     caller moving between them relearns nothing the hardware does not force.
     """
-    return describe(model).build(memory, **options)
+    return models.lookup(model).build(memory, **options)
 
 
 __all__ = [
-    "DEFAULT_MODEL",
     "MODELS",
     "UNSET_SEED",
     "Clock",
@@ -80,7 +77,6 @@ __all__ = [
     "UnknownModelError",
     "__version__",
     "decode",
-    "describe",
     "disassemble",
     "scramble",
 ]

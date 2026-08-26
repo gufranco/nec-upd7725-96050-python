@@ -4,7 +4,7 @@ A uPD7725 you can drive from a clock, held to NEC's own data book for every flag
 
 [![CI](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml/badge.svg)](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml)
 
-**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **804** tests, **100%** statement and branch coverage, no dependencies
+**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **808** tests, **100%** statement and branch coverage, no dependencies
 
 ```python
 from upd7725 import Cpu
@@ -48,7 +48,7 @@ Everything a caller touches. Nothing else is public.
 | `cpu.irq()` | Offers the interrupt line and acts on it now. A call to 100H when the enable bit is set | `True` if taken |
 | `identify(image)` | Names an image from its digest, with no machine to run it in | an `Identity` |
 | `disassemble(words, address)` | Reads program words with no machine to run them in | `Instruction` objects with `.text` |
-| `describe(model)` | The part behind a name, before building one | a `Model` |
+| `MODELS` | Every model this package covers, by the name it goes by | a mapping |
 
 | Pin or attribute | Is |
 |:--|:--|

@@ -112,7 +112,7 @@ def timed(
     clock: Callable[[], float] = _clock,
 ) -> Timed:
     """Run that many instructions that many times, from a fresh part each repeat."""
-    model = models.describe(part)
+    model = models.lookup(part)
     seconds = []
     for _ in range(repeats):
         chip = model.build(fill=0)

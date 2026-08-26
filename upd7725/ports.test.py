@@ -18,7 +18,7 @@ def a_console(fill: int = 0) -> "ports.Host":
     the part is reset and its registers put to a known value first rather than
     left holding whatever the seed produced.
     """
-    chip = models.describe("upd7725").build(fill=fill).reset()
+    chip = models.lookup("upd7725").build(fill=fill).reset()
     registers = chip.registers
     registers.rp = registers.dp = registers.sp = 0
     registers.k = registers.l = registers.m = registers.n = 0

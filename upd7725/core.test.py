@@ -17,7 +17,7 @@ def a_processor(**options: Any) -> "core.Cpu":
     first and says so: reset defines the counter, and everything an instruction
     reads is put to a known value here rather than assumed to arrive as one.
     """
-    found = core.Cpu(models.describe("upd96050"), fill=0, **options).reset()
+    found = core.Cpu(models.lookup("upd96050"), fill=0, **options).reset()
     registers = found.registers
     registers.rp = registers.dp = registers.sp = 0
     registers.k = registers.l = registers.m = registers.n = 0
@@ -535,14 +535,14 @@ class ReturnTest(unittest.TestCase):
 
 class NarrowPartTest(unittest.TestCase):
     def test_the_smaller_part_has_a_narrower_counter(self) -> None:
-        found = core.Cpu(models.describe("upd7725"), fill=0)
+        found = core.Cpu(models.lookup("upd7725"), fill=0)
 
         found.registers.pc = 0xFFFF
 
         self.assertEqual(found.registers.pc, 0x7FF)
 
     def test_and_a_narrower_pointer(self) -> None:
-        found = core.Cpu(models.describe("upd7725"), fill=0)
+        found = core.Cpu(models.lookup("upd7725"), fill=0)
 
         found.registers.dp = 0xFFFF
 
@@ -553,43 +553,43 @@ class PowerOnTest(unittest.TestCase):
     """That a part arrives holding rubbish, and that a reset is the caller's."""
 
     def test_a_newly_built_part_does_not_start_at_zero(self) -> None:
-        found = core.Cpu(models.describe("upd96050"), fill=0)
+        found = core.Cpu(models.lookup("upd96050"), fill=0)
 
         settled = [found.registers.pc, found.registers.a, found.registers.b]
 
         self.assertNotEqual(settled, [0, 0, 0])
 
     def test_the_same_seed_gives_the_same_rubbish_twice(self) -> None:
-        one = core.Cpu(models.describe("upd96050"), fill=0, seed=7)
-        other = core.Cpu(models.describe("upd96050"), fill=0, seed=7)
+        one = core.Cpu(models.lookup("upd96050"), fill=0, seed=7)
+        other = core.Cpu(models.lookup("upd96050"), fill=0, seed=7)
 
         self.assertEqual(one.registers.pc, other.registers.pc)
 
     def test_a_different_seed_gives_different_rubbish(self) -> None:
-        one = core.Cpu(models.describe("upd96050"), fill=0, seed=7)
-        other = core.Cpu(models.describe("upd96050"), fill=0, seed=8)
+        one = core.Cpu(models.lookup("upd96050"), fill=0, seed=7)
+        other = core.Cpu(models.lookup("upd96050"), fill=0, seed=8)
 
         self.assertNotEqual(one.registers.pc, other.registers.pc)
 
     def test_the_stack_holds_rubbish_too(self) -> None:
-        found = core.Cpu(models.describe("upd96050"), fill=0)
+        found = core.Cpu(models.lookup("upd96050"), fill=0)
 
         self.assertNotEqual(list(found.registers.stack), [0] * len(found.registers.stack))
 
     def test_a_reset_puts_the_counter_at_zero(self) -> None:
-        found = core.Cpu(models.describe("upd96050"), fill=0)
+        found = core.Cpu(models.lookup("upd96050"), fill=0)
 
         found.reset()
 
         self.assertEqual(found.registers.pc, 0)
 
     def test_and_returns_the_part_so_it_can_be_built_and_reset_at_once(self) -> None:
-        found = core.Cpu(models.describe("upd96050"), fill=0).reset()
+        found = core.Cpu(models.lookup("upd96050"), fill=0).reset()
 
         self.assertIsInstance(found, core.Cpu)
 
     def test_a_reset_leaves_the_accumulators_holding_what_they_held(self) -> None:
-        found = core.Cpu(models.describe("upd96050"), fill=0)
+        found = core.Cpu(models.lookup("upd96050"), fill=0)
         before = found.registers.a
 
         found.reset()

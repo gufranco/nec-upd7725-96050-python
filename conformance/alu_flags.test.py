@@ -63,7 +63,7 @@ INPUTS = (
 
 
 def settled() -> "core.Cpu":
-    found = core.Cpu(models.describe("upd7725"), fill=0).reset()
+    found = core.Cpu(models.lookup("upd7725"), fill=0).reset()
     registers = found.registers
     registers.rp = registers.dp = registers.sp = 0
     registers.k = registers.l = registers.m = registers.n = 0

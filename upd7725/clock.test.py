@@ -18,7 +18,7 @@ from upd7725 import Clock, ClockClosed, core, models
 
 def a_processor() -> "core.Cpu":
     """A settled part, so a tick advances a program rather than rubbish."""
-    return core.Cpu(models.describe("upd96050"), fill=0).reset()
+    return core.Cpu(models.lookup("upd96050"), fill=0).reset()
 
 
 class TickTest(unittest.TestCase):
