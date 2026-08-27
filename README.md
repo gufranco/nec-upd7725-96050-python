@@ -4,7 +4,7 @@ A uPD7725 you can drive from a clock, held to NEC's own data book for every flag
 
 [![CI](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml/badge.svg)](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml)
 
-**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **811** tests, **100%** statement and branch coverage, no dependencies
+**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **843** tests, **100%** statement and branch coverage, no dependencies
 
 ```python
 from upd7725 import Cpu
@@ -238,6 +238,14 @@ Every manufacturer document below is copyrighted and not redistributable, which 
 |:---------|:-----|------:|:--------|:----------------|
 | [NEC Electronics, *uPD77C25/uPD77P25 Digital Signal Processor Data Sheet*, Advance Product Information](https://www.cryptomuseum.com/df/telefunken/e2000/files/uPD77C25.pdf) | 1987-08 | 36 | `d043be18d5cd21d9…` | No |
 | [NEC Electronics, *Digital Signal Processor and Speech Processor Products Data Book*, document 50052](https://bitsavers.trailing-edge.com/components/nec/_dataBooks/1989_DSP_and_Speech_Products_Data_Book.pdf) | 1989 | 388 | `2f0190523de99938…` | No |
+
+
+Fetching them is a command rather than an exercise. [`conformance/documents.json`](conformance/documents.json) carries the full digest, the byte count and a fetchable address for each, and [`conformance/documents.py`](conformance/documents.py) brings both down into `docs/`, which git ignores, and refuses anything whose digest does not match.
+
+```bash
+python3 -m conformance.documents          # fetch and verify every digest
+python3 -m conformance.documents --check  # verify what is already here
+```
 
 The data book is the fuller of the two. The 1987 sheet is Advance Product Information and states no flag rules; the data book's Table 6 gives, for all sixteen ALU operations, which flags are affected, which are reset, which are held and which NEC declines to define. It numbers pages per section, as 2-33, so a fact read from it names the section.
 

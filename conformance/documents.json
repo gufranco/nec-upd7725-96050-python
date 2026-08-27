@@ -1,0 +1,39 @@
+{
+  "note": "Every document this package is held to, by identity rather than by name. conformance/documents.py brings each one down again and refuses anything whose digest does not match.",
+  "authority": {
+    "1": "A manufacturer document. What the maker of the part printed about it.",
+    "2": "A recording taken off a real part, which is conformance/suites.json rather than a document, so nothing in this folder occupies that rung.",
+    "3": "Independent research, for what no manufacturer printed."
+  },
+  "whyNotCarriedHere": "These are the publishers' documents, not this project's, and this repository is public. What is carried is the identity, which is what makes a copy checkable.",
+  "readOn": "2026-08-27",
+  "partsWithNoDocument": {},
+  "documents": [
+    {
+      "file": "manufacturer/upd77c25.pdf",
+      "rung": 1,
+      "publisher": "NEC Electronics Inc.",
+      "title": "uPD77C25/uPD77P25 Digital Signal Processor Data Sheet, Advance Product Information",
+      "date": "1987-08",
+      "retrievedFrom": "https://www.cryptomuseum.com/df/telefunken/e2000/files/uPD77C25.pdf",
+      "covers": ["upd7725", "upd96050"],
+      "settles": "The instruction set, the register file, the memory sizes and the pin functions. It covers the mask-ROM part and the UVEPROM part, which it describes as functionally identical.",
+      "sha256": "d043be18d5cd21d90960ffb7e068e3b9a81647c8534a142f29eb11015733d042",
+      "bytes": 1299452,
+      "pages": 36
+    },
+    {
+      "file": "manufacturer/nec-dsp-data-book-1989.pdf",
+      "rung": 1,
+      "publisher": "NEC Electronics Inc.",
+      "title": "Digital Signal Processor (DSP) and Speech Processor Products Data Book, document 50052",
+      "date": "1989",
+      "retrievedFrom": "https://bitsavers.trailing-edge.com/components/nec/_dataBooks/1989_DSP_and_Speech_Products_Data_Book.pdf",
+      "covers": ["upd7725", "upd96050"],
+      "settles": "The wider family the part belongs to, and the second witness for figures the data sheet prints once.",
+      "sha256": "2f0190523de99938cc1da1c138f2c5b7f71573eb11bcb3b0dcdd1da1267e85ce",
+      "bytes": 14316524,
+      "pages": 388
+    }
+  ]
+}
