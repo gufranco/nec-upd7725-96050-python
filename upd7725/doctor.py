@@ -105,9 +105,16 @@ def _default_build(name: str) -> Cpu:
 
 
 def _processor(name: str, build: Callable[[str], Cpu]) -> Finding:
-    """Whether that processor builds, saying exactly what stopped it if not."""
+    """Whether that processor builds and resets, saying what stopped it if not.
+
+    The reset is driven rather than described. A part built here comes up
+    scrambled, so the counter it holds before the pin is pulled is rubbish that
+    changes every run and is not where execution begins. Pulling it is also the
+    only way this report says anything about the path every caller takes first.
+    """
     try:
         core = build(name)
+        core.reset()
     except Exception as trouble:
         return Finding(
             name,
@@ -121,7 +128,7 @@ def _processor(name: str, build: Callable[[str], Cpu]) -> Finding:
         name,
         True,
         f"{described.program_words} program words, {described.table_words} table,"
-        f" {described.scratch_words} scratch, starts at word {core.registers.pc}",
+        f" {described.scratch_words} scratch, resets to word {core.registers.pc}",
     )
 
 

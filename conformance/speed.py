@@ -115,7 +115,7 @@ def timed(
     model = models.lookup(part)
     seconds = []
     for _ in range(repeats):
-        chip = model.build(fill=0)
+        chip = model.build(fill=0).reset()
         at = clock()
         chip.run_for(instructions)
         seconds.append(clock() - at)

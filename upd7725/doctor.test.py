@@ -5,11 +5,12 @@ import tempfile
 import unittest
 import unittest.mock
 from pathlib import Path
-from typing import NoReturn
+from typing import NoReturn, override
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from upd7725 import doctor
+from upd7725 import doctor, models
+from upd7725.core import Cpu
 
 
 class Complaint(Exception):
@@ -83,6 +84,25 @@ class ExamineTest(unittest.TestCase):
             raise Complaint("the core exploded")
 
         found = doctor.examine(build=boom)
+
+        self.assertTrue(any(not one.ok for one in found))
+
+    def test_a_processor_that_builds_reports_where_the_reset_left_it(self) -> None:
+        """Driven rather than described, because the pin is what every caller pulls first."""
+        found = [one for one in doctor.examine() if one.name == "upd7725"]
+
+        self.assertIn("resets to word", found[0].detail)
+
+    def test_a_processor_that_will_not_reset_is_reported_as_broken(self) -> None:
+        class WillNotReset(Cpu):
+            @override
+            def reset(self) -> NoReturn:
+                raise Complaint("the pin did nothing")
+
+        def build(name: str) -> Cpu:
+            return WillNotReset(models.lookup(name))
+
+        found = doctor.examine(build=build)
 
         self.assertTrue(any(not one.ok for one in found))
 
