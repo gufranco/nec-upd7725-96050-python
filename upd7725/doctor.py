@@ -39,6 +39,8 @@ def _version(where: Path | None = None) -> str:
 
 ROOT = Path(__file__).resolve().parent.parent
 
+from upd7725 import environment  # noqa: E402
+
 VERSION = _version()
 
 
@@ -145,6 +147,10 @@ def report(found: Sequence[Finding]) -> list[str]:
     """The lines a person pastes into an issue."""
     unwell = [one for one in found if not one.ok]
     lines = [f"upd7725 {VERSION} on {platform.python_version()}, {platform.system()}", ""]
+    lines.append("  the machine")
+    lines.extend(environment.lines(ROOT))
+    lines.append("")
+    lines.append("  this package")
     lines.extend(one.report for one in found)
     lines.append("")
     if unwell:

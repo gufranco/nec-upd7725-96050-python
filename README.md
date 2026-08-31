@@ -4,7 +4,7 @@ A uPD7725 you can drive from a clock, held to NEC's own data book for every flag
 
 [![CI](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml/badge.svg)](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml)
 
-**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **854** tests, **100%** statement and branch coverage, no dependencies
+**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **896** tests, **100%** statement and branch coverage, no dependencies
 
 ```python
 from upd7725 import Cpu
