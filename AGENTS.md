@@ -129,18 +129,15 @@ aspired to. A new branch without a test fails the build.
 | Thing | Rule |
 |:------|:-----|
 | Language | Python only. Nothing else, anywhere in the project |
-| Comments | None in source, ever. Docstrings carry the reasoning |
+| Comments | None in source, and a docstring counts as one |
 | Test layout | `<module>.test.py` beside the module it covers |
-| Test structure | Arrange, blank line, one act, blank line, assert. No section labels |
+| Test structure | Arrange, act, assert, each opened by its bare marker |
 | Test data | Derived from a seed, never hardcoded |
 | Coverage | 100% statements and branches, enforced |
 | Types | `mypy` at strict, plus every optional error class the version offers |
 | Commits | [Conventional Commits](https://www.conventionalcommits.org/); subject under 50 characters |
 | Releases | semantic-release from `main`; never tag by hand |
 | A program image | Never committed, never vendored, never encoded, never generated |
-
-Docstrings explain why, not what. A docstring restating the function name is
-worse than none, because it takes space a reason could have used.
 
 ## Layout
 
