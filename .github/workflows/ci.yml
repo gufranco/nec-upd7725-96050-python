@@ -159,3 +159,19 @@ jobs:
       # cheaply enough to run on every push. The long sweep is on the schedule.
       - name: Model against reference, on a slice the corpus does not cover
         run: python -m conformance.differential --from 70000000 --cases 4000
+
+  package:
+    name: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Build the wheel
+        run: python -m pip wheel --no-deps --wheel-dir dist .
+
+      - name: Every module ships and no test does
+        run: python -m conformance.package dist/upd7725-*.whl
