@@ -10,7 +10,6 @@ from conformance import speed
 
 
 def ticking(*seconds: float) -> Any:
-    """A clock that advances by each of those in turn, so a run is exactly timed."""
     held = [0.0]
     steps = list(seconds)
 
@@ -25,8 +24,6 @@ def ticking(*seconds: float) -> Any:
 
 
 class MeasurementTest(unittest.TestCase):
-    """What a run reports, on a clock that does not vary."""
-
     def _timed(self, seconds: Sequence[float]) -> speed.Timed:
         return speed.Timed("upd7725", instructions=1000, seconds=seconds)
 
@@ -66,8 +63,6 @@ class MeasurementTest(unittest.TestCase):
 
 
 class RunTest(unittest.TestCase):
-    """That the runner actually drives the model, on a clock it is given."""
-
     def test_a_run_records_one_duration_per_repeat(self) -> None:
         found = speed.timed(instructions=10, repeats=3, clock=ticking(0.1, 0.1, 0.1))
 

@@ -132,8 +132,6 @@ class AttributeTest(unittest.TestCase):
 
 
 class WordTest(unittest.TestCase):
-    """Reading a signed register back as the bits it holds."""
-
     def test_a_signed_register_reads_back_as_sixteen_bits(self) -> None:
         found = registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11)
         found.a = -1
@@ -152,14 +150,6 @@ class WordTest(unittest.TestCase):
 
 
 class StackTest(unittest.TestCase):
-    """How many return addresses there are, which the field usually gets wrong.
-
-    Four is not a number chosen here. It is what NEC prints for this part, and
-    conformance/hardware.test.py is where that is held against the document. What
-    these check is that the register file is built to whatever depth it is handed,
-    and that the pointer cannot reach past the last slot.
-    """
-
     def _held(self, **options: int) -> registers.Registers:
         return registers.Registers(counter_bits=14, table_bits=11, pointer_bits=11, **options)
 

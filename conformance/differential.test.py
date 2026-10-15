@@ -22,8 +22,6 @@ def disagreeing_on(index: int) -> Any:
 
 
 class CaseTest(unittest.TestCase):
-    """Which case a number stands for, which is what makes a run repeatable."""
-
     def test_a_number_names_the_same_case_every_time(self) -> None:
         self.assertEqual(case_for(7), case_for(7))
 
@@ -47,8 +45,6 @@ class CaseTest(unittest.TestCase):
 
 
 class SweepTest(unittest.TestCase):
-    """Model against reference, live, over a range of cases."""
-
     def test_two_that_agree_everywhere_report_nothing(self) -> None:
         found = differential.sweep(3, model=agreeing, reference=agreeing)
 
@@ -104,8 +100,6 @@ class SweepTest(unittest.TestCase):
 
 
 class BudgetTest(unittest.TestCase):
-    """A run bounded by time rather than by a count."""
-
     def test_a_clock_that_has_run_out_stops_the_sweep(self) -> None:
         ticks = iter([0.0, 0.0, 99.0])
 
@@ -238,13 +232,6 @@ class EntryTest(unittest.TestCase):
 
 
 class RealPartTest(unittest.TestCase):
-    """The model and the reference themselves, over a handful of real cases.
-
-    Small on purpose: this file's job is the harness, and the sweep that runs for
-    long enough to find something is the one the schedule runs. A handful here
-    proves the two are actually wired to each other rather than to stand-ins.
-    """
-
     def test_the_model_and_the_reference_agree_on_the_first_cases(self) -> None:
         found = differential.sweep(24)
 

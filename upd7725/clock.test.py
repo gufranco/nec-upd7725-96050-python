@@ -1,11 +1,3 @@
-"""That a part can be driven a cycle at a time, and let go cleanly afterwards.
-
-What is worth pinning here is not the arithmetic. It is that the worker thread
-is genuinely suspended between cycles rather than replaying them afterwards,
-that a failure inside the part reaches the caller instead of dying quietly on a
-thread nobody is watching, and that closing gives the part back untouched.
-"""
-
 import sys
 import unittest
 from pathlib import Path
@@ -17,7 +9,6 @@ from upd7725 import Clock, ClockClosed, core, models
 
 
 def a_processor() -> "core.Cpu":
-    """A settled part, so a tick advances a program rather than rubbish."""
     return core.Cpu(models.lookup("upd96050"), fill=0).reset()
 
 

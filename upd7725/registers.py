@@ -1,15 +1,3 @@
-"""Everything the processor holds between one instruction and the next.
-
-Three of the registers are narrower on the smaller part than on the larger one,
-and the widths are the only difference between the two: the instruction set,
-the flags and the status word are identical. So the widths arrive at construction
-rather than being written into the arithmetic, and every store masks itself.
-
-Six registers are signed. They are the two accumulators, the two multiplicands
-and the two halves of the product, and a model that keeps them unsigned agrees
-with the part until the first negative multiply and then stops.
-"""
-
 from typing import override
 
 WORD = 0x10000
@@ -17,24 +5,8 @@ WORD = 0x10000
 SIGN = 0x8000
 
 STACK_DEPTH = 4
-"""How many return addresses the smaller part holds.
-
-Four, because NEC says four: "The SPI+ contains a four-level program stack for
-efficient program usage and interrupt handling", and the block diagram beside it
-draws the slots labelled 0 to 3. Every implementation of this family in the field
-carries sixteen, which is where this started too, and none of them is the part.
-
-What a fifth consecutive call does is not in the document. A two-bit pointer
-wrapping to slot zero is what the width implies, and that is what happens below,
-but it is an inference from the width rather than a figure anybody printed.
-
-The larger part of the family holds more, and that number has no manufacturer's
-document behind it. Both live in models.py so the part decides, and
-conformance/hardware.json records which of the two is verified.
-"""
 
 STACK_MASK = STACK_DEPTH - 1
-"""The default when a caller does not say, which is the smaller part's."""
 
 SIGNED = ("k", "l", "m", "n", "a", "b")
 
@@ -56,7 +28,6 @@ STATUS_PLACES = (
 TRANSFER_PLACE = 12
 
 WRITABLE_BY_INSTRUCTION = 0x907C
-"""The bits an instruction may not set, because the part owns them."""
 
 
 def signed(word: int) -> int:
@@ -64,13 +35,6 @@ def signed(word: int) -> int:
 
 
 class Status:
-    """The word the host reads to find out whether the part wants attention.
-
-    The ten bits are declared rather than set in a loop over their names. A loop
-    is shorter and costs every reader and every checker the ability to see that
-    the bits exist: `sr.rqm` and a misspelling of it are the same thing to a loop.
-    """
-
     __slots__ = (
         "dma",
         "drc",
@@ -105,12 +69,6 @@ class Status:
         self.so_reserved = False
 
     def assign(self, word: int) -> None:
-        """Take every bit the part defines, and nothing between them.
-
-        The three acknowledgements are not among them. They are state the part
-        holds and never puts in the word the host reads, so a write to the
-        register cannot set them and reading the word back cannot see them.
-        """
         self.p0 = bool(word >> 0 & 1)
         self.p1 = bool(word >> 1 & 1)
         self.ei = bool(word >> 7 & 1)
@@ -147,26 +105,6 @@ class Status:
 
 
 class Registers:
-    """The whole register file, at the widths the part being modelled has.
-
-    Every register is declared. An earlier version kept the six signed ones in a
-    dictionary reached through `__getattr__`, which is four fewer lines and hides
-    the most important structure in this package from every reader and every
-    checker: a misspelt register name read as zero instead of raising, and a
-    renamed one broke nothing until something ran.
-
-    The six signed registers are properties rather than plain attributes because
-    a store has to narrow to sixteen bits and re-sign. That is the part's
-    behaviour: it holds two accumulators, two multiplicands and the two halves of
-    a product as signed values, and a model that keeps them unsigned agrees with
-    the part until the first negative multiply.
-
-    The slots finish that reasoning for writes. Declaring every register stopped a
-    misspelt read from answering zero; without slots a misspelt write is still
-    accepted in silence, setting a stray attribute while the register meant keeps
-    whatever it held. Both halves of the mistake now raise.
-    """
-
     __slots__ = (
         "_a",
         "_b",
@@ -301,7 +239,6 @@ class Registers:
         self._b = signed(value & 0xFFFF)
 
     def word(self, name: str) -> int:
-        """A signed register read back as the sixteen bits it actually holds."""
         found = getattr(self, name)
         if not isinstance(found, int):
             raise AttributeError(name)

@@ -1,21 +1,3 @@
-"""The reference processor, ported to Python.
-
-This is not the model. The model lives in `upd7725/`, and this is the independent
-implementation it is checked against, ported from the one a widely used emulator
-carries.
-
-The two are deliberately built differently. This one dispatches through tables: a
-source is a lookup, an operation is a lookup, a branch is a lookup. The model
-branches through named conditions instead. Two implementations that share a shape
-tend to share a mistake, and these two do not share a shape.
-
-Neither of them is the evidence, though. The evidence is `corpus.json`, recorded
-from the original implementation at the commit named in `pinned.json`, before this
-file existed. Both this port and the model are held to those recordings, so a
-mistake made here shows up as a failure here rather than as agreement with a model
-that made the same one.
-"""
-
 from collections.abc import Callable
 from typing import Protocol, runtime_checkable
 
@@ -48,13 +30,6 @@ STACK_LEVELS = {
     UPD7725: 4,
     UPD96050: 8,
 }
-"""How many return addresses each part holds.
-
-Four for the smaller one because NEC prints four. Eight for the larger one
-because no manufacturer document for it was found and eight is what the secondary
-sources say, which conformance/hardware.json records as unverified rather than
-letting it pass for a fact.
-"""
 
 FLAG_BITS = ("ov0", "ov1", "z", "c", "s0", "s1")
 
@@ -84,16 +59,6 @@ class UnknownRevision(Exception):
 
 @runtime_checkable
 class Words(Protocol):
-    """A block of words this reference reads and writes by index.
-
-    A list satisfies it, and so does anything that answers the same way without
-    holding every word. The conformance oracle needs the second: filling twenty
-    thousand words to read three is the difference between a comparison that runs
-    in a second and one that runs in minutes. Declaring what is actually used, an
-    index in each direction and a length, lets the substitution be checked rather
-    than merely work.
-    """
-
     def __len__(self) -> int: ...
 
     def __getitem__(self, at: int) -> int: ...
@@ -115,13 +80,6 @@ def i16(value: int) -> int:
 
 
 class Flag:
-    """The six bits one accumulator carries.
-
-    Each bit is declared rather than only named in FLAG_BITS, so a checker can
-    see the six that exist. The assignment still walks the tuple, because that
-    is the shape the implementation this was ported from has.
-    """
-
     __slots__ = FLAG_BITS
 
     ov0: int
@@ -146,8 +104,6 @@ class Flag:
 
 
 class Status:
-    """The word the host reads, plus the two acknowledgements it never sees."""
-
     __slots__ = tuple(sorted({name for name, _ in STATUS_BITS} | {"drs", "siack", "soack"}))
 
     p0: int
@@ -181,8 +137,6 @@ class Status:
 
 
 class Registers:
-    """The register file, narrowed to the widths the part being modelled has."""
-
     k: int
     l: int  # noqa: E741
     m: int
@@ -330,17 +284,8 @@ CONDITIONS: "dict[int, Callable[[Upd96050], int]]" = {
 }
 
 ACC_A = 1
-"""The destination code for accumulator A, from the manufacturer's DST table."""
 
 ACC_B = 2
-"""And for accumulator B.
-
-Both are here because of one sentence: "if the accumulator specified in the ASL
-field is also specified as the destination of the data move, the ALU operation
-becomes a NOP, as the data move supersedes the ALU operation." A NOP leaves the
-flags alone, so running the arithmetic and overwriting the result afterwards is
-not the same thing.
-"""
 
 THROUGH_OUTPUT = 0x000
 JUMP_NEAR = 0x100
@@ -350,8 +295,6 @@ CALL_FAR = 0x141
 
 
 class Upd96050:
-    """One processor of the family, at the widths its revision has."""
-
     revision: str
     regs: Registers
     flags_a: Flag
@@ -372,7 +315,6 @@ class Upd96050:
         self.dataRAM = [0] * DATA_WORDS
 
     def exec(self) -> None:
-        """One instruction, then the multiply the part runs after every one."""
         opcode = n24(self.programROM[self.regs.pc])
         self.regs.pc += 1
 

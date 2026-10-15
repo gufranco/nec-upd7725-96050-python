@@ -1,23 +1,3 @@
-"""Reading an instruction word without a processor to run it in.
-
-A program for this part is a list of twenty-four bit words with no operands
-between them, so anything that can name the fields of one word can read a whole
-store. That is worth having separately from the core: a reader looking at a
-program they did not write wants to know what it does before deciding to run it,
-and running it changes state they may care about.
-
-Every name here is the one the core uses, taken from the same constants, so a
-disassembly and an execution cannot disagree about what a field means. The core
-decides what a field does; this decides what to call it, and there is exactly one
-place each answer lives.
-
-Four forms share the top two bits. An operate word moves one value and may
-compute with it; a jump word carries a condition and a target; a load word
-carries sixteen bits of immediate and where to put them; a return word carries
-nothing at all. The manufacturer's own field order is kept, so a reader with the
-data sheet open sees the same names in the same order.
-"""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
@@ -53,7 +33,6 @@ ALU = (
     "shl4",
     "xchg",
 )
-"""The sixteen operations, in the order the field encodes them."""
 
 SOURCES = (
     "trb",
@@ -73,7 +52,6 @@ SOURCES = (
     "l",
     "scratch",
 )
-"""Where a move reads from, by the value of the source field."""
 
 DESTINATIONS = (
     "none",
@@ -93,13 +71,10 @@ DESTINATIONS = (
     "trb",
     "scratch",
 )
-"""Where a move writes to, by the value of the destination field."""
 
 ACCUMULATORS = ("a", "b")
-"""Which accumulator an operate word computes into, from its one bit."""
 
 POINTER_STEPS = ("dpnop", "dpinc", "dpdec", "dpclr")
-"""What the scratch pointer's low half does, by the two-bit field."""
 
 CONDITIONS = {
     0x000: "jmpso",
@@ -142,18 +117,11 @@ CONDITIONS = {
     0x140: "call",
     0x141: "call",
 }
-"""The branch field, by the value the core dispatches on.
-
-`jmp` and `call` appear twice because the low bit of those two selects which half
-of the program store the target lands in, which the target itself already shows.
-"""
 
 FORMS = {OPERATE: "op", JUMP: "jp", LOAD: "ld", RETURN: "rt"}
 
 
 class Instruction:
-    """One decoded word, and where it was found."""
-
     __slots__ = ("address", "raw", "text")
 
     def __init__(self, address: int, raw: int, text: str) -> None:
@@ -207,12 +175,6 @@ def _load(word: int) -> str:
 
 
 def decode(word: int, address: int = 0) -> Instruction:
-    """One word, named field by field.
-
-    A word this part cannot execute does not exist: every one of the sixteen
-    million is a valid instruction of one of four forms, which is why nothing
-    here raises and there is no undefined case to report.
-    """
     form = word >> FORM_SHIFT & 0x3
     if form == OPERATE:
         text = _operate(word)
@@ -226,10 +188,5 @@ def decode(word: int, address: int = 0) -> Instruction:
 
 
 def disassemble(words: Sequence[int], address: int = 0) -> Iterator[Instruction]:
-    """Every word in order, from that address on.
-
-    Words rather than bytes, because the program store is addressed by word and a
-    caller holding an image has already had to decide how three bytes become one.
-    """
     for step, word in enumerate(words):
         yield decode(word, address + step)

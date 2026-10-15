@@ -30,8 +30,6 @@ def facts_for(part: str) -> dict[str, Any]:
 
 
 class DocumentTest(unittest.TestCase):
-    """That the file names its source well enough for somebody to go and check."""
-
     def test_the_verified_part_names_the_document_it_was_read_from(self) -> None:
         for one in declared()["parts"]:
             if not one["verified"]:
@@ -59,12 +57,6 @@ class DocumentTest(unittest.TestCase):
             self.assertGreater(len(fact["quote"]), 20, name)
 
     def test_and_where_those_words_are_printed(self) -> None:
-        """A page number, or a section when the document numbers its pages per section.
-
-        The data book numbers pages as 2-33, so a fact read from it names the
-        section instead. Either answers the only question that matters, which is
-        where a reader goes to check the sentence.
-        """
         pages = declared()["parts"][0]["documents"]["dataSheet"]["pdfPages"]
         for name, fact in facts_for("upd7725").items():
             if isinstance(fact.get("section"), str):
@@ -93,12 +85,6 @@ class LookupTest(unittest.TestCase):
 
 
 class WidthTest(unittest.TestCase):
-    """That the model is built to the widths the manufacturer printed.
-
-    This is the gate the datasheet becomes. A figure quoted in prose rots quietly;
-    a figure something reads and compares cannot.
-    """
-
     def test_the_program_counter_is_as_wide_as_the_document_says(self) -> None:
         facts = facts_for("upd7725")
 
@@ -133,8 +119,6 @@ class WidthTest(unittest.TestCase):
 
 
 class StackTest(unittest.TestCase):
-    """The one the field gets wrong, so the one worth pinning hardest."""
-
     def test_the_stack_is_as_deep_as_the_document_says(self) -> None:
         facts = facts_for("upd7725")
 
@@ -163,8 +147,6 @@ class StackTest(unittest.TestCase):
 
 
 class CycleTest(unittest.TestCase):
-    """What makes a cycle claim a claim rather than a word."""
-
     def test_the_document_gives_one_clock_per_instruction(self) -> None:
         self.assertEqual(facts_for("upd7725")["clocksPerInstruction"]["value"], 1)
 
@@ -207,14 +189,6 @@ class CycleTest(unittest.TestCase):
 
 
 class SupersededArithmeticTest(unittest.TestCase):
-    """The rule that a move over its own accumulator cancels the arithmetic.
-
-    Discarding the result is not the same as not computing it, because the
-    difference is the flags, and the next conditional branch reads them. Both
-    implementations here ran the arithmetic and overwrote it, and so did the
-    emulator the corpus was recorded from.
-    """
-
     def _run(self, destination: int, asl: int = 0) -> Any:
         chip = models.lookup("upd7725").build(fill=0)
         registers = chip.registers
@@ -276,13 +250,6 @@ class MultiplierTest(unittest.TestCase):
 
 
 class DivergenceTest(unittest.TestCase):
-    """The standing of each fact, kept in the file the family reads for that.
-
-    `hardware.json` already marks the part with no document. This checks that the
-    same thing is said where a reader of any sibling repository will look for it,
-    so the two cannot part company.
-    """
-
     @override
     def setUp(self) -> None:
         here = Path(__file__).resolve().parent
@@ -321,7 +288,6 @@ class DivergenceTest(unittest.TestCase):
 
 
 def overclaimed(facts: dict[str, Any], widths: dict[str, str]) -> list[str]:
-    """Every width claimed for a part that does not hold it, per models.py."""
     found = []
     for name, attribute in widths.items():
         fact = facts[name]
@@ -336,17 +302,6 @@ def overclaimed(facts: dict[str, Any], widths: dict[str, str]) -> list[str]:
 
 
 class PartScopeTest(unittest.TestCase):
-    """That every fact says which parts it governs, not just where it was read.
-
-    Nesting the facts under the verified part recorded where each was read and
-    said nothing about how far it reaches. The two parts share an instruction
-    set, so most reach both; a width does not, and neither does a number measured
-    off one part's pins when no document for the other has been found.
-
-    A width is checked against models.py rather than taken on trust, so a fact
-    claiming both parts for a value that differs between them fails here.
-    """
-
     def facts(self) -> dict[str, Any]:
         held: dict[str, Any] = declared()["parts"][0]["facts"]
         return held
@@ -373,13 +328,6 @@ class PartScopeTest(unittest.TestCase):
         self.assertEqual(invented, [])
 
     def test_a_fact_the_parts_disagree_on_is_not_claimed_for_both(self) -> None:
-        """Every width the record states is checked against both models.
-
-        This is the one that would catch a fact widened by hand: the record says
-        a value, models.py says what each part holds, and a fact naming both
-        parts for a value only one of them has is a contradiction rather than a
-        matter of opinion.
-        """
         widths = {
             "programWords": "program_words",
             "programCounterBits": "counter_bits",
@@ -393,7 +341,6 @@ class PartScopeTest(unittest.TestCase):
         self.assertEqual(overclaimed(self.facts(), widths), [])
 
     def test_and_a_width_widened_by_hand_would_be_reported(self) -> None:
-        """The check has to be seen failing to be worth running."""
         facts = {"programWords": {"value": 2048, "appliesTo": ["upd7725", "upd96050"]}}
 
         found = overclaimed(facts, {"programWords": "program_words"})

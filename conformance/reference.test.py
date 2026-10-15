@@ -8,8 +8,6 @@ from conformance import reference
 
 
 class WordsTest(unittest.TestCase):
-    """What this reference needs a block of words to be."""
-
     def test_a_plain_list_is_one(self) -> None:
         self.assertIsInstance([0, 0, 0], reference.Words)
 
@@ -27,8 +25,6 @@ class WordsTest(unittest.TestCase):
 
 
 class StandInTest(unittest.TestCase):
-    """The stand-ins themselves, since a double nobody drives proves nothing."""
-
     def test_one_that_answers_by_index_gives_back_what_it_was_asked_for(self) -> None:
         self.assertEqual(_Answered()[3], 3)
 

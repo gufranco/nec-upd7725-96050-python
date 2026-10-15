@@ -1,17 +1,3 @@
-"""The two addresses the host sees, and the handshake across them.
-
-This is the whole of what a host can observe of this part. One address
-is a data register and the other is a status word, and the only thing the host
-learns about the program running inside is one bit: whether the part is waiting
-for it.
-
-The handshake is the awkward part and the reason this is its own module. The data
-register is a word wide but the host is a byte wide, so a transfer is two
-accesses, and which half comes next is state the part holds rather than something
-the host can see. A model that ignores that reads the same byte twice and gets
-a plausible wrong answer instead of an error.
-"""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -31,8 +17,6 @@ DEFAULT_LIMIT = 200000
 
 
 class Host:
-    """The host's side of the two registers, and the waiting between them."""
-
     __slots__ = ("chip",)
 
     def __init__(self, chip: Cpu) -> None:
@@ -40,11 +24,9 @@ class Host:
 
     @property
     def asking(self) -> bool:
-        """Whether the part is waiting for the host rather than working."""
         return bool(self.chip.registers.sr.rqm)
 
     def settle(self, limit: int = DEFAULT_LIMIT) -> int:
-        """Run until the part asks for attention, and say how long that took."""
         for step in range(limit):
             if self.asking:
                 return step
@@ -95,13 +77,11 @@ class Host:
         registers.dr = value << 8 | registers.dr & 0x00FF
 
     def send_bytes(self, values: Iterable[int], limit: int = DEFAULT_LIMIT) -> None:
-        """Hand the part one byte at a time, waiting for it to ask for each."""
         for value in values:
             self.settle(limit)
             self.write(DATA, value)
 
     def take_bytes(self, count: int, limit: int = DEFAULT_LIMIT) -> bytes:
-        """Take that many bytes back, waiting for the part to offer each."""
         found = []
         for _ in range(count):
             self.settle(limit)
@@ -109,10 +89,8 @@ class Host:
         return bytes(found)
 
     def send(self, word: int, limit: int = DEFAULT_LIMIT) -> None:
-        """One word, low half first, which is the order the part expects."""
         self.send_bytes((word & 0xFF, word >> 8 & 0xFF), limit)
 
     def take(self, limit: int = DEFAULT_LIMIT) -> int:
-        """One word, put back together from the two halves."""
         low, high = self.take_bytes(2, limit)
         return high << 8 | low

@@ -7,17 +7,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from upd7725 import errors, models, ports
 
 ALWAYS_ASKING = 3 << 22 | 6
-"""A store full of loads into the data register, so the part keeps asking."""
 
 
 def a_console(fill: int = 0) -> "ports.Host":
-    """A host around a settled part, because these are interface tests.
-
-    Construction scrambles every register, which the power-on tests check. What
-    is under test here is what the host sees through the two addresses, so
-    the part is reset and its registers put to a known value first rather than
-    left holding whatever the seed produced.
-    """
     chip = models.lookup("upd7725").build(fill=fill).reset()
     registers = chip.registers
     registers.rp = registers.dp = registers.sp = 0

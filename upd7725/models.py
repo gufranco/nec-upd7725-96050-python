@@ -1,18 +1,3 @@
-"""Which processors this package covers, and what separates them.
-
-NEC built a family of digital signal processors around one instruction set, and
-the members differ in how far three registers can reach rather than in what the
-instructions do. That is the whole difference between the two parts here: the
-counter, the table pointer and the scratch pointer are wider on the larger one,
-and every store is exactly as long as the register that addresses it.
-
-This package is the processor and nothing that was built around one. A module
-somebody soldered onto a board is that board's business: what it was called, what
-program was masked into it and what machine it plugged into are all outside the
-part. Naming any of that here would make a processor package a catalogue of one
-system's cartridges, and the processor is not that system's.
-"""
-
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -25,8 +10,6 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Model:
-    """One processor: how far it reaches, and what shipped running on it."""
-
     __slots__ = (
         "aliases",
         "counter_bits",
@@ -57,11 +40,6 @@ class Model:
 
     @property
     def stack_pointer_bits(self) -> int:
-        """How wide the pointer into that stack is.
-
-        A four-level stack is reached by a two-bit pointer, so this follows from
-        the depth rather than being a second number that could disagree with it.
-        """
         return (self.stack_levels - 1).bit_length()
 
     @property
@@ -134,7 +112,6 @@ NOT_MODELLED = {
         "ask for upd7725 and load the program yourself"
     ),
 }
-"""Names that belong to a real part the package deliberately does not answer to."""
 
 _BY_ALIAS = {}
 for _model in _CATALOGUE:
@@ -148,19 +125,6 @@ def _normalise(name: str) -> str:
 
 
 def lookup(name: str | None) -> Model:
-    """The model of that name, however it happens to be written.
-
-    Naming nothing is refused rather than filled in. A default would be the one
-    implicit thing in the call that builds a part, and it is worst where it looks
-    most harmless: a caller who learns to leave the model out against a member
-    covering one part writes the same call against a member covering sixteen.
-    The refusal names every model there is, so somebody who did not know what to
-    pass learns it here rather than from the source.
-
-    Not exported from the package. What a caller wants is the part, and the part
-    carries its own model; handing back a description of a part nobody built
-    reads like a test fixture rather than an interface.
-    """
     if name is None:
         raise UnknownModelError(
             "no model was named, and this package will not choose one for you."

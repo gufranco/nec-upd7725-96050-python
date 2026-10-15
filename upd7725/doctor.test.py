@@ -88,7 +88,6 @@ class ExamineTest(unittest.TestCase):
         self.assertTrue(any(not one.ok for one in found))
 
     def test_a_processor_that_builds_reports_where_the_reset_left_it(self) -> None:
-        """Driven rather than described, because the pin is what every caller pulls first."""
         found = [one for one in doctor.examine() if one.name == "upd7725"]
 
         self.assertIn("resets to word", found[0].detail)
@@ -159,13 +158,6 @@ class EntryTest(unittest.TestCase):
 
 
 class PathTest(unittest.TestCase):
-    """That the doctor puts the repository on the path when nothing else has.
-
-    Run as a file it has no package to be relative to, so it inserts the
-    repository itself. Under the test suite the path is already set, so the line
-    never runs and nothing would report it broken.
-    """
-
     def test_the_repository_is_put_on_the_path_when_it_is_not_already_there(self) -> None:
         held = [one for one in sys.path if one != str(doctor.ROOT)]
 

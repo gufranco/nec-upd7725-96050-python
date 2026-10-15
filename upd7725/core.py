@@ -1,17 +1,3 @@
-"""Fetch, and the four instruction forms the processor has.
-
-The top two bits of every word choose the form. One does arithmetic and a move at
-once, one does that and then returns, one branches, and one loads a constant. That
-is the entire instruction set, and it is why a part this small can carry programs
-as different as a road renderer and a shogi player.
-
-Two things about it are worth knowing before reading further. Every instruction
-ends with a multiply, whether or not the instruction asked for one, because the
-multiplier is wired to two registers and runs continuously. And the arithmetic
-form performs its move after its arithmetic, so the value it moves is the one that
-was read at the start rather than the one the arithmetic just produced.
-"""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -31,25 +17,8 @@ from .registers import Registers
 WORD_MASK = 0xFFFF
 
 RESET_CYCLES = 4
-"""What a reset occupies of the board's clock.
-
-The data sheet gives the reset pin a minimum pulse width of four clock cycles,
-and one clock cycle is one instruction on this part. So a reset is not free: the
-line has to be held for four of them, and a host pacing against a wall has spent
-that time whether or not the part advanced a program.
-
-This is the minimum the manufacturer requires of the host rather than a count of
-what the part does internally, which the document does not give. The distinction
-is recorded beside the figure in hardware.json.
-"""
 
 INTERRUPT_VECTOR = 0x100
-"""Where the part goes when it takes the interrupt.
-
-"A low-to-high transition on this pin executes a call instruction to location
-100H, if interrupts were previously enabled." A call, so the counter it was
-about to run from is pushed and a return comes back to it.
-"""
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
@@ -221,32 +190,10 @@ BRANCHES: dict[int, Callable[[Cpu], bool]] = {
 
 
 def _superseded(asl: int, destination: int) -> bool:
-    """Whether the move overwrites the very accumulator the arithmetic would write.
-
-    When it does, the arithmetic does not happen at all. The manufacturer is
-    explicit: "if the accumulator specified in the ASL field is also specified as
-    the destination of the data move, the ALU operation becomes a NOP, as the data
-    move supersedes the ALU operation."
-
-    Discarding the result is not enough, because a NOP is the one operation that
-    leaves the flags alone: the document says they are "updated at the end of each
-    arithmetic instruction (except NOP)". A model that runs the arithmetic and then
-    overwrites the accumulator holds the right value and the wrong flags, and the
-    next conditional branch reads those flags.
-    """
     return destination == (TO_B if asl else TO_A)
 
 
 class Cpu:
-    """One processor, its registers, its flags and its three stores.
-    The slots are the point rather than a saving. Without them a name this class
-    does not have is accepted in silence: the caller sets a stray attribute, the
-    one they meant keeps whatever it held, and nothing reports that the write went
-    nowhere. A sibling package shipped exactly that, where two parts spell the
-    interrupt disable flag differently and reaching for the wrong one did nothing
-    at all.
-    """
-
     __slots__ = (
         "cycles",
         "flags_a",
@@ -277,13 +224,6 @@ class Cpu:
         sources: dict[str, Callable[[int], int]] | None = None,
         seed: int = UNSET_SEED,
     ) -> None:
-        """A part of that model, optionally sharing stores a caller already has.
-
-        The second parameter is called memory and is positional, so building one
-        of these reads the same as building the processors in the sibling
-        packages. Passing none gives the part its own stores, which is what a
-        chip does: the three of them are on the die.
-        """
         self.model = model
         self.registers = Registers(
             counter_bits=model.counter_bits,
@@ -311,14 +251,6 @@ class Cpu:
         self.power_on(seed)
 
     def power_on(self, seed: int = UNSET_SEED) -> None:
-        """The state the part is in when the rail comes up and nothing else has.
-
-        Every register holds something derived from the seed, the program counter
-        included, so a newly built part steps rubbish from a rubbish address
-        exactly as the silicon would. This is where scrambling belongs; reset
-        does not do it, because a reset defines a few things and leaves the rest
-        holding whatever they held.
-        """
         undefined = scramble(12, seed)
         registers = self.registers
         registers.pc = undefined[0]
@@ -337,20 +269,6 @@ class Cpu:
             registers.stack[slot] = undefined[slot % len(undefined)] & registers.counter_mask
 
     def reset(self) -> Cpu:
-        """What the document says a reset does, and nothing beyond it.
-
-        "This input initializes the SPI+ internal logic and sets the PC to 0."
-        The accumulators, the pointers and the stores keep whatever they were
-        holding, because the page does not say a reset touches them and this
-        model does not invent an event the part does not perform.
-
-        It costs the four cycles the data sheet requires the reset line to be
-        held for, and they appear in the tally, because a board that pulls that
-        line has spent them.
-
-        Returns the part, so a caller can build and reset in one expression
-        without losing the reference.
-        """
         self.registers.pc = 0
         self.steps = 0
         for _ in range(RESET_CYCLES):
@@ -358,33 +276,11 @@ class Cpu:
         return self
 
     def spend(self) -> None:
-        """One cycle: counted once, and announced once.
-
-        Every path that costs the part a cycle comes through here. A count kept
-        in one method and a watcher called from another drift the first time
-        somebody adds a cycle to only one of them, and nothing catches it.
-        """
         self.cycles += 1
         if self.on_cycle is not None:
             self.on_cycle()
 
     def irq(self) -> bool:
-        """Offer the interrupt line, and report whether the part took it.
-
-        The pin is edge sensitive: the document says a low-to-high transition
-        executes the call, so a line already high is not a fresh request and this
-        returns false. That is the family's rule about inputs being levels rather
-        than events, and it is the part's rule too, because a device holding its
-        request high does not get served twice.
-
-        Refused while the enable bit is clear, which is what "if interrupts were
-        previously enabled" means. A refusal costs nothing and leaves the line
-        raised, so the next lowering and raising is a new request.
-
-        Taking it is a call: the counter is pushed and execution continues at
-        100H. It costs one cycle, because every instruction on this part costs
-        one and the document calls this one an executed call instruction.
-        """
         raised = not self.irq_line
         self.irq_line = True
         if not raised or not self.registers.sr.ei:
@@ -397,33 +293,12 @@ class Cpu:
         return True
 
     def lower_irq(self) -> None:
-        """Drop the interrupt line, so raising it again is a fresh request."""
         self.irq_line = False
 
     def held(self) -> bool:
-        """Whether the part has stopped advancing the program.
-
-        Always false here. The data sheet gives this part no halt, no wait and no
-        stop instruction: every encoding advances the counter. The method exists
-        because the family promises it, and answering honestly is better than
-        leaving a caller to find out this one repository omits it.
-        """
         return False
 
     def step(self) -> int:
-        """One instruction, and the multiply that follows every one of them.
-
-        Returns the cycles it cost, which on this part is always one. A host that
-        cannot ask what an instruction cost cannot pace anything, so the figure is
-        returned rather than left for the caller to assume.
-
-        One instruction is one cycle on this part, so the count kept here is a
-        cycle count and not merely an instruction count. That is the
-        manufacturer's figure rather than a convenience: "Since the 77C25
-        executes an instruction in one external clock cycle", and "All
-        instructions execute in one instruction cycle". Nothing here has to carry
-        a per-instruction cycle table, because the part does not have one.
-        """
         opcode = self.stores.program[self.registers.pc]
         self.registers.pc += 1
 
@@ -444,30 +319,12 @@ class Cpu:
         return self.cycles - before
 
     def run_for(self, cycles: int) -> int:
-        """Run a budget of cycles and report what was really spent.
-
-        An instruction is not divisible, so the last one can carry the run past
-        the budget. The overshoot is returned rather than hidden, so a host
-        subtracts it from the next slice and a long run does not drift.
-        """
         spent = 0
         while spent < cycles:
             spent += self.step()
         return spent
 
     def run_until(self, check: Callable[[Cpu], bool], limit: int | None = None) -> Cpu:
-        """Step until the condition holds.
-
-        `limit` bounds the number of instructions and raises when it is reached.
-        Without one this runs as long as the part would, which for a program
-        that never satisfies the condition is forever. That is what the silicon
-        does, so it is what happens here unless a caller asks for otherwise.
-
-        One instruction is one cycle on this part, so a bound on instructions
-        and a bound on cycles are the same number. The signature still counts
-        instructions, because that is what the two sibling cores count and a
-        caller moving between them should not have to know which.
-        """
         taken = 0
         while not check(self):
             self.step()
@@ -659,12 +516,6 @@ class Cpu:
 
 
 def _apply(alu: int, left: int, right: int, carry: int) -> tuple[int, int]:
-    """The result, and the operand the flags should be told about.
-
-    Two of the sixteen replace their operand with one before the flags are set,
-    because stepping by one is a sum with a constant rather than with whatever
-    happened to be selected.
-    """
     if alu == OR:
         return (left | right) & WORD_MASK, right
     if alu == AND:

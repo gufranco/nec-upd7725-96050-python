@@ -1,24 +1,3 @@
-"""Hold every instruction to the reference, one instruction at a time.
-
-A case is a seed, a part, and twenty four bits. The seed fills every store, every
-register and both flag sets before the instruction runs, so nothing starts clear:
-real silicon powers up holding whatever it holds, and a model that starts at zero
-agrees with the part until the first instruction that reads somewhere nothing
-wrote.
-
-The seed does that without either side listing twenty thousand words. Every word
-of every store is a function of the seed and its own address, so both sides can
-compute any one of them without walking to it, and the model computes only the
-handful an instruction actually touches.
-
-The instruction words are generated rather than quoted. That is what makes this
-evidence complete without any program present: a processor is settled by walking
-its own encoding, and an encoding belongs to nobody.
-
-Usage:
-    python3 -m conformance.instructions [--cases N] [--record]
-"""
-
 import base64
 import json
 import sys
@@ -45,14 +24,6 @@ TABLE_WORDS = 2048
 SCRATCH_WORDS = 2048
 
 STACK_SLOTS_RESERVED = 16
-"""How much room the seed layout leaves for stack slots, not how deep any stack is.
-
-Deliberately larger than the deepest stack in the family, and deliberately fixed.
-Every seed address after it is derived from it, so shrinking it to a part's real
-depth would move the address of every register and change every recorded case for
-a reason that has nothing to do with the part. How many of these slots a given
-part actually has comes from its model.
-"""
 
 AT_PROGRAM = 0
 AT_TABLE = AT_PROGRAM + PROGRAM_WORDS
@@ -65,14 +36,6 @@ REPORTED_CHANGES = 2
 TOO_MANY_CHANGES = 0xFF
 
 RECORDED_STACK_SLOTS = 8
-"""How many stack words each recorded state carries.
-
-The deepest stack in the family, so the record has one fixed width whichever part
-produced it and a case can still be found by multiplying its number by that
-width. A part with fewer slots than this pads with zeroes, and both sides of a
-comparison pad the same way, so padding cannot hide a difference. It is not a
-claim that any part holds this many: models.py says how many each holds.
-"""
 
 WIDTH = 114
 
@@ -147,7 +110,6 @@ class Options:
 
 
 def word_at(seed: int, index: int) -> int:
-    """The word that seed puts at that address, without walking to it."""
     mixed = (seed + index * 0x9E3779B9) & 0xFFFFFFFF
     mixed ^= mixed >> 16
     mixed = mixed * 0x21F0AAAD & 0xFFFFFFFF
@@ -173,7 +135,6 @@ def _operate(
 
 
 def _settled_opcodes() -> tuple[int, ...]:
-    """Every field of every form, walked rather than sampled."""
     found: list[int] = []
 
     for alu in range(16):
@@ -210,7 +171,6 @@ SETTLED = len(SETTLED_OPCODES) * len(PARTS)
 
 
 def case_for(index: int) -> tuple[int, int, int]:
-    """The seed, the part and the instruction that case number stands for."""
     seed = (index * 2654435761 + 0x9E3779B9) & 0xFFFFFFFF
 
     if index < SETTLED:
@@ -228,13 +188,6 @@ def _sources(seed: int) -> dict[str, Callable[[int], int]]:
 
 
 def _start(seed: int, name: str, place: int, stack_mask: int) -> int:
-    """What that seed puts in one register, narrowed to what the part can hold.
-
-    The stack pointer is the one width that differs between the two parts, so it
-    arrives rather than being looked up. Seeding it past the last slot would put
-    the case in a state the silicon cannot be in, and a comparison there measures
-    an implementation's masking rather than the part.
-    """
     value = word_at(seed, AT_REGISTERS + place)
     if name == "sp":
         return value & stack_mask
@@ -242,7 +195,6 @@ def _start(seed: int, name: str, place: int, stack_mask: int) -> int:
 
 
 def prepared(seed: int, part: int) -> core.Cpu:
-    """A processor holding what that seed says it holds, before any instruction."""
     model = models.lookup(PARTS[part])
     chip = core.Cpu(model, sources=_sources(seed))
 
@@ -267,7 +219,6 @@ def prepared(seed: int, part: int) -> core.Cpu:
 
 
 def state_of(chip: core.Cpu) -> str:
-    """The processor's whole state, in the shape the recordings are in."""
     registers = chip.registers
     changed = chip.stores.scratch.changed()
     slots = list(changed.items())[:REPORTED_CHANGES]
@@ -305,7 +256,6 @@ def state_of(chip: core.Cpu) -> str:
 
 
 def replay(seed: int, part: int, opcode: int) -> str:
-    """The state the model is left in after that one instruction."""
     chip = prepared(seed, part)
     chip.stores.program[chip.registers.pc] = opcode
     chip.step()
@@ -338,7 +288,6 @@ def load(path: Path | str | None = None) -> dict[str, Any]:
 
 
 def record(cases: int | None = None) -> dict[str, Any]:
-    """Ask the reference for every case, and write down what it answered."""
     from conformance import oracle
 
     total = cases or SETTLED + DEFAULT_RANDOM_CASES

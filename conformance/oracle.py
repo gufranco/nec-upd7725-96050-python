@@ -1,16 +1,3 @@
-"""Run one case through the ported reference and report what it left behind.
-
-This is the other half of the comparison. `instructions.py` runs a case through
-the model in `upd7725/`; this runs the same case through `reference.py`, which is
-an independent implementation with a different internal shape. Both answer in the
-same layout, so a disagreement names the field rather than merely the case.
-
-The layout is not arbitrary. It was fixed by `corpus.json`, recorded from the
-original implementation at the commit `pinned.json` names, before either Python
-side existed. Every state this file produces is checked against those recordings,
-which is what turns the port from a claim into a measurement.
-"""
-
 from collections.abc import Iterable
 
 from conformance import instructions, reference
@@ -19,14 +6,6 @@ REVISIONS = (reference.UPD7725, reference.UPD96050)
 
 
 class Sourced:
-    """A store whose untouched words are computed from the seed on first read.
-
-    The reference indexes plain lists, and filling twenty thousand of them to read
-    three is the difference between a comparison that runs in a second and one that
-    runs in two minutes. This stands in for a list, answers the same way, and
-    remembers what was written so the changes can be named without a second sweep.
-    """
-
     def __init__(self, seed: int, base: int, words: int, mask: int) -> None:
         self.seed = seed
         self.base = base
@@ -52,7 +31,6 @@ class Sourced:
 
 
 def prepared(seed: int, part: int) -> "reference.Upd96050":
-    """A reference processor holding what that seed says it holds."""
     chip = reference.Upd96050(REVISIONS[part])
 
     chip.programROM = Sourced(seed, instructions.AT_PROGRAM, reference.PROGRAM_WORDS, 0xFFFFFF)
@@ -83,7 +61,6 @@ def prepared(seed: int, part: int) -> "reference.Upd96050":
 
 
 def answer(seed: int, part: int, opcode: int) -> str:
-    """The state the reference is left in after that one instruction."""
     chip = prepared(seed, part)
     chip.programROM[chip.regs.pc] = opcode
     chip.exec()

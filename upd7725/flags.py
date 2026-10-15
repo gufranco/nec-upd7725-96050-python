@@ -1,18 +1,3 @@
-"""The six bits each accumulator carries, and what sets them.
-
-Two of the six are unusual and are the reason this is its own module. There are
-two overflow bits rather than one, and two sign bits rather than one, and the
-second of each pair is not a copy of the first.
-
-The second sign follows the first only while no second overflow is held. Once one
-is, the second sign freezes at whatever it held, so it records the sign the value
-had before the word stopped being able to express it. The second overflow, in
-turn, clears only when a fresh overflow arrives while one is already held and the
-two signs have parted. That pair is how the part carries a value through a
-sequence of sums that leave the word and come back, which is what a fixed point
-routine does constantly.
-"""
-
 from typing import override
 
 WORD = 0x10000
@@ -25,14 +10,6 @@ NAMES = ("ov0", "ov1", "z", "c", "s0", "s1")
 
 
 class Flags:
-    """One accumulator's six bits, each one named rather than reached by string.
-
-    The six are declared here rather than built in a loop. A loop over the names
-    is shorter and costs the reader and every checker the ability to see that the
-    bits exist at all: nothing can tell `flags.ov1` from a typo, and a rename of
-    one of them is invisible until something reads the wrong bit at runtime.
-    """
-
     __slots__ = NAMES
 
     def __init__(self) -> None:
@@ -45,7 +22,6 @@ class Flags:
 
     @classmethod
     def of(cls, word: int) -> "Flags":
-        """The set a word of six bits describes."""
         found = cls()
         found.ov0 = bool(word >> 0 & 1)
         found.ov1 = bool(word >> 1 & 1)
@@ -75,7 +51,6 @@ class Flags:
 
 
 def record_result(flags: Flags, result: int) -> None:
-    """The zero and sign bits every operation with a result sets."""
     flags.z = result == 0
     flags.s0 = bool(result & SIGN)
     if not flags.ov1:
@@ -83,20 +58,12 @@ def record_result(flags: Flags, result: int) -> None:
 
 
 def record_logic(flags: Flags) -> None:
-    """What an operation with nothing to carry leaves behind."""
     flags.ov0 = False
     flags.ov1 = False
     flags.c = False
 
 
 def record_addition(flags: Flags, left: int, right: int, result: int, adding: bool) -> None:
-    """The carry and the two overflows, for the operations that have them.
-
-    The second overflow is the one worth reading twice. While one is already
-    held and a fresh one arrives, it survives only if the two signs still agree,
-    which is the part's way of noticing that a value has wandered out of the word
-    and come back rather than merely left it.
-    """
     carries = left ^ right ^ result
     overflow = (left ^ result) & (right ^ (result if adding else left))
     held = flags.ov1

@@ -14,12 +14,6 @@ PLAIN_REGISTERS = ("tr", "trb", "k", "l", "dr")
 
 
 def disagreeing(chip: upd7725.core.Cpu, named: str, wanted: int) -> list[str]:
-    """A complaint when the register the disassembly named does not hold the value.
-
-    Only the destinations that are a single register are checked. The rest write
-    somewhere with a side effect of its own, a store or a pointer or the status
-    word, and asserting on those would be testing the core rather than the name.
-    """
     if named in WORD_REGISTERS:
         held = chip.registers.word(named)
     elif named in PLAIN_REGISTERS:
@@ -43,7 +37,6 @@ class FormTest(unittest.TestCase):
         self.assertEqual(opcodes.decode(0x800000).text, "jmpso")
 
     def test_every_word_decodes_to_something(self) -> None:
-        """This part has no undefined encoding, so nothing may raise."""
         generator = random.Random(20260824)
 
         for _ in range(4000):
@@ -52,14 +45,6 @@ class FormTest(unittest.TestCase):
 
 
 class AgreementTest(unittest.TestCase):
-    """That the reading and the running name the same thing.
-
-    A disassembler that disagrees with the core is worse than none: it is read
-    as authority and it is wrong in exactly the cases somebody is investigating.
-    So the destination it names is checked against where the core actually put
-    the value, for every destination the field can hold.
-    """
-
     def a_part(self) -> upd7725.core.Cpu:
         chip = upd7725.Cpu("upd96050", fill=0)
         chip.reset()
@@ -81,7 +66,6 @@ class AgreementTest(unittest.TestCase):
         self.assertEqual(wrong, [])
 
     def test_and_the_reader_of_that_names_a_register_holding_the_wrong_thing(self) -> None:
-        """The check has to be seen failing to be worth running."""
         chip = self.a_part()
         chip.registers.a = 0
 

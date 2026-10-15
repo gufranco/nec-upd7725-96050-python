@@ -1,18 +1,3 @@
-"""The three stores, each at its own width and its own length.
-
-The part reads its instructions from one store twenty four bits at a time, its
-constants from a second sixteen bits at a time, and it reads and writes a third
-that is also sixteen. None of the three is byte addressed from the inside; only
-the host sees bytes, and only of the third.
-
-Nothing here starts clear unless it is asked to. Real silicon powers up holding
-whatever it holds, and a model that starts at zero agrees with the part right up
-until the first instruction that reads somewhere nothing wrote. A store can
-therefore be given a source instead of a fill: a function of the address, called
-only for words nothing has written yet. Filling four thousand words to read two of
-them is waste, and a store that computes them on demand is the same store.
-"""
-
 from __future__ import annotations
 
 import random
@@ -32,24 +17,16 @@ PROGRAM_BYTES_PER_WORD = 3
 TABLE_BYTES_PER_WORD = 2
 
 UNSET_SEED = 0x5A5A5A5A
-"""The seed a part is scrambled with when the caller names none."""
 
 DEFAULT_FILL = 0
 
 
 def scramble(size: int, seed: int = UNSET_SEED) -> list[int]:
-    """A deterministic fill that is nothing like a cleared machine.
-
-    Reproducible from the seed, so a differential run stays comparable, and
-    obviously not clean, so a read of something never written shows up.
-    """
     source = random.Random(seed)
     return [source.getrandbits(32) for _ in range(size)]
 
 
 class Store:
-    """A run of words of one width, addressed within its own length."""
-
     __slots__ = (
         "_fill",
         "_written",
@@ -84,13 +61,6 @@ class Store:
         return self._unwritten(at)
 
     def _unwritten(self, at: int) -> int:
-        """What an address that has never been written to holds.
-
-        Exactly one of the two ways of saying that is in force: a store either
-        has a source that answers for every address, or a single fill it answers
-        everywhere. Naming both here rather than at each use is what lets the
-        second be an int rather than something that might be missing.
-        """
         if self.source is None:
             return self._fill
         return self.source(at) & self.mask
@@ -99,15 +69,12 @@ class Store:
         self._written[at % self.words] = value & self.mask
 
     def changed(self) -> dict[int, int]:
-        """Every address whose word is not what the store started with."""
         return {
             at: word for at, word in sorted(self._written.items()) if word != self._unwritten(at)
         }
 
 
 class Stores:
-    """The program store, the constant table and the scratch the part shares."""
-
     __slots__ = (
         "program",
         "scratch",
@@ -128,12 +95,10 @@ class Stores:
         self.scratch = Store(scratch_words, WORD_BITS, fill, sources.get("scratch"))
 
     def read_byte(self, at: int) -> int:
-        """One half of a scratch word, the low half from the even address."""
         word = self.scratch[at >> 1]
         return word >> 8 & 0xFF if at & 1 else word & 0xFF
 
     def write_byte(self, at: int, value: int) -> None:
-        """The same halves, written without disturbing the other one."""
         where = at >> 1
         word = self.scratch[where]
         if at & 1:

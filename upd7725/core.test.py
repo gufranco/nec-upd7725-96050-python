@@ -9,14 +9,6 @@ from upd7725 import core, errors, models
 
 
 def a_processor(**options: Any) -> "core.Cpu":
-    """A part in a stated starting state, because these are instruction tests.
-
-    Construction scrambles every register, which is what the silicon does and
-    what the power-on tests check. An instruction test that started there would
-    be asserting against whatever the seed produced, so this settles the part
-    first and says so: reset defines the counter, and everything an instruction
-    reads is put to a known value here rather than assumed to arrive as one.
-    """
     found = core.Cpu(models.lookup("upd96050"), fill=0, **options).reset()
     registers = found.registers
     registers.rp = registers.dp = registers.sp = 0
@@ -550,8 +542,6 @@ class NarrowPartTest(unittest.TestCase):
 
 
 class PowerOnTest(unittest.TestCase):
-    """That a part arrives holding rubbish, and that a reset is the caller's."""
-
     def test_a_newly_built_part_does_not_start_at_zero(self) -> None:
         found = core.Cpu(models.lookup("upd96050"), fill=0)
 
@@ -606,8 +596,6 @@ class PowerOnTest(unittest.TestCase):
 
 
 class TallyTest(unittest.TestCase):
-    """That the part reports what it spent, the way the family says it must."""
-
     def test_a_step_reports_the_cycle_it_cost(self) -> None:
         found = a_processor()
 
@@ -703,8 +691,6 @@ class BoundedRunTest(unittest.TestCase):
 
 
 class InterruptTest(unittest.TestCase):
-    """That the pin is a line the part reads, not a method that acts."""
-
     def enabled(self) -> "core.Cpu":
         found = a_processor()
         found.registers.sr.ei = True

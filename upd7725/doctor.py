@@ -1,20 +1,3 @@
-"""Look at this machine and say what is actually here, so a report can be believed.
-
-Almost everything that goes wrong with a package like this is the part not being
-the one the reporter thinks it is. Two processors share one instruction set here
-and differ in how wide their registers and stores are, so a result that looks
-wrong is very often the right answer from the other one.
-
-So this looks, and prints what it found in a form that can be pasted into an
-issue as it stands.
-
-Two rules shape the rest. Nothing is hidden: a check that fails says what it saw,
-and a check that itself throws is caught and reported as what it threw, named by
-type, because a report that says everything is well on a machine where something
-is not is worse than no report. And nothing is inferred: every line is something
-looked at just now rather than something that ought to be true.
-"""
-
 from __future__ import annotations
 
 import platform
@@ -25,11 +8,6 @@ from typing import TYPE_CHECKING, override
 
 
 def _version(where: Path | None = None) -> str:
-    """The package version, read out of the file beside this one.
-
-    Read rather than imported. Importing it would go through the package, and a
-    package that will not import is one of the things this exists to report.
-    """
     found = re.search(
         r"""VERSION\s*[:=][^"']*["']([^"']+)["']""",
         (where or Path(__file__).resolve().parent / "version.py").read_text(),
@@ -58,8 +36,6 @@ OLDEST_PYTHON = (3, 12)
 
 
 class Finding:
-    """One thing that was looked at, and what was there."""
-
     def __init__(self, name: str, ok: bool, detail: str, advice: str | None = None) -> None:
         self.name = name
         self.ok = ok
@@ -68,12 +44,10 @@ class Finding:
 
     @property
     def line(self) -> str:
-        """The one-line form, which is what a reader scans."""
         return f"  {'ok  ' if self.ok else '   !'}  {self.name}: {self.detail}"
 
     @property
     def report(self) -> str:
-        """The same, with what to do about it when there is something to do."""
         if self.ok or not self.advice:
             return self.line
         return f"{self.line}\n         {self.advice}"
@@ -93,12 +67,6 @@ def _python() -> Finding:
 
 
 def _package() -> Finding:
-    """The distribution, labelled so it cannot be mistaken for the part.
-
-    This package and one of the parts it models share the name `upd7725`, so
-    labelling both with it puts two different things under one word in a report
-    somebody else has to read.
-    """
     return Finding("package", True, f"upd7725 {VERSION}")
 
 
@@ -107,13 +75,6 @@ def _default_build(name: str) -> Cpu:
 
 
 def _processor(name: str, build: Callable[[str], Cpu]) -> Finding:
-    """Whether that processor builds and resets, saying what stopped it if not.
-
-    The reset is driven rather than described. A part built here comes up
-    scrambled, so the counter it holds before the pin is pulled is rubbish that
-    changes every run and is not where execution begins. Pulling it is also the
-    only way this report says anything about the path every caller takes first.
-    """
     try:
         core = build(name)
         core.reset()
@@ -137,14 +98,12 @@ def _processor(name: str, build: Callable[[str], Cpu]) -> Finding:
 def examine(
     build: Callable[[str], Cpu] = _default_build,
 ) -> list[Finding]:
-    """Everything worth looking at on this machine, in the order a reader wants it."""
     found = [_python(), _package()]
     found.extend(_processor(name, build) for name in sorted(models.MODELS))
     return found
 
 
 def report(found: Sequence[Finding]) -> list[str]:
-    """The lines a person pastes into an issue."""
     unwell = [one for one in found if not one.ok]
     lines = [f"upd7725 {VERSION} on {platform.python_version()}, {platform.system()}", ""]
     lines.append("  the machine")

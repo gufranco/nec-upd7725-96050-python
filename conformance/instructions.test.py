@@ -115,13 +115,6 @@ class ReplayTest(unittest.TestCase):
 
 
 class ClaimedCountTest(unittest.TestCase):
-    """That the two figures the readme advertises are the ones there are.
-
-    Both were bare claims: the encoding count appeared in no file but the readme,
-    and the instruction count appeared in the corpus but nothing compared them.
-    A figure nothing derives is a figure that drifts.
-    """
-
     def readme(self) -> str:
         return (ROOT / "README.md").read_text()
 

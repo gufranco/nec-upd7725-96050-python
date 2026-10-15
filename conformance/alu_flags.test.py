@@ -1,18 +1,3 @@
-"""Every ALU operation, against the flag matrix the manufacturer printed.
-
-The data sheet this project was built on is Advance Product Information and
-states no flag rules, so every one of them came from a recording of another
-implementation. The 1989 data book states them: its Table 6 gives, for all
-sixteen ALU operations, which flags are affected, which are reset, which are
-held and which the manufacturer declines to define.
-
-So the flags are checked against the manufacturer here, and against the
-recording elsewhere. Where a flag is declared affected, this asks only that the
-model can move it, because "may be affected, depending on the results" is not a
-value. Where it is declared reset or held, the claim is exact and is tested
-exactly.
-"""
-
 import json
 import sys
 import unittest
@@ -76,7 +61,6 @@ def an_operation(alu: int, pselect: int = 1, asl: int = 0, src: int = 0) -> int:
 
 
 def loaded(alu: int, left: int, right: int, carry: bool) -> "core.Cpu":
-    """A part holding a stated starting state, with one operation ready to run."""
     chip = settled()
     chip.registers.a = left
     chip.registers.dr = right
@@ -91,14 +75,12 @@ def loaded(alu: int, left: int, right: int, carry: bool) -> "core.Cpu":
 
 
 def after(alu: int, left: int, right: int, carry: bool) -> dict[str, bool]:
-    """The flags an operation leaves, from a stated starting state."""
     chip = loaded(alu, left, right, carry)
     chip.step()
     return {name: bool(getattr(chip.flags_a, name)) for name in COLUMNS}
 
 
 def result_after(alu: int, left: int, right: int, carry: bool) -> int:
-    """The word the operation left in the accumulator."""
     chip = loaded(alu, left, right, carry)
     chip.step()
     word: int = chip.registers.word("a")
@@ -110,8 +92,6 @@ def before(carry: bool) -> dict[str, bool]:
 
 
 class MatrixTest(unittest.TestCase):
-    """That the model moves each flag exactly where the manufacturer says it may."""
-
     def outcomes(self, name: str) -> list[tuple[str, dict[str, bool], dict[str, bool], int]]:
         alu = CODES[name]
         found = []
@@ -153,13 +133,6 @@ class MatrixTest(unittest.TestCase):
         self.assertEqual(wrong, [])
 
     def test_a_zero_flag_the_document_calls_affected_follows_the_result(self) -> None:
-        """The document says a flag may be affected depending on the result.
-
-        For the zero and sign bits that claim is exact and testable: the flag is
-        the result. It is not a claim that both values occur, which matters here
-        because a two-bit left shift shifts ones in, so its result is never zero
-        and its zero flag is always clear while still being derived from it.
-        """
         wrong = [
             f"{what}: z"
             for name, verdicts in ROWS.items()
@@ -180,13 +153,6 @@ class MatrixTest(unittest.TestCase):
         self.assertEqual(wrong, [])
 
     def test_the_shifts_that_bring_ones_in_can_never_reach_zero(self) -> None:
-        """Recorded because it is the recording speaking, not the manufacturer.
-
-        Table 6 names the operation a two-bit left shift and says nothing about
-        what arrives at the bottom. This model brings ones in, following the
-        recording, which makes the zero flag unreachable for those two
-        operations. A manufacturer statement either way would settle it.
-        """
         reached = {word == 0 for _, _, _ended, word in self.outcomes("SHL2")}
 
         self.assertEqual(reached, {False})

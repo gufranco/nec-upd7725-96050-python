@@ -1,34 +1,3 @@
-"""How fast the model runs, and a floor it must not fall through.
-
-Not a benchmark for its own sake. A model of a processor is only useful if it can
-be driven for long enough to be interesting, and the way that stops being true is
-gradual: a helper grows an allocation, a property becomes a lookup, and a year
-later nothing can be swept. A floor that fails loudly is cheaper than noticing.
-
-The floor is deliberately far below what the model does today. It is there to
-catch something several times slower, not to police the noise between one runner
-and another, because a shared runner's variance is larger than any change worth
-arguing about.
-
-Every figure is a median across repeats rather than a mean, because one scheduling
-hiccup moves a mean and moves a median much less, and the runtime version is
-printed beside it because it is the single thing that changes these numbers most.
-
-Nothing here needs a program image. It runs whatever the fill puts in
-front of it, which is the same work the conformance sweep does.
-
-The floor is checked here and never from inside the test suite, because the suite
-runs under a coverage tracer and the tracer costs about ten times what the model
-does: 1.4 million instructions per second becomes 150 thousand. A throughput
-assertion in that environment measures the tracer, passes or fails for reasons
-that have nothing to do with this code, and would have to be set so low it could
-not catch anything. So the tests here check the measuring, with a clock they
-control, and the measurement itself is a step of its own.
-
-Usage:
-    python3 -m conformance.speed [--repeats N] [--instructions N]
-"""
-
 from __future__ import annotations
 
 import statistics
@@ -45,26 +14,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Sequence
 
 INSTRUCTIONS = 200_000
-"""How many instructions one repeat runs. Long enough to swamp the setup."""
 
 REPEATS = 7
-"""How many repeats a median is taken over. Odd, so the median is a measurement."""
 
 FLOOR = 250_000
-"""Instructions per second the model must beat, uninstrumented.
-
-Measured at 1.24 million on Python 3.12 and 1.43 million on 3.14 when this was
-written, so the floor sits about five times below the slower of the two. That
-leaves room for a shared runner having a bad minute and none for a change that
-made the model several times slower.
-"""
 
 PART_HERTZ = 8_192_000
-"""The rate the manufacturer quotes the part at, for the ratio below.
-
-"Fast instruction execution: 122 ns with 8.192 MHz clock." One instruction per
-clock, so this is instructions per second on the silicon.
-"""
 
 
 class Usage(Exception):
@@ -72,8 +27,6 @@ class Usage(Exception):
 
 
 class Timed:
-    """What a run measured."""
-
     def __init__(self, part: str, instructions: int, seconds: Sequence[float]) -> None:
         self.part = part
         self.instructions = instructions
@@ -85,12 +38,10 @@ class Timed:
 
     @property
     def rate(self) -> float:
-        """Instructions per second, at the median."""
         return self.instructions / self.median
 
     @property
     def of_real_time(self) -> float:
-        """What fraction of the silicon's own rate this manages."""
         return self.rate / PART_HERTZ
 
     def beats(self, floor: int) -> bool:
@@ -111,7 +62,6 @@ def timed(
     repeats: int = REPEATS,
     clock: Callable[[], float] = _clock,
 ) -> Timed:
-    """Run that many instructions that many times, from a fresh part each repeat."""
     model = models.lookup(part)
     seconds = []
     for _ in range(repeats):
@@ -123,7 +73,6 @@ def timed(
 
 
 def lines_for(found: Timed, floor: int = FLOOR) -> list[str]:
-    """What was measured, with the numbers a reader needs to judge it."""
     said = [
         f"  {found.part}: {found.rate:,.0f} instructions per second at the median"
         f" of {len(found.seconds)} runs of {found.instructions:,}",
@@ -142,7 +91,6 @@ def lines_for(found: Timed, floor: int = FLOOR) -> list[str]:
 
 
 def options(argv: Sequence[str]) -> tuple[int, int]:
-    """How many instructions and how many repeats, from the command line."""
     instructions = INSTRUCTIONS
     repeats = REPEATS
     rest = list(argv)

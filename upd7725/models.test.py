@@ -39,12 +39,6 @@ class CatalogueTest(unittest.TestCase):
         self.assertIn("reference", str(raised.exception))
 
     def test_a_name_nothing_here_recognises_is_refused_with_the_list(self) -> None:
-        """Neither an alias nor a part named as deliberately unmodelled.
-
-        The two refusals read differently on purpose: one says why a known part
-        is absent, and this one says what the package does have, because a caller
-        who typed something unrecognisable needs the list rather than a reason.
-        """
         with self.assertRaises(errors.UnknownModelError) as raised:
             models.lookup("nothing-like-a-part-number")
 
@@ -52,11 +46,6 @@ class CatalogueTest(unittest.TestCase):
         self.assertIn("upd96050", str(raised.exception))
 
     def test_the_stack_pointer_follows_from_the_depth(self) -> None:
-        """A four-level stack is reached by two bits, an eight-level one by three.
-
-        It is derived rather than declared so the two cannot disagree, which is
-        worth a check because a second number is exactly what would drift.
-        """
         self.assertEqual(models.lookup("upd7725").stack_pointer_bits, 2)
         self.assertEqual(models.lookup("upd96050").stack_pointer_bits, 3)
 
@@ -87,13 +76,6 @@ class BuildTest(unittest.TestCase):
 
 
 class QuietStoreTest(unittest.TestCase):
-    """`fill`, which is the one spelling across this family for a store of one byte.
-
-    This part had it before the others did, and the others each needed a
-    different keyword, so a check written against any one of them reported the
-    rest as broken. The spelling here is the one the family took.
-    """
-
     def test_a_fill_puts_that_byte_everywhere(self) -> None:
         part = upd7725.Cpu("upd7725", fill=0)
 
@@ -102,24 +84,11 @@ class QuietStoreTest(unittest.TestCase):
     def test_and_this_part_defaults_to_a_cleared_store_where_its_siblings_scramble(
         self,
     ) -> None:
-        """A difference worth pinning rather than leaving for somebody to trip on.
-
-        The siblings hand over scrambled memory because that is what a board
-        does. All three of this part's stores are on the die and two of them are
-        mask ROM, so there is no board to hand anything over: a store here holds
-        what a program was loaded into it, and nothing is read before one is.
-        """
         part = upd7725.Cpu("upd7725")
 
         self.assertEqual({part.stores.read_byte(at) for at in range(0x40)}, {0})
 
     def test_and_this_part_offers_no_scrambled_store_at_all(self) -> None:
-        """Which follows from the same fact, and is worth saying out loud.
-
-        A store here answers one byte everywhere until something is written to
-        it, so there is nothing to scramble and asking for none is the same as
-        asking for zero.
-        """
         asked = upd7725.Cpu("upd7725", fill=None)
         cleared = upd7725.Cpu("upd7725", fill=0)
 
@@ -130,8 +99,6 @@ class QuietStoreTest(unittest.TestCase):
 
 
 class NamingNoneTest(unittest.TestCase):
-    """That leaving the model out is refused, and refused usefully."""
-
     def test_building_without_naming_a_model_is_refused(self) -> None:
         with self.assertRaises(errors.UnknownModelError):
             upd7725.Cpu()

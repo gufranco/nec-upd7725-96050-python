@@ -1,31 +1,3 @@
-"""The model and the reference, run side by side on cases nobody wrote down.
-
-The gate is `instructions.py`: every field of every instruction form, plus twenty
-thousand generated cases, compared against states recorded from the original
-implementation before this project's port of it existed. That is the evidence, and
-it is a fixed size, because a recording has to be stored.
-
-This is the other half. It runs the model and the ported reference live, on the
-same case, and compares what each is left holding. Nothing is stored, so nothing
-bounds it: give it a case number to start from and a count, or a number of
-seconds, and it explores as far as it is allowed to. Case fifty million is as
-reachable as case one and just as repeatable, because a case is derived from its
-number rather than drawn from a generator that has to be walked to get there.
-
-What it is worth is narrower than the gate, and saying so matters. Agreement here
-is agreement between two implementations in this repository, one of which was
-ported by the same hand as the other. It is not evidence about hardware. A
-disagreement is the useful direction: it names a case where the two differ, and
-that case is then settled against the recordings, which is where the authority
-lives. This finds candidates. The corpus decides.
-
-Both are still worth running. The two are built to differ in shape: the reference
-dispatches through tables and the model branches through named conditions, so a
-mistake made in one has no reason to appear in the other. Two implementations that
-disagree on a case the corpus never covered is exactly the thing a fixed corpus
-cannot tell you about.
-"""
-
 from __future__ import annotations
 
 import sys
@@ -43,17 +15,10 @@ if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable, Sequence
 
 DEFAULT_CASES = 5000
-"""How many cases a run with no arguments compares.
-
-Small enough to finish while somebody waits, which is what makes it worth running
-by hand. The schedule asks for far more.
-"""
 
 KEEP = 5
-"""How many disagreements are printed. The rest are counted rather than shown."""
 
 Answered = Callable[[int, int, int], str]
-"""How one side answers a case: the seed, the part, the instruction, in that order."""
 
 
 class Usage(Exception):
@@ -70,8 +35,6 @@ class Options:
 
 
 class Disagreement:
-    """One case the two did not answer alike."""
-
     def __init__(self, index: int, case: tuple[int, int, int], model: str, reference: str) -> None:
         self.index = index
         self.case = case
@@ -80,7 +43,6 @@ class Disagreement:
 
     @property
     def rerun(self) -> str:
-        """The command that runs this one case and nothing else."""
         return f"--from {self.index} --cases 1"
 
     @override
@@ -89,8 +51,6 @@ class Disagreement:
 
 
 class Compared:
-    """What a sweep found, and how much of it there was."""
-
     def __init__(self, checked: int, disagreed: int, disagreements: Iterable[Disagreement]) -> None:
         self.checked = checked
         self.disagreed = disagreed
@@ -122,11 +82,6 @@ def sweep(
     seconds: float | None = None,
     clock: Callable[[], float] = time.monotonic,
 ) -> Compared:
-    """Every case in that range, put to both, compared.
-
-    The clock is only read when there is a budget to check it against, so a run
-    counted in cases does not pay for one and cannot be cut short by one.
-    """
     started = clock() if seconds is not None else 0.0
     checked = 0
     disagreed = 0
@@ -149,7 +104,6 @@ def sweep(
 
 
 def lines_for(found: Compared) -> list[str]:
-    """What a sweep found, in the order somebody reading it wants it."""
     said = []
     for one in found.disagreements:
         seed, part, opcode = one.case

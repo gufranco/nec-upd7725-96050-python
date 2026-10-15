@@ -8,12 +8,6 @@ from conformance import instructions, oracle, reference
 
 
 def _sourced(block: reference.Words) -> oracle.Sourced:
-    """The lazily-answered block a prepared reference carries.
-
-    A prepared processor holds these rather than plain lists, and the started
-    value is the thing only they know: what the seed put at an address before
-    anything wrote to it.
-    """
     assert isinstance(block, oracle.Sourced), "a prepared reference does not hold plain lists"
     return block
 
