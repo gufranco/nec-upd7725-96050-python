@@ -1,5 +1,6 @@
 import importlib
 import re
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -155,6 +156,27 @@ class EntryTest(unittest.TestCase):
         doctor.main([], say=said.append)
 
         self.assertIn("upd7725", " ".join(said))
+
+
+class RunAsAFileTest(unittest.TestCase):
+    def test_run_as_a_file_from_outside_the_repository_it_ends_with_its_verdict(self) -> None:
+        # Arrange
+        script = doctor.ROOT / "upd7725" / "doctor.py"
+        elsewhere = tempfile.mkdtemp()
+
+        # Act
+        finished = subprocess.run(
+            [sys.executable, str(script)],
+            capture_output=True,
+            check=False,
+            text=True,
+            cwd=elsewhere,
+            timeout=120,
+        )
+
+        # Assert
+        self.assertEqual(finished.stderr, "")
+        self.assertRegex(finished.stdout.splitlines()[-1], r"^  \d+ (of \d+ )?checks")
 
 
 class PathTest(unittest.TestCase):

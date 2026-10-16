@@ -17,15 +17,13 @@ def _version(where: Path | None = None) -> str:
 
 ROOT = Path(__file__).resolve().parent.parent
 
-from upd7725 import environment  # noqa: E402
-
 VERSION = _version()
 
 
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from upd7725 import models  # noqa: E402
+from upd7725 import environment, models  # noqa: E402
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Sequence
