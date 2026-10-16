@@ -193,13 +193,28 @@ clearing one.
 
 **Run the suite as a machine that holds nothing.** A test that reaches a default
 which opens a real file passes on a workstation holding that file and fails on a
-done
-```
+runner that does not, and the local run gives no hint. Here the files a default
+reaches are the data sheets under `docs/`, which no runner holds.
 
-Every test that could reach a real image supplies its own path or its own stand-in.
-A default is for a person at a command line, never for a test.
+Every test that could reach a real document supplies its own path or its own
+stand-in. A default is for a person at a command line, never for a test.
 
 **Coverage that depends on what the machine holds is not coverage.** A test that
+only runs where a data sheet happens to be present is a test that reports a pass
+on a machine that ran nothing. Tests that need a file supply their own.
+
+**The two implementations are deliberately shaped differently.** The package
+branches through named conditions; [`conformance/reference.py`](conformance/reference.py)
+dispatches through tables. Do not refactor one towards the other. Implementations
+that share a shape share a mistake, and the whole value of the comparison is that
+these two do not.
+
+**The reference is a transcription.** It was ported from a widely used emulator's
+core, and its structure, its names and its mixed-case fields come from there. Keep
+them. Declaring a field explicitly so the checker can see it is fine; restructuring
+the logic makes the port harder to re-derive and weakens the claim that it is
+independent.
+
 ## Before calling anything finished
 
 [`FAMILY.md`](FAMILY.md) carries a checklist under "What a new repository has to

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "upd7725"
-description = "The NEC uPD7720, uPD7725 and uPD96050 digital signal processors, settled against their own reference one instruction at a time."
+description = "The NEC uPD7725 and uPD96050 digital signal processors, settled against their own reference one instruction at a time."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
