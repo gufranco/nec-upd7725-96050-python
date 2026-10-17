@@ -8,7 +8,7 @@ NECのデジタルシグナルプロセッサuPD7725とuPD96050をPythonで実�
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2**種類のチップ、フィールドごとに網羅した**1,120**通りのエンコーディング、比較した**22,240**命令、不一致**0**件、**1,005**件のテスト、ステートメントとブランチの**100%**カバレッジ、依存パッケージなし
+**2**種類のチップ、フィールドごとに網羅した**1,120**通りのエンコーディング、比較した**22,240**命令、不一致**0**件、**1,032**件のテスト、ステートメントとブランチの**100%**カバレッジ、依存パッケージなし
 
 ```python
 from upd7725 import Cpu
@@ -90,7 +90,7 @@ python3 upd7725/doctor.py
 | `irq_line` | レベルとしての割り込み線です |
 | `on_cycle` | `None`、またはサイクルごとに引数なしで呼ばれる関数です |
 
-`registers.pc`、`rp`、`dp`、`sp`は書き込まれた値をチップ固有の幅でマスクします。`k`、`l`、`m`、`n`、`a`、`b`は16ビットを保持し、符号付きで読み出されます。`registers.word(name)`はそのいずれも符号なし16ビットワードとして読みます。`tr`、`trb`、`dr`、`si`、`so`は普通の整数です。`registers.stack`はチップのスタックと同じ長さのリストで、`registers.sr`はステータスワードです。ビット`p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm`、`drs`はデータシートのFigure 3が示す位置にあり、`int(registers.sr)`はそれらを1ワードとして読み、`registers.sr.assign(word)`は1ワードからそれらを設定します。
+`registers.pc`、`rp`、`dp`、`sp`は書き込まれた値をチップ固有の幅でマスクします。`k`、`l`、`m`、`n`、`a`、`b`は16ビットを保持し、符号付きで読み出されます。`registers.word(name)`はそのいずれも符号なし16ビットワードとして読みます。`tr`、`trb`、`dr`、`si`、`so`は普通の整数です。`registers.stack`はチップのスタックと同じ長さのリストで、`registers.sr`はステータスワードです。ビット`p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm`、`drs`はデータシートのFigure 3が示す位置にあり、`int(registers.sr)`はそれらを1ワードとして読み、`registers.sr.assign(word)`は1ワードからそれらを設定します。`registers.sr.siack`と`registers.sr.soack`は、SIACKとSOACKによる条件ジャンプが読むシリアル入力と出力の肯定応答です。このパッケージはどちらも設定しないため、それらのジャンプを使うホストが自分で設定します。どちらもワードには含まれません。
 
 ```python
 from upd7725 import Cpu, disassemble
@@ -204,7 +204,7 @@ TooLarge 2049 words will not fit in a store of 2048
 
 ### ホスト側
 
-ホストからは2つのアドレスが見えます。0である`upd7725.ports.DATA`と、1である`upd7725.ports.STATUS`です。`upd7725.ports.Host(cpu)`がそれらを操作します。
+ホストからは2つのアドレスが見えます。0である`upd7725.DATA`と、1である`upd7725.STATUS`です。`upd7725.Host(cpu)`がそれらを操作します。
 
 | 呼び出し | 動作 |
 |:--|:--|
@@ -218,8 +218,7 @@ TooLarge 2049 words will not fit in a store of 2048
 DRCビットがクリアのとき、データレジスタは16ビットを1バイトずつ転送し、DRSは転送済みの半分を示します。DRCが立っているときは8ビットを転送します。
 
 ```python
-from upd7725 import Cpu, NeverReady
-from upd7725.ports import STATUS, Host
+from upd7725 import STATUS, Cpu, Host, NeverReady
 
 cpu = Cpu("upd7725", fill=0)
 cpu.reset()
@@ -253,13 +252,13 @@ the part did not ask for attention within 50 instructions
 | 名前 | 内容 |
 |:--|:--|
 | `upd7725.MODELS` | 2つの`Model`レコードで、正式名をキーとします |
-| `upd7725.models.Model` | `name`、`aliases`、`summary`、`counter_bits`、`table_bits`、`pointer_bits`、`stack_levels`と、派生値の`program_words`、`table_words`、`scratch_words`、`stack_pointer_bits`です。`build(*arguments, **options)`はこのモデルからチップを構築し、`Cpu`がモデルの後に受け取る引数を受け取ります |
+| `upd7725.Model` | `name`、`aliases`、`summary`、`counter_bits`、`table_bits`、`pointer_bits`、`stack_levels`と、派生値の`program_words`、`table_words`、`scratch_words`、`stack_pointer_bits`です。`build(*arguments, **options)`はこのモデルからチップを構築し、`Cpu`がモデルの後に受け取る引数を受け取ります |
 | `upd7725.UNSET_SEED` | シードを指定しないときに使われるシード、`0x5A5A5A5A`です |
 | `upd7725.scramble(size, seed=UNSET_SEED)` | `seed`から導出した`size`個の32ビット値で、電源投入時の状態の元になります |
 | `upd7725.Store`, `upd7725.Stores` | 上で説明したストアのクラスです |
 | `upd7725.Clock` | 1サイクルずつのステップ実行で、[1サイクルずつ動かす](#driving-it-one-cycle-at-a-time)で説明します |
 | `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | プログラムワードの読み取りで、[実行せずに読む](#reading-without-running)で説明します |
-| `upd7725.flags.Flags` | フラグの集合です。`Flags.of(word)`は6ビットを展開し、`copy()`は複製を作ります |
+| `upd7725.Flags` | フラグの集合です。`Flags.of(word)`は6ビットを展開し、`copy()`は複製を作ります |
 | `upd7725.__version__` | インストールされているバージョンです |
 
 ### エラー

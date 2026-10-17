@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** 个器件，**1,120** 种编码逐字段遍历，**22,240** 条指令比对，**0** 处不一致，**1,005** 个测试，**100%** 语句与分支覆盖率，无任何依赖
+**2** 个器件，**1,120** 种编码逐字段遍历，**22,240** 条指令比对，**0** 处不一致，**1,032** 个测试，**100%** 语句与分支覆盖率，无任何依赖
 
 ```python
 from upd7725 import Cpu
@@ -90,7 +90,7 @@ python3 upd7725/doctor.py
 | `irq_line` | 以电平表示的中断线 |
 | `on_cycle` | `None`，或每个周期后以无参数方式调用的函数 |
 
-`registers.pc`、`rp`、`dp` 和 `sp` 会把写入的值按器件自身的宽度掩码。`k`、`l`、`m`、`n`、`a` 和 `b` 持有 16 位，读回时为有符号数。`registers.word(name)` 把其中任意一个读作无符号 16 位字。`tr`、`trb`、`dr`、`si` 和 `so` 是普通整数。`registers.stack` 是一个与器件堆栈等长的列表，`registers.sr` 是状态字：`p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm` 和 `drs` 各位位于数据表 Figure 3 所示的位置，`int(registers.sr)` 把它们读作一个字，`registers.sr.assign(word)` 从一个字设置它们。
+`registers.pc`、`rp`、`dp` 和 `sp` 会把写入的值按器件自身的宽度掩码。`k`、`l`、`m`、`n`、`a` 和 `b` 持有 16 位，读回时为有符号数。`registers.word(name)` 把其中任意一个读作无符号 16 位字。`tr`、`trb`、`dr`、`si` 和 `so` 是普通整数。`registers.stack` 是一个与器件堆栈等长的列表，`registers.sr` 是状态字：`p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm` 和 `drs` 各位位于数据表 Figure 3 所示的位置，`int(registers.sr)` 把它们读作一个字，`registers.sr.assign(word)` 从一个字设置它们。`registers.sr.siack` 和 `registers.sr.soack` 是串行输入和输出的应答，SIACK 和 SOACK 条件跳转读取它们。本包不会设置它们，因此使用这些跳转的主机需自行设置；两者都不属于状态字。
 
 ```python
 from upd7725 import Cpu, disassemble
@@ -204,7 +204,7 @@ TooLarge 2049 words will not fit in a store of 2048
 
 ### 主机端
 
-主机看到两个地址：`upd7725.ports.DATA`，值为 0；`upd7725.ports.STATUS`，值为 1。`upd7725.ports.Host(cpu)` 驱动它们。
+主机看到两个地址：`upd7725.DATA`，值为 0；`upd7725.STATUS`，值为 1。`upd7725.Host(cpu)` 驱动它们。
 
 | 调用 | 作用 |
 |:--|:--|
@@ -218,8 +218,7 @@ TooLarge 2049 words will not fit in a store of 2048
 DRC 位清零时，数据寄存器传送 16 位，每次一个字节，DRS 标记已传送的那一半。DRC 置位时传送 8 位。
 
 ```python
-from upd7725 import Cpu, NeverReady
-from upd7725.ports import STATUS, Host
+from upd7725 import STATUS, Cpu, Host, NeverReady
 
 cpu = Cpu("upd7725", fill=0)
 cpu.reset()
@@ -253,13 +252,13 @@ the part did not ask for attention within 50 instructions
 | 名称 | 内容 |
 |:--|:--|
 | `upd7725.MODELS` | 两个 `Model` 记录，以规范名称为键 |
-| `upd7725.models.Model` | `name`、`aliases`、`summary`、`counter_bits`、`table_bits`、`pointer_bits`、`stack_levels`，以及派生的 `program_words`、`table_words`、`scratch_words` 和 `stack_pointer_bits`。`build(*arguments, **options)` 据此构建一个器件，接受 `Cpu` 在型号之后接受的参数 |
+| `upd7725.Model` | `name`、`aliases`、`summary`、`counter_bits`、`table_bits`、`pointer_bits`、`stack_levels`，以及派生的 `program_words`、`table_words`、`scratch_words` 和 `stack_pointer_bits`。`build(*arguments, **options)` 据此构建一个器件，接受 `Cpu` 在型号之后接受的参数 |
 | `upd7725.UNSET_SEED` | 未给出种子时使用的种子，`0x5A5A5A5A` |
 | `upd7725.scramble(size, seed=UNSET_SEED)` | 由 `seed` 派生的 `size` 个 32 位值，是上电状态的来源 |
 | `upd7725.Store`, `upd7725.Stores` | 上文描述的存储区类 |
 | `upd7725.Clock` | 每次单步一个周期，见[逐周期驱动](#driving-it-one-cycle-at-a-time) |
 | `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | 读取程序字，见[不运行而读取](#reading-without-running) |
-| `upd7725.flags.Flags` | 标志集合。`Flags.of(word)` 解包六个位，`copy()` 复制一份 |
+| `upd7725.Flags` | 标志集合。`Flags.of(word)` 解包六个位，`copy()` 复制一份 |
 | `upd7725.__version__` | 已安装的版本 |
 
 ### 错误

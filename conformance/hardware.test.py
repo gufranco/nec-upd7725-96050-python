@@ -1,15 +1,26 @@
+from __future__ import annotations
+
 import json
 import sys
 import unittest
 from pathlib import Path
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import upd7725
-from conformance import reference
-from upd7725 import models
-from upd7725.flags import Flags
+from conformance.printed import (
+    ADD,
+    FROM_B,
+    FROM_BUS,
+    TO_A,
+    TO_B,
+    TO_NOWHERE,
+    an_operation,
+)
+
+if TYPE_CHECKING:
+    from conformance.printed import Part
 
 HARDWARE = Path(__file__).resolve().parent / "hardware.json"
 
@@ -29,224 +40,305 @@ def facts_for(part: str) -> dict[str, Any]:
     raise AssertionError(f"{part} is not in {HARDWARE.name}")
 
 
+def verified_sheets() -> list[tuple[str, dict[str, Any]]]:
+    return [
+        (one["part"], one["documents"]["dataSheet"])
+        for one in declared()["parts"]
+        if one["verified"]
+    ]
+
+
 class DocumentTest(unittest.TestCase):
     def test_the_verified_part_names_the_document_it_was_read_from(self) -> None:
-        for one in declared()["parts"]:
-            if not one["verified"]:
-                continue
-            for named in ("publisher", "title", "kind", "date", "readOn"):
-                self.assertIn(named, one["documents"]["dataSheet"], one["part"])
+        # Arrange
+        named = ("publisher", "title", "kind", "date", "readOn")
+
+        # Act
+        missing = [
+            f"{part}: {one}"
+            for part, sheet in verified_sheets()
+            for one in named
+            if one not in sheet
+        ]
+
+        # Assert
+        self.assertEqual(missing, [])
 
     def test_and_pins_it_by_digest_so_the_reading_can_be_repeated(self) -> None:
-        for one in declared()["parts"]:
-            if not one["verified"]:
-                continue
-            self.assertRegex(
-                one["documents"]["dataSheet"]["sha256"], r"^[0-9a-f]{64}$", one["part"]
-            )
+        # Arrange
+        sheets = verified_sheets()
+
+        # Act
+        digests = [sheet["sha256"] for _, sheet in sheets]
+
+        # Assert
+        for digest in digests:
+            self.assertRegex(digest, r"^[0-9a-f]{64}$")
 
     def test_and_says_how_the_printed_number_relates_to_the_file(self) -> None:
-        for one in declared()["parts"]:
-            if not one["verified"]:
-                continue
-            self.assertIn("pageNumbering", one["documents"]["dataSheet"], one["part"])
+        # Arrange
+        sheets = verified_sheets()
+
+        # Act
+        missing = [part for part, sheet in sheets if "pageNumbering" not in sheet]
+
+        # Assert
+        self.assertEqual(missing, [])
 
     def test_every_fact_carries_the_words_it_came_from(self) -> None:
-        for name, fact in facts_for("upd7725").items():
-            self.assertIn("quote", fact, name)
-            self.assertGreater(len(fact["quote"]), 20, name)
+        # Arrange
+        facts = facts_for("upd7725")
+
+        # Act
+        short = [name for name, fact in facts.items() if len(fact.get("quote", "")) <= 20]
+
+        # Assert
+        self.assertEqual(short, [])
 
     def test_and_where_those_words_are_printed(self) -> None:
+        # Arrange
         pages = declared()["parts"][0]["documents"]["dataSheet"]["pdfPages"]
-        for name, fact in facts_for("upd7725").items():
-            if isinstance(fact.get("section"), str):
-                continue
-            self.assertIsInstance(fact.get("page"), int, name)
-            self.assertGreaterEqual(fact["page"], 1, name)
-            self.assertLess(fact["page"], pages, name)
+
+        # Act
+        astray = [
+            name
+            for name, fact in facts_for("upd7725").items()
+            if not isinstance(fact.get("section"), str)
+            and not (isinstance(fact.get("page"), int) and 1 <= fact["page"] < pages)
+        ]
+
+        # Assert
+        self.assertEqual(astray, [])
 
     def test_an_unverified_part_says_so_and_says_what_would_settle_it(self) -> None:
-        for one in declared()["parts"]:
-            if one["verified"]:
-                continue
-            self.assertEqual(one["documents"], {}, one["part"])
-            self.assertIn("howToSettleIt", one["unverified"], one["part"])
+        # Arrange
+        unverified = [one for one in declared()["parts"] if not one["verified"]]
+
+        # Act
+        found = [(one["documents"], "howToSettleIt" in one["unverified"]) for one in unverified]
+
+        # Assert
+        self.assertEqual(found, [({}, True)])
 
     def test_the_authority_order_is_written_down(self) -> None:
-        self.assertGreaterEqual(len(declared()["authority"]["order"]), 2)
+        # Arrange
+        authority = declared()["authority"]
+
+        # Act
+        order = authority["order"]
+
+        # Assert
+        self.assertGreaterEqual(len(order), 2)
 
 
 class LookupTest(unittest.TestCase):
     def test_asking_for_a_part_the_file_does_not_carry_says_so(self) -> None:
+        # Arrange
+        absent = "upd7720"
+
+        # Act
         with self.assertRaises(AssertionError) as raised:
-            facts_for("upd7720")
+            facts_for(absent)
 
-        self.assertIn("upd7720", str(raised.exception))
-
-
-class WidthTest(unittest.TestCase):
-    def test_the_program_counter_is_as_wide_as_the_document_says(self) -> None:
-        facts = facts_for("upd7725")
-
-        self.assertEqual(
-            models.lookup("upd7725").counter_bits, facts["programCounterBits"]["value"]
-        )
-
-    def test_and_addresses_as_many_words(self) -> None:
-        facts = facts_for("upd7725")
-
-        self.assertEqual(models.lookup("upd7725").program_words, facts["programWords"]["value"])
-
-    def test_the_table_pointer_is_as_wide_as_the_document_says(self) -> None:
-        facts = facts_for("upd7725")
-
-        self.assertEqual(models.lookup("upd7725").table_bits, facts["romPointerBits"]["value"])
-
-    def test_and_addresses_as_many_table_words(self) -> None:
-        facts = facts_for("upd7725")
-
-        self.assertEqual(models.lookup("upd7725").table_words, facts["dataRomWords"]["value"])
-
-    def test_the_scratch_pointer_is_as_wide_as_the_document_says(self) -> None:
-        facts = facts_for("upd7725")
-
-        self.assertEqual(models.lookup("upd7725").pointer_bits, facts["dataPointerBits"]["value"])
-
-    def test_and_addresses_as_many_scratch_words(self) -> None:
-        facts = facts_for("upd7725")
-
-        self.assertEqual(models.lookup("upd7725").scratch_words, facts["dataRamWords"]["value"])
-
-
-class StackTest(unittest.TestCase):
-    def test_the_stack_is_as_deep_as_the_document_says(self) -> None:
-        facts = facts_for("upd7725")
-
-        self.assertEqual(models.lookup("upd7725").stack_levels, facts["stackLevels"]["value"])
-
-    def test_the_reference_holds_the_same_depth_as_the_model(self) -> None:
-        self.assertEqual(
-            reference.STACK_LEVELS[reference.UPD7725], models.lookup("upd7725").stack_levels
-        )
-
-    def test_a_pointer_that_wide_reaches_every_slot_and_no_further(self) -> None:
-        model = models.lookup("upd7725")
-
-        self.assertEqual(1 << model.stack_pointer_bits, model.stack_levels)
-
-    def test_the_document_admits_it_does_not_say_what_a_fifth_call_does(self) -> None:
-        self.assertIn("notStated", facts_for("upd7725")["stackLevels"])
-
-    def test_the_larger_part_holds_more_and_is_not_claimed_as_verified(self) -> None:
-        larger = models.lookup("upd96050")
-
-        self.assertGreater(larger.stack_levels, models.lookup("upd7725").stack_levels)
-        for one in declared()["parts"]:
-            if one["part"] == "upd96050":
-                self.assertFalse(one["verified"])
+        # Assert
+        self.assertIn(absent, str(raised.exception))
 
 
 class CycleTest(unittest.TestCase):
     def test_the_document_gives_one_clock_per_instruction(self) -> None:
-        self.assertEqual(facts_for("upd7725")["clocksPerInstruction"]["value"], 1)
+        # Arrange
+        facts = facts_for("upd7725")
+
+        # Act
+        clocks = facts["clocksPerInstruction"]["value"]
+
+        # Assert
+        self.assertEqual(clocks, 1)
 
     def test_and_says_every_instruction_takes_the_same_one(self) -> None:
-        self.assertTrue(facts_for("upd7725")["everyInstructionSameLength"]["value"])
+        # Arrange
+        facts = facts_for("upd7725")
+
+        # Act
+        same = facts["everyInstructionSameLength"]["value"]
+
+        # Assert
+        self.assertTrue(same)
 
     def test_so_one_step_is_one_cycle(self) -> None:
-        chip = models.lookup("upd7725").build(fill=0)
+        # Arrange
+        chip = upd7725.Cpu("upd7725", fill=0)
 
+        # Act
         chip.step()
 
+        # Assert
         self.assertEqual(chip.cycles, 1)
 
     def test_and_a_run_of_many_is_that_many_cycles(self) -> None:
-        chip = models.lookup("upd7725").build(fill=0)
+        # Arrange
+        chip = upd7725.Cpu("upd7725", fill=0)
 
+        # Act
         chip.run_for(1000)
 
+        # Assert
         self.assertEqual(chip.cycles, 1000)
 
     def test_a_part_that_has_run_nothing_has_spent_no_cycles(self) -> None:
-        self.assertEqual(models.lookup("upd7725").build(fill=0).cycles, 0)
+        # Arrange
+        name = "upd7725"
+
+        # Act
+        chip = upd7725.Cpu(name, fill=0)
+
+        # Assert
+        self.assertEqual(chip.cycles, 0)
 
     def test_the_cycle_time_and_the_clock_it_belongs_to_agree(self) -> None:
-        facts = facts_for("upd7725")
-        cycle = facts["instructionCycleNanoseconds"]
-        clock = cycle["atClockHz"]
+        # Arrange
+        cycle = facts_for("upd7725")["instructionCycleNanoseconds"]
 
-        self.assertAlmostEqual(1e9 / clock, cycle["value"], places=0)
+        # Act
+        derived = 1e9 / cycle["atClockHz"]
+
+        # Assert
+        self.assertAlmostEqual(derived, cycle["value"], places=0)
 
     def test_the_rated_clock_is_recorded_separately_from_any_board(self) -> None:
-        self.assertGreater(facts_for("upd7725")["maximumClockHz"]["value"], 8_000_000)
+        # Arrange
+        facts = facts_for("upd7725")
+
+        # Act
+        rated = facts["maximumClockHz"]["value"]
+
+        # Assert
+        self.assertGreater(rated, 8_000_000)
 
     def test_the_earlier_part_of_the_family_is_recorded_for_contrast(self) -> None:
-        for one in declared()["parts"]:
-            if one["part"] != "upd7725":
-                continue
-            earlier = one["predecessorForContrast"]
-            self.assertEqual(earlier["clocksPerInstruction"], 2)
+        # Arrange
+        parts = declared()["parts"]
+
+        # Act
+        earlier = [
+            one["predecessorForContrast"]["clocksPerInstruction"]
+            for one in parts
+            if one["part"] == "upd7725"
+        ]
+
+        # Assert
+        self.assertEqual(earlier, [2])
+
+
+def after_adding(destination: int, asl: int = 0) -> Part:
+    chip = upd7725.Cpu("upd7725", fill=0)
+    registers = chip.registers
+    registers.a = 0x1234
+    registers.b = 0x7FFF
+    chip.flags_a = upd7725.Flags()
+    chip.flags_b = upd7725.Flags()
+    registers.pc = 0
+    chip.stores.program[0] = an_operation(
+        alu=ADD, pselect=FROM_BUS, asl=asl, src=FROM_B, dst=destination
+    )
+    chip.step()
+    return chip
 
 
 class SupersededArithmeticTest(unittest.TestCase):
-    def _run(self, destination: int, asl: int = 0) -> Any:
-        chip = models.lookup("upd7725").build(fill=0)
-        registers = chip.registers
-        registers.a = 0x7FFF
-        registers.b = 0x7FFF
-        chip.flags_a = Flags()
-        chip.flags_b = Flags()
-        registers.pc = 0
-        chip.stores.program[0] = 1 << 20 | 5 << 16 | asl << 15 | 2 << 4 | destination
-        chip.step()
-        return chip
-
     def test_the_document_says_the_arithmetic_becomes_a_nop(self) -> None:
-        self.assertTrue(facts_for("upd7725")["arithmeticSupersededByItsOwnDestination"]["value"])
+        # Arrange
+        facts = facts_for("upd7725")
+
+        # Act
+        superseded = facts["arithmeticSupersededByItsOwnDestination"]["value"]
+
+        # Assert
+        self.assertTrue(superseded)
 
     def test_arithmetic_into_nowhere_still_sets_the_flags(self) -> None:
-        chip = self._run(destination=0)
+        # Arrange
+        destination = TO_NOWHERE
 
-        self.assertNotEqual(int(chip.flags_a), 0)
+        # Act
+        chip = after_adding(destination)
+
+        # Assert
+        self.assertEqual(int(chip.flags_a), 0x33)
 
     def test_arithmetic_over_its_own_accumulator_sets_no_flags(self) -> None:
-        chip = self._run(destination=1)
+        # Arrange
+        destination = TO_A
 
+        # Act
+        chip = after_adding(destination)
+
+        # Assert
         self.assertEqual(int(chip.flags_a), 0)
 
     def test_and_the_moved_value_is_what_lands(self) -> None:
-        chip = self._run(destination=1)
+        # Arrange
+        destination = TO_A
 
+        # Act
+        chip = after_adding(destination)
+
+        # Assert
         self.assertEqual(chip.registers.word("a"), 0x7FFF)
 
     def test_arithmetic_over_the_other_accumulator_still_sets_the_flags(self) -> None:
-        chip = self._run(destination=2)
+        # Arrange
+        destination = TO_B
 
-        self.assertNotEqual(int(chip.flags_a), 0)
+        # Act
+        chip = after_adding(destination)
+
+        # Assert
+        self.assertEqual(int(chip.flags_a), 0x33)
 
     def test_the_rule_follows_the_accumulator_the_arithmetic_names(self) -> None:
-        chip = self._run(destination=2, asl=1)
+        # Arrange
+        destination = TO_B
 
+        # Act
+        chip = after_adding(destination, asl=1)
+
+        # Assert
         self.assertEqual(int(chip.flags_b), 0)
 
     def test_and_not_the_other_one(self) -> None:
-        chip = self._run(destination=1, asl=1)
+        # Arrange
+        destination = TO_A
 
-        self.assertNotEqual(int(chip.flags_b), 0)
+        # Act
+        chip = after_adding(destination, asl=1)
+
+        # Assert
+        self.assertEqual(int(chip.flags_b), 0x33)
 
 
 class MultiplierTest(unittest.TestCase):
     def test_the_document_gives_a_thirty_one_bit_product(self) -> None:
-        self.assertEqual(facts_for("upd7725")["multiplier"]["productBits"], 31)
+        # Arrange
+        facts = facts_for("upd7725")
+
+        # Act
+        bits = facts["multiplier"]["productBits"]
+
+        # Assert
+        self.assertEqual(bits, 31)
 
     def test_and_the_low_word_carries_a_zero_in_its_lowest_bit(self) -> None:
-        chip = models.lookup("upd7725").build(fill=0)
+        # Arrange
+        chip = upd7725.Cpu("upd7725", fill=0)
         chip.registers.k = 0x7FFF
         chip.registers.l = 0x7FFF
 
+        # Act
         chip.step()
 
-        self.assertEqual(chip.registers.word("n") & 1, 0)
+        # Assert
+        self.assertEqual(chip.registers.word("n"), 0x0002)
 
 
 class DivergenceTest(unittest.TestCase):
@@ -258,109 +350,54 @@ class DivergenceTest(unittest.TestCase):
         ]
 
     def test_each_entry_says_which_source_the_package_follows(self) -> None:
+        # Arrange
         allowed = {"document", "reference", "corpus", "neither"}
 
-        self.assertEqual({entry["packageFollows"] for entry in self.entries} - allowed, set())
+        # Act
+        followed = {entry["packageFollows"] for entry in self.entries}
+
+        # Assert
+        self.assertEqual(followed - allowed, set())
 
     def test_each_entry_says_what_would_settle_it(self) -> None:
-        missing = [entry["id"] for entry in self.entries if not entry.get("wouldSettleIt")]
+        # Arrange
+        entries = self.entries
 
+        # Act
+        missing = [entry["id"] for entry in entries if not entry.get("wouldSettleIt")]
+
+        # Assert
         self.assertEqual(missing, [])
 
     def test_the_part_with_no_document_is_named_here_too(self) -> None:
-        named = {entry["id"] for entry in self.entries}
+        # Arrange
+        entries = self.entries
 
+        # Act
+        named = {entry["id"] for entry in entries}
+
+        # Assert
         self.assertIn("no-document-for-the-upd96050", named)
 
     def test_and_it_agrees_with_the_mark_on_the_part_itself(self) -> None:
-        unverified = [part for part in declared()["parts"] if not part["verified"]]
+        # Arrange
+        parts = declared()["parts"]
 
-        self.assertEqual(len(unverified), 1)
+        # Act
+        unverified = [part["part"] for part in parts if not part["verified"]]
+
+        # Assert
+        self.assertEqual(unverified, ["upd96050"])
 
     def test_the_corpus_being_a_recording_is_recorded(self) -> None:
-        entry = next(
-            item
-            for item in self.entries
-            if item["id"] == "the-corpus-was-recorded-from-an-emulator"
-        )
+        # Arrange
+        wanted = "the-corpus-was-recorded-from-an-emulator"
 
+        # Act
+        entry = next(item for item in self.entries if item["id"] == wanted)
+
+        # Assert
         self.assertEqual(entry["severity"], "high")
-
-
-def overclaimed(facts: dict[str, Any], widths: dict[str, str]) -> list[str]:
-    found = []
-    for name, attribute in widths.items():
-        fact = facts[name]
-        holding = {
-            part
-            for part in upd7725.MODELS
-            if getattr(upd7725.models.lookup(part), attribute) == fact["value"]
-        }
-        if set(fact["appliesTo"]) != holding:
-            found.append(f"{name}: claims {fact['appliesTo']}, holds for {sorted(holding)}")
-    return found
-
-
-class PartScopeTest(unittest.TestCase):
-    def facts(self) -> dict[str, Any]:
-        held: dict[str, Any] = declared()["parts"][0]["facts"]
-        return held
-
-    def test_every_fact_names_the_parts_it_governs(self) -> None:
-        unscoped = [
-            name
-            for name, fact in self.facts().items()
-            if not isinstance(fact.get("appliesTo"), list) or not fact["appliesTo"]
-        ]
-
-        self.assertEqual(unscoped, [])
-
-    def test_and_every_part_it_names_is_one_the_package_builds(self) -> None:
-        invented = sorted(
-            {
-                part
-                for fact in self.facts().values()
-                for part in fact["appliesTo"]
-                if part not in upd7725.MODELS
-            }
-        )
-
-        self.assertEqual(invented, [])
-
-    def test_a_fact_the_parts_disagree_on_is_not_claimed_for_both(self) -> None:
-        widths = {
-            "programWords": "program_words",
-            "programCounterBits": "counter_bits",
-            "dataRomWords": "table_words",
-            "romPointerBits": "table_bits",
-            "dataRamWords": "scratch_words",
-            "dataPointerBits": "pointer_bits",
-            "stackLevels": "stack_levels",
-        }
-
-        self.assertEqual(overclaimed(self.facts(), widths), [])
-
-    def test_and_a_width_widened_by_hand_would_be_reported(self) -> None:
-        facts = {"programWords": {"value": 2048, "appliesTo": ["upd7725", "upd96050"]}}
-
-        found = overclaimed(facts, {"programWords": "program_words"})
-
-        self.assertEqual(len(found), 1)
-        self.assertIn("holds for ['upd7725']", found[0])
-
-    def test_a_shared_fact_reaches_both_parts(self) -> None:
-        shared = self.facts()["aluOperations"]
-
-        self.assertEqual(sorted(shared["appliesTo"]), sorted(upd7725.MODELS))
-
-    def test_a_fact_that_reaches_one_part_says_why(self) -> None:
-        narrow = [
-            name
-            for name, fact in self.facts().items()
-            if len(fact["appliesTo"]) < len(upd7725.MODELS) and "whyNotBoth" not in fact
-        ]
-
-        self.assertEqual(narrow, [])
 
 
 if __name__ == "__main__":

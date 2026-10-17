@@ -1,13 +1,21 @@
+from __future__ import annotations
+
 import json
 import sys
 import unittest
-from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from upd7725 import core, models  # noqa: E402
+import upd7725  # noqa: E402
+from conformance.printed import FROM_BUS, FROM_DATA  # noqa: E402
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from conformance.printed import Part
 
 HELD = json.loads((ROOT / "conformance" / "hardware.json").read_text())
 
@@ -48,8 +56,8 @@ INPUTS = (
 )
 
 
-def settled() -> "core.Cpu":
-    found = core.Cpu(models.lookup("upd7725"), fill=0).reset()
+def settled() -> Part:
+    found = upd7725.Cpu("upd7725", fill=0).reset()
     registers = found.registers
     registers.rp = registers.dp = registers.sp = 0
     registers.k = registers.l = registers.m = registers.n = 0
@@ -57,11 +65,11 @@ def settled() -> "core.Cpu":
     return found
 
 
-def an_operation(alu: int, pselect: int = 1, asl: int = 0, src: int = 0) -> int:
+def an_operation(alu: int, pselect: int = FROM_BUS, asl: int = 0, src: int = 0) -> int:
     return pselect << 20 | alu << 16 | asl << 15 | src << 4
 
 
-def loaded(alu: int, left: int, right: int, carry: bool) -> "core.Cpu":
+def loaded(alu: int, left: int, right: int, carry: bool) -> Part:
     chip = settled()
     chip.registers.a = left
     chip.registers.dr = right
@@ -71,7 +79,7 @@ def loaded(alu: int, left: int, right: int, carry: bool) -> "core.Cpu":
     chip.flags_a.s1 = carry
     chip.flags_a.ov0 = carry
     chip.flags_a.ov1 = carry
-    chip.stores.program[0] = an_operation(alu, src=0x9)
+    chip.stores.program[0] = an_operation(alu, src=FROM_DATA)
     return chip
 
 
@@ -126,48 +134,75 @@ class MatrixTest(unittest.TestCase):
         return found
 
     def test_the_matrix_covers_every_operation_the_part_has(self) -> None:
-        self.assertEqual(sorted(ROWS), sorted(CODES))
+        # Arrange
+        rows = ROWS
+
+        # Act
+        named = sorted(rows)
+
+        # Assert
+        self.assertEqual(named, sorted(CODES))
 
     def test_a_flag_the_document_calls_reset_is_always_reset(self) -> None:
+        # Arrange
+        rows = ROWS
+
+        # Act
         wrong = [
             f"{what}: {flag}"
-            for name, verdicts in ROWS.items()
+            for name, verdicts in rows.items()
             for what, _, ended, _word in self.outcomes(name)
             for flag, verdict in zip(COLUMNS, verdicts, strict=True)
             if verdict == "reset" and ended[flag]
         ]
 
+        # Assert
         self.assertEqual(wrong, [])
 
     def test_a_flag_the_document_calls_held_never_moves(self) -> None:
+        # Arrange
+        rows = ROWS
+
+        # Act
         wrong = [
             f"{what}: {flag}"
-            for name, verdicts in ROWS.items()
+            for name, verdicts in rows.items()
             for what, started, ended, _word in self.outcomes(name)
             for flag, verdict in zip(COLUMNS, verdicts, strict=True)
             if verdict == "held" and ended[flag] != started[flag]
         ]
 
+        # Assert
         self.assertEqual(wrong, [])
 
     def test_a_zero_flag_the_document_calls_affected_follows_the_result(self) -> None:
+        # Arrange
+        column = COLUMNS.index("z")
+
+        # Act
         wrong = [
             f"{what}: z"
             for name, verdicts in ROWS.items()
-            for what, _, ended, _word in self.outcomes(name)
-            if verdicts[COLUMNS.index("z")] == "affected" and ended["z"] != (_word == 0)
+            for what, _, ended, word in self.outcomes(name)
+            if verdicts[column] == "affected" and ended["z"] != (word == 0)
         ]
 
+        # Assert
         self.assertEqual(wrong, [])
 
     def test_and_so_does_the_sign(self) -> None:
+        # Arrange
+        column = COLUMNS.index("s0")
+
+        # Act
         wrong = [
             f"{what}: s0"
             for name, verdicts in ROWS.items()
-            for what, _, ended, _word in self.outcomes(name)
-            if verdicts[COLUMNS.index("s0")] == "affected" and ended["s0"] != bool(_word & 0x8000)
+            for what, _, ended, word in self.outcomes(name)
+            if verdicts[column] == "affected" and ended["s0"] != bool(word & 0x8000)
         ]
 
+        # Assert
         self.assertEqual(wrong, [])
 
     def test_every_verdict_the_manufacturer_gives_holds_on_the_model(self) -> None:
@@ -187,26 +222,46 @@ class MatrixTest(unittest.TestCase):
         self.assertEqual(wrong, [])
 
     def test_the_shifts_that_bring_ones_in_can_never_reach_zero(self) -> None:
-        reached = {word == 0 for _, _, _ended, word in self.outcomes("SHL2")}
+        # Arrange
+        name = "SHL2"
 
-        self.assertEqual(reached, {False})
+        # Act
+        found = self.outcomes(name)
+
+        # Assert
+        self.assertEqual({word == 0 for _, _, _ended, word in found}, {False})
 
     def test_only_the_one_bit_shifts_take_the_carry_from_the_bit_shifted_out(self) -> None:
-        moving = [
-            name for name, verdicts in ROWS.items() if verdicts[COLUMNS.index("c")] == "affected"
-        ]
+        # Arrange
+        column = COLUMNS.index("c")
 
+        # Act
+        moving = [name for name, verdicts in ROWS.items() if verdicts[column] == "affected"]
+
+        # Assert
         self.assertEqual(
             sorted(moving), sorted(["ADC", "ADD", "DEC", "INC", "SBB", "SHL1", "SHR1", "SUB"])
         )
 
     def test_the_auxiliary_sign_is_where_the_manufacturer_stops(self) -> None:
-        undefined = [name for name, verdicts in ROWS.items() if verdicts[0] == "indefinite"]
+        # Arrange
+        rows = ROWS
 
+        # Act
+        undefined = [name for name, verdicts in rows.items() if verdicts[0] == "indefinite"]
+
+        # Assert
         self.assertEqual(len(undefined), 9)
 
     def test_and_the_record_says_this_model_answers_there_anyway(self) -> None:
-        self.assertIn("indefinite", MATRIX["whatItLeavesOpen"])
+        # Arrange
+        matrix = MATRIX
+
+        # Act
+        left_open = matrix["whatItLeavesOpen"]
+
+        # Assert
+        self.assertIn("indefinite", left_open)
 
 
 if __name__ == "__main__":

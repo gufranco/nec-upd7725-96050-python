@@ -4,94 +4,246 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-
 import upd7725
-from upd7725 import errors, models
+
+REFUSED_BY_NAME = ("upd7720", "upd77p25")
+
+
+def refusals(names: tuple[str, ...]) -> list[str]:
+    said = []
+    for name in names:
+        try:
+            upd7725.Cpu(name)
+        except upd7725.UnknownModelError as error:
+            said.append(str(error))
+    return said
 
 
 class CatalogueTest(unittest.TestCase):
     def test_the_package_names_every_processor_it_covers(self) -> None:
-        self.assertEqual(set(models.MODELS), {"upd7725", "upd96050"})
+        # Arrange
+        catalogue = upd7725.MODELS
+
+        # Act
+        names = set(catalogue)
+
+        # Assert
+        self.assertEqual(names, {"upd7725", "upd96050"})
+
+    def test_every_entry_is_a_model(self) -> None:
+        # Arrange
+        catalogue = upd7725.MODELS
+
+        # Act
+        kinds = {type(one) for one in catalogue.values()}
+
+        # Assert
+        self.assertEqual(kinds, {upd7725.Model})
 
     def test_a_model_says_how_wide_each_of_its_three_registers_is(self) -> None:
-        found = models.lookup("upd7725")
+        # Arrange
+        name = "upd7725"
 
+        # Act
+        found = upd7725.Cpu(name).model
+
+        # Assert
         self.assertEqual((found.counter_bits, found.table_bits, found.pointer_bits), (11, 10, 8))
 
-    def test_each_store_is_exactly_as_long_as_its_register_can_reach(self) -> None:
-        for found in models.MODELS.values():
-            self.assertEqual(found.program_words, 1 << found.counter_bits, found.name)
-            self.assertEqual(found.table_words, 1 << found.table_bits, found.name)
-            self.assertEqual(found.scratch_words, 1 << found.pointer_bits, found.name)
+    def test_and_the_larger_part_says_the_same_of_its_own(self) -> None:
+        # Arrange
+        name = "upd96050"
+
+        # Act
+        found = upd7725.Cpu(name).model
+
+        # Assert
+        self.assertEqual((found.counter_bits, found.table_bits, found.pointer_bits), (14, 11, 11))
+
+    def test_each_store_is_exactly_as_long_as_the_models_table_prints(self) -> None:
+        # Arrange
+        catalogue = upd7725.MODELS
+
+        # Act
+        sizes = {
+            name: (one.program_words, one.table_words, one.scratch_words)
+            for name, one in catalogue.items()
+        }
+
+        # Assert
+        self.assertEqual(sizes, {"upd7725": (2048, 1024, 256), "upd96050": (16384, 2048, 2048)})
 
     def test_a_model_name_is_matched_however_it_is_written(self) -> None:
-        for written in ("UPD7725", "upd-7725", "uPD_7725", "7725"):
-            self.assertEqual(models.lookup(written).name, "upd7725")
+        # Arrange
+        written = ("UPD7725", "upd-7725", "uPD_7725", "7725", " upd77c25 ")
 
-    def test_a_processor_the_package_does_not_have_is_refused_by_name(self) -> None:
-        with self.assertRaises(errors.UnknownModelError):
-            models.lookup("upd7720")
+        # Act
+        found = {upd7725.Cpu(one).model.name for one in written}
 
-    def test_and_the_refusal_says_why_rather_than_only_that(self) -> None:
-        with self.assertRaises(errors.UnknownModelError) as raised:
-            models.lookup("upd7720")
+        # Assert
+        self.assertEqual(found, {"upd7725"})
 
-        self.assertIn("reference", str(raised.exception))
+    def test_every_alias_builds_the_part_it_belongs_to(self) -> None:
+        # Arrange
+        aliases = {alias: name for name, one in upd7725.MODELS.items() for alias in one.aliases}
 
-    def test_a_name_nothing_here_recognises_is_refused_with_the_list(self) -> None:
-        with self.assertRaises(errors.UnknownModelError) as raised:
-            models.lookup("nothing-like-a-part-number")
+        # Act
+        found = {alias: upd7725.Cpu(alias).model.name for alias in aliases}
 
-        self.assertIn("upd7725", str(raised.exception))
-        self.assertIn("upd96050", str(raised.exception))
+        # Assert
+        self.assertEqual(found, aliases)
 
     def test_the_stack_pointer_follows_from_the_depth(self) -> None:
-        self.assertEqual(models.lookup("upd7725").stack_pointer_bits, 2)
-        self.assertEqual(models.lookup("upd96050").stack_pointer_bits, 3)
+        # Arrange
+        catalogue = upd7725.MODELS
 
-    def test_every_refusal_carries_a_reason(self) -> None:
-        for name, why in models.NOT_MODELLED.items():
-            self.assertTrue(why, name)
+        # Act
+        found = {name: one.stack_pointer_bits for name, one in catalogue.items()}
+
+        # Assert
+        self.assertEqual(found, {"upd7725": 2, "upd96050": 3})
 
     def test_a_model_prints_as_its_name_and_its_widths(self) -> None:
-        printed = repr(models.lookup("upd96050"))
+        # Arrange
+        found = upd7725.MODELS["upd96050"]
 
-        self.assertIn("upd96050", printed)
-        self.assertIn("14", printed)
+        # Act
+        printed = repr(found)
+
+        # Assert
+        self.assertEqual(
+            printed, "<Model upd96050, counter 14 bits, table 11, pointer 11, stack 8>"
+        )
 
     def test_a_model_says_what_it_is(self) -> None:
-        self.assertTrue(models.lookup("upd7725").summary)
+        # Arrange
+        found = upd7725.MODELS["upd7725"]
+
+        # Act
+        summary = found.summary
+
+        # Assert
+        self.assertIn("uPD7725", summary)
+
+
+class RefusalTest(unittest.TestCase):
+    def test_a_processor_the_package_does_not_have_is_refused_by_name(self) -> None:
+        # Arrange
+        name = "upd7720"
+
+        # Act
+        with self.assertRaises(upd7725.UnknownModelError) as raised:
+            upd7725.Cpu(name)
+
+        # Assert
+        said = str(raised.exception)
+        self.assertTrue(said.startswith("upd7720 is not modelled here: "), said)
+
+    def test_and_the_refusal_says_why_rather_than_only_that(self) -> None:
+        # Arrange
+        name = "upd7720"
+
+        # Act
+        with self.assertRaises(upd7725.UnknownModelError) as raised:
+            upd7725.Cpu(name)
+
+        # Assert
+        said = str(raised.exception)
+        self.assertIn("the reference this package is measured against does not implement it", said)
+
+    def test_every_part_refused_by_name_carries_its_own_reason(self) -> None:
+        # Arrange
+        names = REFUSED_BY_NAME
+
+        # Act
+        reasons = {said.partition(": ")[2] for said in refusals(names)}
+
+        # Assert
+        self.assertEqual(len(reasons), len(REFUSED_BY_NAME))
+        self.assertNotIn("", reasons)
+
+    def test_a_refused_part_is_recognised_however_it_is_written(self) -> None:
+        # Arrange
+        name = "uPD-77P25"
+
+        # Act
+        with self.assertRaises(upd7725.UnknownModelError) as raised:
+            upd7725.Cpu(name)
+
+        # Assert
+        said = str(raised.exception)
+        self.assertIn("ask for upd7725 and load the program yourself", said)
+
+    def test_a_name_nothing_here_recognises_is_refused_with_the_list(self) -> None:
+        # Arrange
+        name = "nothing-like-a-part-number"
+
+        # Act
+        with self.assertRaises(upd7725.UnknownModelError) as raised:
+            upd7725.Cpu(name)
+
+        # Assert
+        said = str(raised.exception)
+        self.assertEqual(
+            said,
+            "nothing-like-a-part-number is not a processor this package covers;"
+            " it has upd7725, upd96050",
+        )
 
 
 class BuildTest(unittest.TestCase):
     def test_a_processor_is_built_from_its_model(self) -> None:
-        built = models.lookup("upd7725").build(fill=0)
+        # Arrange
+        model = upd7725.MODELS["upd7725"]
 
-        self.assertEqual(len(built.stores.program), 2048)
+        # Act
+        built = model.build(fill=0)
+
+        # Assert
+        self.assertEqual((built.model, len(built.stores.program)), (model, 2048))
 
     def test_options_reach_the_processor_that_gets_built(self) -> None:
-        built = models.lookup("upd7725").build(fill=0xABCD)
+        # Arrange
+        model = upd7725.MODELS["upd7725"]
 
+        # Act
+        built = model.build(fill=0xABCD)
+
+        # Assert
         self.assertEqual(built.stores.scratch[0], 0xABCD)
 
 
 class QuietStoreTest(unittest.TestCase):
     def test_a_fill_puts_that_byte_everywhere(self) -> None:
-        part = upd7725.Cpu("upd7725", fill=0)
+        # Arrange
+        fill = 0
 
+        # Act
+        part = upd7725.Cpu("upd7725", fill=fill)
+
+        # Assert
         self.assertEqual({part.stores.read_byte(at) for at in range(0x40)}, {0})
 
     def test_and_this_part_defaults_to_a_cleared_store_where_its_siblings_scramble(
         self,
     ) -> None:
-        part = upd7725.Cpu("upd7725")
+        # Arrange
+        name = "upd7725"
 
+        # Act
+        part = upd7725.Cpu(name)
+
+        # Assert
         self.assertEqual({part.stores.read_byte(at) for at in range(0x40)}, {0})
 
     def test_and_this_part_offers_no_scrambled_store_at_all(self) -> None:
-        asked = upd7725.Cpu("upd7725", fill=None)
+        # Arrange
         cleared = upd7725.Cpu("upd7725", fill=0)
 
+        # Act
+        asked = upd7725.Cpu("upd7725", fill=None)
+
+        # Assert
         self.assertEqual(
             {asked.stores.read_byte(at) for at in range(0x40)},
             {cleared.stores.read_byte(at) for at in range(0x40)},
@@ -100,22 +252,48 @@ class QuietStoreTest(unittest.TestCase):
 
 class NamingNoneTest(unittest.TestCase):
     def test_building_without_naming_a_model_is_refused(self) -> None:
-        with self.assertRaises(errors.UnknownModelError):
-            upd7725.Cpu()
+        # Arrange
+        name = None
+
+        # Act
+        with self.assertRaises(upd7725.UnknownModelError) as raised:
+            upd7725.Cpu(name)
+
+        # Assert
+        said = str(raised.exception)
+        self.assertTrue(said.startswith("no model was named"), said)
 
     def test_and_the_refusal_names_every_model_there_is(self) -> None:
-        with self.assertRaises(errors.UnknownModelError) as caught:
-            upd7725.Cpu()
+        # Arrange
+        name = None
 
-        missing = [name for name in upd7725.MODELS if name not in str(caught.exception)]
+        # Act
+        with self.assertRaises(upd7725.UnknownModelError) as raised:
+            upd7725.Cpu(name)
 
-        self.assertEqual(missing, [])
+        # Assert
+        said = str(raised.exception)
+        self.assertEqual([one for one in ("upd7725", "upd96050") if one not in said], [])
 
     def test_nothing_named_describe_is_published(self) -> None:
-        self.assertFalse(hasattr(upd7725, "describe"))
+        # Arrange
+        package = upd7725
+
+        # Act
+        published = hasattr(package, "describe")
+
+        # Assert
+        self.assertFalse(published)
 
     def test_and_no_default_model_is_published_either(self) -> None:
-        self.assertFalse(hasattr(upd7725, "DEFAULT_MODEL"))
+        # Arrange
+        package = upd7725
+
+        # Act
+        published = hasattr(package, "DEFAULT_MODEL")
+
+        # Assert
+        self.assertFalse(published)
 
 
 if __name__ == "__main__":

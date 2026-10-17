@@ -8,7 +8,7 @@ English | [日本語](README.ja.md) | [简体中文](README.zh-Hans.md) | [繁�
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **1,005** tests, **100%** statement and branch coverage, no dependencies
+**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **1,032** tests, **100%** statement and branch coverage, no dependencies
 
 ```python
 from upd7725 import Cpu
@@ -90,7 +90,7 @@ Releases follow [Semantic Versioning](https://semver.org/) and are cut from the 
 | `irq_line` | The interrupt line as a level |
 | `on_cycle` | `None`, or a function called with no arguments after every cycle |
 
-`registers.pc`, `rp`, `dp` and `sp` mask what is written to them to the part's own widths. `k`, `l`, `m`, `n`, `a` and `b` hold 16 bits and read back signed. `registers.word(name)` reads any of them as an unsigned 16-bit word. `tr`, `trb`, `dr`, `si` and `so` are plain integers. `registers.stack` is a list as long as the part's stack, and `registers.sr` is the status word: the bits `p0`, `p1`, `ei`, `sic`, `soc`, `drc`, `dma`, `usf0`, `usf1`, `rqm` and `drs` sit where Figure 3 of the data sheet puts them, `int(registers.sr)` reads them as one word, and `registers.sr.assign(word)` sets them from one.
+`registers.pc`, `rp`, `dp` and `sp` mask what is written to them to the part's own widths. `k`, `l`, `m`, `n`, `a` and `b` hold 16 bits and read back signed. `registers.word(name)` reads any of them as an unsigned 16-bit word. `tr`, `trb`, `dr`, `si` and `so` are plain integers. `registers.stack` is a list as long as the part's stack, and `registers.sr` is the status word: the bits `p0`, `p1`, `ei`, `sic`, `soc`, `drc`, `dma`, `usf0`, `usf1`, `rqm` and `drs` sit where Figure 3 of the data sheet puts them, `int(registers.sr)` reads them as one word, and `registers.sr.assign(word)` sets them from one. `registers.sr.siack` and `registers.sr.soack` are the serial input and output acknowledgements the conditional jumps on SIACK and SOACK read. Nothing in this package sets them, so a host that drives those jumps sets them itself, and neither is part of the word.
 
 ```python
 from upd7725 import Cpu, disassemble
@@ -204,7 +204,7 @@ Table address 1024 wraps to 0 on a uPD7725, whose table is 1024 words long. A lo
 
 ### The host side
 
-A host sees two addresses: `upd7725.ports.DATA`, which is 0, and `upd7725.ports.STATUS`, which is 1. `upd7725.ports.Host(cpu)` drives them.
+A host sees two addresses: `upd7725.DATA`, which is 0, and `upd7725.STATUS`, which is 1. `upd7725.Host(cpu)` drives them.
 
 | Call | Effect |
 |:--|:--|
@@ -218,8 +218,7 @@ A host sees two addresses: `upd7725.ports.DATA`, which is 0, and `upd7725.ports.
 With the DRC bit clear the data register moves 16 bits, a byte at a time, and DRS marks the half already moved. With DRC set it moves 8 bits.
 
 ```python
-from upd7725 import Cpu, NeverReady
-from upd7725.ports import STATUS, Host
+from upd7725 import STATUS, Cpu, Host, NeverReady
 
 cpu = Cpu("upd7725", fill=0)
 cpu.reset()
@@ -253,13 +252,13 @@ The program is one word, `ld $1234,dr`. Writing the data register sets RQM, whic
 | Name | Content |
 |:--|:--|
 | `upd7725.MODELS` | The two `Model` records, keyed by canonical name |
-| `upd7725.models.Model` | `name`, `aliases`, `summary`, `counter_bits`, `table_bits`, `pointer_bits`, `stack_levels`, and the derived `program_words`, `table_words`, `scratch_words` and `stack_pointer_bits`. `build(*arguments, **options)` builds a part from it, taking what `Cpu` takes after the model |
+| `upd7725.Model` | `name`, `aliases`, `summary`, `counter_bits`, `table_bits`, `pointer_bits`, `stack_levels`, and the derived `program_words`, `table_words`, `scratch_words` and `stack_pointer_bits`. `build(*arguments, **options)` builds a part from it, taking what `Cpu` takes after the model |
 | `upd7725.UNSET_SEED` | The seed used when none is given, `0x5A5A5A5A` |
 | `upd7725.scramble(size, seed=UNSET_SEED)` | `size` 32-bit values derived from `seed`, the source of the power-on state |
 | `upd7725.Store`, `upd7725.Stores` | The store classes described above |
 | `upd7725.Clock` | Stepping one cycle at a time, under [Driving it one cycle at a time](#driving-it-one-cycle-at-a-time) |
 | `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | Reading program words, under [Reading without running](#reading-without-running) |
-| `upd7725.flags.Flags` | The flag set. `Flags.of(word)` unpacks six bits and `copy()` duplicates one |
+| `upd7725.Flags` | The flag set. `Flags.of(word)` unpacks six bits and `copy()` duplicates one |
 | `upd7725.__version__` | The installed version |
 
 ### Errors

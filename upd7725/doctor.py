@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, override
 
 
-def _version(where: Path | None = None) -> str:
+def installed_version(where: Path | None = None) -> str:
     found = re.search(
         r"""VERSION\s*[:=][^"']*["']([^"']+)["']""",
         (where or Path(__file__).resolve().parent / "version.py").read_text(),
@@ -17,7 +17,7 @@ def _version(where: Path | None = None) -> str:
 
 ROOT = Path(__file__).resolve().parent.parent
 
-VERSION = _version()
+VERSION = installed_version()
 
 
 if str(ROOT) not in sys.path:

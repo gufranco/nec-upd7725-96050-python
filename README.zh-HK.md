@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** 款晶片，逐欄位走訪 **1,120** 種編碼，比對 **22,240** 條指令，**0** 處分歧，**1,005** 項測試，**100%** 語句與分支覆蓋率，無任何依賴
+**2** 款晶片，逐欄位走訪 **1,120** 種編碼，比對 **22,240** 條指令，**0** 處分歧，**1,032** 項測試，**100%** 語句與分支覆蓋率，無任何依賴
 
 ```python
 from upd7725 import Cpu
@@ -90,7 +90,7 @@ python3 upd7725/doctor.py
 | `irq_line` | 以電平表示的中斷線 |
 | `on_cycle` | `None`，或在每個週期後以無參數呼叫的函式 |
 
-`registers.pc`、`rp`、`dp` 與 `sp` 會將寫入的值遮罩至晶片自身的寬度。`k`、`l`、`m`、`n`、`a` 與 `b` 持有 16 位元，讀回時為有號數。`registers.word(name)` 將其中任何一個讀作無號 16 位元字。`tr`、`trb`、`dr`、`si` 與 `so` 是普通整數。`registers.stack` 是長度與晶片堆疊相同的清單，`registers.sr` 是狀態字：位元 `p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm` 與 `drs` 位於數據表 Figure 3 所示的位置，`int(registers.sr)` 將它們讀作一個字，`registers.sr.assign(word)` 則從一個字設定它們。
+`registers.pc`、`rp`、`dp` 與 `sp` 會將寫入的值遮罩至晶片自身的寬度。`k`、`l`、`m`、`n`、`a` 與 `b` 持有 16 位元，讀回時為有號數。`registers.word(name)` 將其中任何一個讀作無號 16 位元字。`tr`、`trb`、`dr`、`si` 與 `so` 是普通整數。`registers.stack` 是長度與晶片堆疊相同的清單，`registers.sr` 是狀態字：位元 `p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm` 與 `drs` 位於數據表 Figure 3 所示的位置，`int(registers.sr)` 將它們讀作一個字，`registers.sr.assign(word)` 則從一個字設定它們。`registers.sr.siack` 與 `registers.sr.soack` 是串列輸入與輸出的應答，SIACK 與 SOACK 條件跳轉會讀取它們。本套件不會設定它們，因此使用這些跳轉的主機須自行設定；兩者皆不屬於狀態字。
 
 ```python
 from upd7725 import Cpu, disassemble
@@ -204,7 +204,7 @@ TooLarge 2049 words will not fit in a store of 2048
 
 ### 主機端
 
-主機看到兩個位址：`upd7725.ports.DATA`，即 0；以及 `upd7725.ports.STATUS`，即 1。`upd7725.ports.Host(cpu)` 驅動它們。
+主機看到兩個位址：`upd7725.DATA`，即 0；以及 `upd7725.STATUS`，即 1。`upd7725.Host(cpu)` 驅動它們。
 
 | 呼叫 | 效果 |
 |:--|:--|
@@ -218,8 +218,7 @@ TooLarge 2049 words will not fit in a store of 2048
 DRC 位元清除時，數據暫存器以每次一個位元組的方式搬移 16 位元，DRS 標示已搬移的那一半。DRC 設定時，它搬移 8 位元。
 
 ```python
-from upd7725 import Cpu, NeverReady
-from upd7725.ports import STATUS, Host
+from upd7725 import STATUS, Cpu, Host, NeverReady
 
 cpu = Cpu("upd7725", fill=0)
 cpu.reset()
@@ -253,13 +252,13 @@ the part did not ask for attention within 50 instructions
 | 名稱 | 內容 |
 |:--|:--|
 | `upd7725.MODELS` | 兩筆 `Model` 記錄，以標準名稱為鍵 |
-| `upd7725.models.Model` | `name`、`aliases`、`summary`、`counter_bits`、`table_bits`、`pointer_bits`、`stack_levels`，以及衍生的 `program_words`、`table_words`、`scratch_words` 與 `stack_pointer_bits`。`build(*arguments, **options)` 以它建立晶片，接受 `Cpu` 在型號之後接受的參數 |
+| `upd7725.Model` | `name`、`aliases`、`summary`、`counter_bits`、`table_bits`、`pointer_bits`、`stack_levels`，以及衍生的 `program_words`、`table_words`、`scratch_words` 與 `stack_pointer_bits`。`build(*arguments, **options)` 以它建立晶片，接受 `Cpu` 在型號之後接受的參數 |
 | `upd7725.UNSET_SEED` | 未指定種子時使用的種子，`0x5A5A5A5A` |
 | `upd7725.scramble(size, seed=UNSET_SEED)` | 由 `seed` 衍生的 `size` 個 32 位元值，為上電狀態的來源 |
 | `upd7725.Store`, `upd7725.Stores` | 上述的儲存區類別 |
 | `upd7725.Clock` | 每次步進一個週期，見[逐個週期驅動](#driving-it-one-cycle-at-a-time) |
 | `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | 讀取程式字，見[不執行而讀取](#reading-without-running) |
-| `upd7725.flags.Flags` | 旗標集合。`Flags.of(word)` 解開六個位元，`copy()` 複製一個集合 |
+| `upd7725.Flags` | 旗標集合。`Flags.of(word)` 解開六個位元，`copy()` 複製一個集合 |
 | `upd7725.__version__` | 已安裝的版本 |
 
 ### 錯誤

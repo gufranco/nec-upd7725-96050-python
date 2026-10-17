@@ -119,12 +119,15 @@ class ClaimedCountTest(unittest.TestCase):
         return (ROOT / "README.md").read_text()
 
     def test_the_readme_advertises_the_number_of_encodings_walked(self) -> None:
-        claimed = re.search(r"\*\*([\d,]+)\*\* encodings walked", self.readme())
+        # Arrange
+        readme = self.readme()
 
+        # Act
+        claimed = re.search(r"\*\*([\d,]+)\*\* encodings walked", readme)
+
+        # Assert
         assert claimed is not None
-        self.assertEqual(
-            int(claimed.group(1).replace(",", "")), len(instructions._settled_opcodes())
-        )
+        self.assertEqual(int(claimed.group(1).replace(",", "")), len(instructions.SETTLED_OPCODES))
 
     def test_and_the_number_of_instructions_the_corpus_holds(self) -> None:
         held = json.loads((ROOT / "conformance" / "corpus.json").read_text())

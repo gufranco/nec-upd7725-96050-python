@@ -5,9 +5,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from conformance.printed import TOP_WORD, a_load, a_part, an_operation, fact
-from upd7725 import core
-from upd7725.ports import DATA, STATUS, Host
+from conformance.printed import (
+    FROM_DATA_AND_ASK,
+    TO_DATA,
+    TOP_WORD,
+    a_load,
+    a_part,
+    an_operation,
+    fact,
+)
+from upd7725 import DATA, STATUS, Host
 
 WORD_BITS = 16
 
@@ -56,7 +63,7 @@ class HostFactTest(unittest.TestCase):
         # Arrange
         bits = fact("parallelInterfaceIsEightBit")["value"]
         chip = a_part()
-        chip.stores.program[0] = a_load(DATA_WORD, core.TO_DATA)
+        chip.stores.program[0] = a_load(DATA_WORD, TO_DATA)
         chip.step()
 
         # Act
@@ -110,7 +117,7 @@ class HostFactTest(unittest.TestCase):
         # Arrange
         printed = fact("requestBitSemantics")["value"]
         chip = a_part()
-        chip.stores.program[0] = an_operation(src=core.FROM_DATA_AND_ASK)
+        chip.stores.program[0] = an_operation(src=FROM_DATA_AND_ASK)
 
         # Act
         chip.step()
@@ -122,7 +129,7 @@ class HostFactTest(unittest.TestCase):
         # Arrange
         printed = fact("requestBitSemantics")["value"]
         chip = a_part()
-        chip.stores.program[0] = a_load(DATA_WORD, core.TO_DATA)
+        chip.stores.program[0] = a_load(DATA_WORD, TO_DATA)
 
         # Act
         chip.step()

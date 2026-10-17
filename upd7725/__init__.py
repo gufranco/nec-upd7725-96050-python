@@ -20,9 +20,11 @@ from .errors import (
     TooLarge,
     UnknownModelError,
 )
+from .flags import Flags
 from .memory import UNSET_SEED, Store, Stores, scramble
-from .models import MODELS
+from .models import MODELS, Model
 from .opcodes import Instruction, decode, disassemble
+from .ports import DATA, STATUS, Host
 from .version import VERSION
 
 __version__ = VERSION
@@ -35,12 +37,17 @@ def Cpu(  # noqa: N802
 
 
 __all__ = [
+    "DATA",
     "MODELS",
+    "STATUS",
     "UNSET_SEED",
     "Clock",
     "ClockClosed",
     "Cpu",
+    "Flags",
+    "Host",
     "Instruction",
+    "Model",
     "NeverReady",
     "NotWholeWords",
     "RunLimit",

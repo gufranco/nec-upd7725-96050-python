@@ -6,16 +6,28 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from conformance.printed import (
+    ADD,
+    CALL_LOW,
+    FROM_B,
+    FROM_DATA,
+    FROM_SCRATCH,
+    INCREMENT,
+    JUMP_LOW,
+    POINTER_UP,
+    TO_A,
+    TO_K_AND_TABLE,
+    TO_NOWHERE,
+    TO_POINTER,
     TOP_WORD,
     a_jump,
     a_load,
     a_part,
     a_powered_part,
+    a_return,
     an_operation,
     fact,
     the_part,
 )
-from upd7725 import core
 
 SEED = 7725
 
@@ -26,9 +38,9 @@ WORD_BITS = 16
 
 EVERY_FORM = (
     an_operation(),
-    core.RETURN << 22,
-    a_jump(core.JUMP_LOW),
-    a_load(0, core.TO_NOWHERE),
+    a_return(),
+    a_jump(JUMP_LOW),
+    a_load(0, TO_NOWHERE),
 )
 
 
@@ -43,7 +55,7 @@ def one_step_of(word: int) -> int:
 def after_increment(asl: int, top: int) -> tuple[int, int]:
     chip = a_part()
     chip.registers.a = chip.registers.b = top
-    chip.stores.program[0] = an_operation(alu=core.INCREMENT, asl=asl)
+    chip.stores.program[0] = an_operation(alu=INCREMENT, asl=asl)
     chip.step()
     return chip.registers.word("a"), chip.registers.word("b")
 
@@ -67,7 +79,7 @@ def outcome_of(alu: int) -> tuple[int, int]:
     chip.registers.a = 0x1234
     chip.registers.dr = 0x0F0F
     chip.flags_b.c = True
-    chip.stores.program[0] = an_operation(alu=alu, pselect=1, src=core.FROM_DATA)
+    chip.stores.program[0] = an_operation(alu=alu, pselect=1, src=FROM_DATA)
     chip.step()
     return chip.registers.word("a"), int(chip.flags_a)
 
@@ -174,7 +186,7 @@ class WidthFactTest(unittest.TestCase):
         # Arrange
         bits = fact("dataPointerBits")["value"]
         chip = a_part()
-        chip.stores.program[0] = a_load(TOP_WORD, core.TO_POINTER)
+        chip.stores.program[0] = a_load(TOP_WORD, TO_POINTER)
 
         # Act
         chip.step()
@@ -197,7 +209,7 @@ class WidthFactTest(unittest.TestCase):
         levels = fact("stackLevels")["value"]
         chip = a_part()
         for at in range(levels):
-            chip.stores.program[at] = a_jump(core.CALL_LOW, at + 1)
+            chip.stores.program[at] = a_jump(CALL_LOW, at + 1)
 
         # Act
         chip.run_for(levels)
@@ -268,9 +280,7 @@ class DataPathFactTest(unittest.TestCase):
         superseded = fact("arithmeticSupersededByItsOwnDestination")["value"]
         chip = a_part()
         chip.registers.a = chip.registers.b = 0x7FFF
-        chip.stores.program[0] = an_operation(
-            alu=core.ADD, pselect=1, src=core.FROM_B, dst=core.TO_A
-        )
+        chip.stores.program[0] = an_operation(alu=ADD, pselect=1, src=FROM_B, dst=TO_A)
 
         # Act
         chip.step()
@@ -289,7 +299,7 @@ class DataPathFactTest(unittest.TestCase):
         for at, word in ((9, 0x3333), (8, 0x4444)):
             chip.stores.table[at] = word
         chip.stores.program[0] = an_operation(
-            dpl=core.POINTER_UP, rpdcr=1, src=core.FROM_SCRATCH, dst=core.TO_K_AND_TABLE
+            dpl=POINTER_UP, rpdcr=1, src=FROM_SCRATCH, dst=TO_K_AND_TABLE
         )
         late = order.index("data move") < order.index("pointer modification")
 
