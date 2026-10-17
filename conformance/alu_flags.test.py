@@ -1,6 +1,7 @@
 import json
 import sys
 import unittest
+from collections.abc import Callable
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -91,6 +92,23 @@ def before(carry: bool) -> dict[str, bool]:
     return dict.fromkeys(COLUMNS, carry)
 
 
+FOLLOWS_THE_RESULT: dict[str, Callable[[int], bool]] = {
+    "z": lambda word: word == 0,
+    "s0": lambda word: bool(word & 0x8000),
+}
+
+
+def agrees(verdict: str, flag: str, started: bool, ended: bool, word: int) -> bool:
+    if verdict == "reset":
+        return not ended
+    if verdict == "held":
+        return ended == started
+    follows = FOLLOWS_THE_RESULT.get(flag)
+    if verdict == "affected" and follows is not None:
+        return ended == follows(word)
+    return True
+
+
 class MatrixTest(unittest.TestCase):
     def outcomes(self, name: str) -> list[tuple[str, dict[str, bool], dict[str, bool], int]]:
         alu = CODES[name]
@@ -150,6 +168,22 @@ class MatrixTest(unittest.TestCase):
             if verdicts[COLUMNS.index("s0")] == "affected" and ended["s0"] != bool(_word & 0x8000)
         ]
 
+        self.assertEqual(wrong, [])
+
+    def test_every_verdict_the_manufacturer_gives_holds_on_the_model(self) -> None:
+        # Arrange
+        rows = HELD["parts"][0]["facts"]["aluFlagMatrix"]["rows"]
+
+        # Act
+        wrong = [
+            f"{what}: {flag}"
+            for name, verdicts in rows.items()
+            for what, started, ended, word in self.outcomes(name)
+            for flag, verdict in zip(COLUMNS, verdicts, strict=True)
+            if not agrees(verdict, flag, started[flag], ended[flag], word)
+        ]
+
+        # Assert
         self.assertEqual(wrong, [])
 
     def test_the_shifts_that_bring_ones_in_can_never_reach_zero(self) -> None:

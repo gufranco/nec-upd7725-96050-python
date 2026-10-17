@@ -59,13 +59,19 @@
           "value": 1,
           "quote": "Since the 77C25 executes an instruction in one external clock cycle (versus two cycles of the same 8.192 MHz clock for 77C20A), the 77C25 may be substituted for a 77C20A (or 7720A or 77P20) in a circuit without modification of that circuit.",
           "page": 3,
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed.test.py::CycleFactTest.test_one_instruction_costs_the_printed_number_of_clocks"
+          ]
         },
         "everyInstructionSameLength": {
           "value": true,
           "quote": "All instructions execute in one instruction cycle",
           "page": 1,
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed.test.py::CycleFactTest.test_every_form_of_instruction_costs_the_same"
+          ]
         },
         "instructionCycleNanoseconds": {
           "value": 122,
@@ -73,14 +79,18 @@
           "quote": "Fast instruction execution: 122 ns with 8.192 MHz clock.",
           "page": 1,
           "appliesTo": ["upd7725"],
-          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for."
+          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for.",
+          "heldBy": [
+            "conformance/printed.test.py::CycleFactTest.test_one_instruction_lasts_the_printed_time_at_the_printed_clock"
+          ]
         },
         "maximumClockHz": {
           "value": 8300000,
           "quote": "The external clock frequency (8.3 MHz maximum) remains the same as for 7720/77C20 while the internal instruction execution speed is doubled.",
           "page": 1,
           "appliesTo": ["upd7725"],
-          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for."
+          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for.",
+          "unreachable": "A rated maximum input frequency is an electrical limit, and the model counts cycles with no notion of how fast they arrive."
         },
         "programWords": {
           "value": 2048,
@@ -88,14 +98,22 @@
           "quote": "Program ROM (2048 x 24 bits)",
           "page": 2,
           "appliesTo": ["upd7725"],
-          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's.",
+          "heldBy": [
+            "conformance/hardware.test.py::WidthTest.test_and_addresses_as_many_words",
+            "conformance/printed.test.py::WidthFactTest.test_the_program_store_holds_the_printed_words"
+          ]
         },
         "programCounterBits": {
           "value": 11,
           "quote": "The 2048 x 24-bit words of instruction ROM are addressed by the 11-bit program counter that can be modified by an external reset, interrupt, call, jump, or return instruction.",
           "page": 7,
           "appliesTo": ["upd7725"],
-          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's.",
+          "heldBy": [
+            "conformance/hardware.test.py::WidthTest.test_the_program_counter_is_as_wide_as_the_document_says",
+            "conformance/printed.test.py::WidthFactTest.test_the_program_counter_wraps_at_the_printed_width"
+          ]
         },
         "dataRomWords": {
           "value": 1024,
@@ -103,14 +121,22 @@
           "quote": "The data ROM is organized in 1024 x 16-bit words that are addressed through a 10-bit ROM pointer (RP register).",
           "page": 8,
           "appliesTo": ["upd7725"],
-          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's.",
+          "heldBy": [
+            "conformance/hardware.test.py::WidthTest.test_and_addresses_as_many_table_words",
+            "conformance/printed.test.py::WidthFactTest.test_the_table_holds_the_printed_words"
+          ]
         },
         "romPointerBits": {
           "value": 10,
           "quote": "addressed through a 10-bit ROM pointer (RP register)",
           "page": 8,
           "appliesTo": ["upd7725"],
-          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's.",
+          "heldBy": [
+            "conformance/hardware.test.py::WidthTest.test_the_table_pointer_is_as_wide_as_the_document_says",
+            "conformance/printed.test.py::WidthFactTest.test_the_table_pointer_wraps_at_the_printed_width"
+          ]
         },
         "dataRamWords": {
           "value": 256,
@@ -118,7 +144,11 @@
           "quote": "The data RAM is 256 x 16-bit words and is addressed through an 8-bit data pointer (DP register).",
           "page": 8,
           "appliesTo": ["upd7725"],
-          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's.",
+          "heldBy": [
+            "conformance/hardware.test.py::WidthTest.test_and_addresses_as_many_scratch_words",
+            "conformance/printed.test.py::WidthFactTest.test_the_scratch_holds_the_printed_words"
+          ]
         },
         "dataPointerBits": {
           "value": 8,
@@ -126,7 +156,11 @@
           "page": 8,
           "note": "The same sentence the data RAM size comes from, quoted whole rather than cut down to the clause about the pointer, so a reader finds it on the page as it is printed.",
           "appliesTo": ["upd7725"],
-          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's.",
+          "heldBy": [
+            "conformance/hardware.test.py::WidthTest.test_the_scratch_pointer_is_as_wide_as_the_document_says",
+            "conformance/printed.test.py::WidthFactTest.test_a_loaded_scratch_pointer_keeps_the_printed_width"
+          ]
         },
         "stackLevels": {
           "value": 4,
@@ -135,56 +169,88 @@
           "corroboration": "The block diagram on page 7 draws the stack as four slots, labelled 0, 1, 2 and 3.",
           "notStated": "What happens on a fifth consecutive call is not stated in this document. A two-bit pointer wrapping to slot zero is the consequence of the width the document gives, and the model takes that, but it is an inference from the width rather than a figure the document prints.",
           "appliesTo": ["upd7725"],
-          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's."
+          "whyNotBoth": "A width, and the two parts differ in it. The value here is the smaller part's, and models.py carries the larger one's.",
+          "heldBy": [
+            "conformance/hardware.test.py::StackTest.test_the_stack_is_as_deep_as_the_document_says",
+            "conformance/printed.test.py::WidthFactTest.test_the_stack_keeps_as_many_return_addresses_as_it_has_levels"
+          ]
         },
         "accumulators": {
           "value": 2,
           "bits": 16,
           "quote": "Dual 16-bit accumulators",
           "page": 2,
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed.test.py::DataPathFactTest.test_each_accumulator_holds_its_own_word_of_the_printed_width"
+          ]
         },
         "flagsPerAccumulator": {
           "value": ["SA1", "SA0", "CA", "ZA", "OVA1", "OVA0"],
           "quote": "In addition to zero result, sign, carry, and overflow flags, the SPI+ incorporates auxiliary overflow and sign flags (SA1, SB1, OVA1, OVB1). These flags enable the detection of an overflow condition and maintain the correct sign after as many as three successive additions or subtractions.",
           "page": 8,
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed.test.py::DataPathFactTest.test_each_printed_flag_is_its_own_bit_of_one_accumulator"
+          ]
         },
         "multiplier": {
           "inputBits": 16,
           "productBits": 31,
           "quote": "Thirty-one-bit results are developed by a 16 x 16-bit two's complement multiplier in 122 ns. The result is automatically latched to two 16-bit registers, M and N, at the end of each instruction cycle. The sign bit and 15 higher bits are in M and the 16 lower bits are in N; the LSB in N is zero. A new product is available for use after every instruction cycle",
           "page": 9,
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed.test.py::DataPathFactTest.test_the_product_lands_in_m_and_n_at_the_printed_width"
+          ]
         },
         "aluOperations": {
           "value": 16,
           "quote": "The ALU is a 16-bit two's complement unit capable of executing 16 distinct operations on data routed via the P and Q ALU inputs.",
           "page": 8,
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed.test.py::DataPathFactTest.test_the_alu_field_selects_the_printed_number_of_operations"
+          ]
         },
         "interruptVector": {
           "value": 256,
           "quote": "A low-to-high transition on this pin executes a call instruction to location 100H, if interrupts were previously enabled.",
           "page": 5,
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed.test.py::DataPathFactTest.test_an_interrupt_calls_the_printed_location"
+          ]
         },
         "resetSetsProgramCounterTo": {
           "value": 0,
           "quote": "This input initializes the SPI+ internal logic and sets the PC to 0.",
           "page": 5,
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed.test.py::DataPathFactTest.test_a_reset_sets_the_counter_to_the_printed_value"
+          ]
         },
         "hostInterfaceBusBits": {
           "value": 8,
           "quote": "Host CPU Interface   8-bit bus",
           "page": 3,
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_host.test.py::HostFactTest.test_nothing_a_host_reads_is_wider_than_the_printed_bus"
+          ]
         },
         "statusDataRegisterSelect": {
+          "value": {
+            "data": 0,
+            "status": 1
+          },
           "quote": "A0 [Status Data Register Select] This input selects data register for read/write (low) or status register for read (high).",
           "page": 5,
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_host.test.py::HostFactTest.test_the_select_line_picks_the_data_or_the_status_register"
+          ]
         },
         "serialNanosecondsPerBit": {
           "value": 244,
@@ -192,7 +258,8 @@
           "page": 2,
           "note": "Two instruction cycles per serial bit at 8.192 MHz. The port is modelled because the part has it, not because a program here drives it.",
           "appliesTo": ["upd7725"],
-          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for."
+          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for.",
+          "unreachable": "The model holds the serial registers as whole words and has no serial clock that shifts them a bit at a time."
         },
         "instructionElementOrder": {
           "value": ["multiply", "data move", "arithmetic", "pointer modification", "return"],
@@ -205,6 +272,9 @@
               "page": 12,
               "note": "The same paragraph continued. It was held under a key nothing searched, so a passage quoted verbatim from the data sheet was never checked against it. Every quote here carries its own page for that reason."
             }
+          ],
+          "heldBy": [
+            "conformance/printed.test.py::DataPathFactTest.test_a_pointer_moves_only_after_the_data_move_has_used_it"
           ]
         },
         "arithmeticSupersededByItsOwnDestination": {
@@ -213,7 +283,10 @@
           "page": 12,
           "consequence": "A NOP is the one operation that leaves the flags alone: \"These flags ... are updated at the end of each arithmetic instruction (except NOP)\", and the ALU table gives NOP no flag effects at all. So the arithmetic must not run, rather than run and be overwritten. A model that overwrites holds the right accumulator and the wrong flags, and the next conditional branch reads those flags.",
           "foundBy": "Reading this page. Both implementations here ran the arithmetic and let the move overwrite it, and so does the emulator the corpus was recorded from: 581 of the 22,240 recorded cases changed when it was fixed.",
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed.test.py::DataPathFactTest.test_an_arithmetic_over_its_own_destination_leaves_the_flags"
+          ]
         },
         "statusRegisterBits": {
           "value": {
@@ -233,21 +306,42 @@
           "assembled": true,
           "page": 11,
           "note": "Checked against both implementations here and they already matched, bit for bit.",
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_host.test.py::HostFactTest.test_each_status_flag_sits_at_its_printed_bit"
+          ]
         },
         "requestBitSemantics": {
+          "value": {
+            "internalTransfer": 1,
+            "externalTransfer": 0
+          },
           "quote": "RQM (Request for Master): A read or write form DR to IDB sets RQM = 1, An external read (write) resets RQM = 0.",
           "assembled": true,
           "page": 12,
           "note": "The part raises it when its own program touches the data register; the host clears it by reading or writing. Checked against the implementation here and it already matched.",
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_host.test.py::HostFactTest.test_the_program_reading_the_data_register_raises_the_request",
+            "conformance/printed_host.test.py::HostFactTest.test_the_program_writing_the_data_register_raises_the_request",
+            "conformance/printed_host.test.py::HostFactTest.test_a_host_read_lowers_the_request",
+            "conformance/printed_host.test.py::HostFactTest.test_a_host_write_lowers_the_request"
+          ]
         },
         "transferHalfSemantics": {
+          "value": {
+            "afterFirstByte": 1,
+            "afterBothBytes": 0
+          },
           "quote": "DRS (DR Status): For 16-bit DR transfers (DRC = 0), DRS = 1 after first 8 bits have been transferred. DRS = 0 after all 16 bits have been transferred.",
           "assembled": true,
           "page": 12,
           "note": "Already matched.",
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_host.test.py::HostFactTest.test_the_transfer_status_rises_after_the_first_byte",
+            "conformance/printed_host.test.py::HostFactTest.test_the_transfer_status_falls_after_both_bytes"
+          ]
         },
         "statusReadWidth": {
           "value": 8,
@@ -255,13 +349,20 @@
           "page": 11,
           "andWriting": "Illegal (SR is read only)",
           "note": "The read width already matched. A write to the status port does nothing here, which is the least surprising reading of illegal.",
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_host.test.py::HostFactTest.test_the_host_reads_the_printed_number_of_status_bits_from_the_top"
+          ]
         },
         "parallelInterfaceIsEightBit": {
+          "value": 8,
           "quote": "Host CPU Interface   8-bit bus",
           "page": 3,
           "note": "So a sixteen-bit data register is moved a byte at a time, which is what DRS tracks.",
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_host.test.py::HostFactTest.test_a_sixteen_bit_word_crosses_the_bus_a_bus_width_at_a_time"
+          ]
         },
         "aluFlagMatrix": {
           "document": "dataBook",
@@ -297,7 +398,10 @@
           "whatItLeavesOpen": "The auxiliary sign flag is declared indefinite for the logic operations, the complement, the exchange and every shift. This model gives it a definite value there, following the recording, because a model has to answer something. That is a choice this project makes and not a figure the manufacturer gives.",
           "filePage": 82,
           "headerOnThatPage": "uPD77C25/77P25",
-          "appliesTo": ["upd7725", "upd96050"]
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/alu_flags.test.py::MatrixTest.test_every_verdict_the_manufacturer_gives_holds_on_the_model"
+          ]
         },
         "clockCycleNanoseconds": {
           "typical": 122,
@@ -308,7 +412,8 @@
           "page": 22,
           "note": "The symbol every other timing figure in the document is given in. One clock cycle is one instruction on this part, so a figure quoted in tCYC is a figure in instructions.",
           "appliesTo": ["upd7725"],
-          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for."
+          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for.",
+          "unreachable": "The shortest and longest clock periods are electrical limits on the input clock, and the model counts cycles with no notion of how long one lasts."
         },
         "resetPulseCycles": {
           "value": 4,
@@ -317,7 +422,10 @@
           "page": 26,
           "note": "The minimum the host must hold the reset line, not a count of what the part does internally, which the document does not give. This model spends it, because a board that pulls the line has spent it.",
           "appliesTo": ["upd7725"],
-          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for."
+          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for.",
+          "heldBy": [
+            "conformance/printed.test.py::CycleFactTest.test_a_reset_spends_the_printed_pulse"
+          ]
         },
         "interruptPulseCycles": {
           "pulse": 3,
@@ -327,7 +435,8 @@
           "page": 26,
           "note": "What the host must hold the interrupt line for, and how long it must wait before raising it again. Recorded because it is the manufacturer speaking about a pin this package does not yet drive.",
           "appliesTo": ["upd7725"],
-          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for."
+          "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for.",
+          "unreachable": "The pulse and recovery times are how long a host must hold and release the line, and the model takes the line as an edge with no width."
         }
       },
       "predecessorForContrast": {
@@ -339,7 +448,10 @@
         "page": 3,
         "document": "dataSheet",
         "why": "Recorded because a reader who finds a 250 ns instruction cycle quoted for this family has found the earlier part. Taking that figure for this one would halve the rate at which it runs.",
-        "section": "the comparison table on printed page 3, which sets the two parts side by side"
+        "section": "the comparison table on printed page 3, which sets the two parts side by side",
+        "heldBy": [
+          "conformance/printed.test.py::CycleFactTest.test_an_instruction_does_not_take_the_earlier_parts_clocks"
+        ]
       },
       "scopeNote": "Every fact names the parts it governs. Nesting them under the verified part said only where they were read, never how far they reach, and the two parts share an instruction set, so most reach both. What does not reach both is a width, which models.py gives differently, and an electrical characteristic, which no document for the other part states. OPEN-QUESTIONS.md carries what that assumption rests on."
     },
