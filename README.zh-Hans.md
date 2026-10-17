@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** 个器件，**1,120** 种编码逐字段遍历，**22,240** 条指令比对，**0** 处不一致，**955** 个测试，**100%** 语句与分支覆盖率，无任何依赖
+**2** 个器件，**1,120** 种编码逐字段遍历，**22,240** 条指令比对，**0** 处不一致，**957** 个测试，**100%** 语句与分支覆盖率，无任何依赖
 
 ```python
 from upd7725 import Cpu
