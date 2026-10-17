@@ -1,3 +1,4 @@
+---
 name: An instruction behaves differently from the reference
 description: The core runs, but one instruction leaves a state the hardware would not
 labels: ["bug", "fidelity"]
@@ -73,6 +74,8 @@ body:
     id: wanted
     attributes:
       label: The state it should have left, and how you know
-      description: Name what you compared against. Hardware, another implementation, or a datasheet all mean different things.
+      description: >-
+        Name what you compared against. Hardware, another implementation, or a
+        datasheet all mean different things.
     validations:
       required: true

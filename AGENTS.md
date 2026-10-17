@@ -106,6 +106,7 @@ ruff format --check .                                  # formatting
 ruff check .                                           # lint, zero warnings
 mypy                                                   # types, strict
 pnpm run format:check                                  # every JSON file
+uvx yamllint==1.38.0 --strict .
 for f in upd7725/*.test.py conformance/*.test.py; do python3 "$f"; done
 python3 -m coverage report                             # fails below 100%
 python3 -m conformance.instructions                    # the gate
