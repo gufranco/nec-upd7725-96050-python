@@ -1,8 +1,8 @@
-[English](README.md) | [日本語](README.ja.md) | [简体中文](README.zh-Hans.md) | 繁體中文（香港）
-
 # NEC uPD7725
 
 以 Python 實現的 NEC uPD7725 與 uPD96050 數碼訊號處理器，每個時鐘週期執行一條指令。每一項印刷事實都以 NEC 1987 年的數據表與 1989 年的數據手冊為準，每條指令執行後的完整處理器狀態則以一套錄製的語料庫為準。
+
+[English](README.md) &nbsp;|&nbsp; [日本語](README.ja.md) &nbsp;|&nbsp; [简体中文](README.zh-Hans.md) &nbsp;|&nbsp; 繁體中文（香港）
 
 [![CI](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml/badge.svg)](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
