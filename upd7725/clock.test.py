@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import random
 import sys
 import threading
 import unittest
@@ -49,6 +50,63 @@ def within(call: Any) -> tuple[str, Any]:
     worker.start()
     worker.join(PATIENCE_SECONDS)
     return outcome[0] if outcome else ("still running", None)
+
+
+PROGRAM_SEED = 7725
+
+PROGRAM_WORDS = 64
+
+RANDOM_INSTRUCTIONS = 24
+
+
+def a_random_program() -> Part:
+    chip = upd7725.Cpu("upd96050", fill=0)
+    chip.stores.load_program(random.Random(PROGRAM_SEED).randbytes(PROGRAM_WORDS * 3))
+    return chip.reset()
+
+
+def observed(chip: Part) -> tuple[Any, ...]:
+    registers = chip.registers
+    names = ("pc", "rp", "dp", "sp", "k", "l", "m", "n", "a", "b", "tr", "trb", "dr", "si", "so")
+    scratch = chip.stores.scratch
+    return (
+        tuple(getattr(registers, name) for name in names),
+        tuple(registers.stack),
+        int(registers.sr),
+        int(chip.flags_a),
+        int(chip.flags_b),
+        chip.cycles,
+        chip.steps,
+        tuple(scratch[index] for index in range(len(scratch))),
+    )
+
+
+def after_steps(instructions: int) -> tuple[int, tuple[Any, ...]]:
+    chip = a_random_program()
+    spent = sum(chip.step() for _ in range(instructions))
+    return spent, observed(chip)
+
+
+def every_prefix_stepped() -> list[tuple[Any, ...]]:
+    return [after_steps(count)[1] for count in range(1, RANDOM_INSTRUCTIONS + 1)]
+
+
+def every_prefix_ticked(closing: bool) -> list[tuple[Any, ...]]:
+    return [
+        after_ticks(after_steps(count)[0], closing) for count in range(1, RANDOM_INSTRUCTIONS + 1)
+    ]
+
+
+def after_ticks(budget: int, closing: bool) -> tuple[Any, ...]:
+    chip = a_random_program()
+    clock = upd7725.Clock(chip)
+    try:
+        clock.run_for(budget)
+        if closing:
+            clock.close()
+        return observed(chip)
+    finally:
+        clock.close()
 
 
 class TickTest(unittest.TestCase):
@@ -153,6 +211,28 @@ class CountedLikeAStepTest(unittest.TestCase):
         self.assertEqual(
             ((chip.steps, chip.cycles, chip.registers.pc), stepped(BUDGET)), ((4, 8, 4),) * 2
         )
+
+
+class TheLastCycleOfAnInstructionFinishesItTest(unittest.TestCase):
+    def test_a_clock_leaves_the_whole_state_the_same_steps_leave(self) -> None:
+        # Arrange
+        expected = every_prefix_stepped()
+
+        # Act
+        found = within(lambda: every_prefix_ticked(closing=False))
+
+        # Assert
+        self.assertEqual(found, ("returned", expected))
+
+    def test_and_so_does_a_clock_closed_on_that_cycle(self) -> None:
+        # Arrange
+        expected = every_prefix_stepped()
+
+        # Act
+        found = within(lambda: every_prefix_ticked(closing=True))
+
+        # Assert
+        self.assertEqual(found, ("returned", expected))
 
 
 class IterationTest(unittest.TestCase):
