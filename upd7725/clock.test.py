@@ -109,6 +109,43 @@ def after_ticks(budget: int, closing: bool) -> tuple[Any, ...]:
         clock.close()
 
 
+ENABLE_INTERRUPTS = bytes.fromhex("C02007")
+
+BEFORE_THE_INTERRUPT = 2
+
+
+def an_interruptible_part() -> Part:
+    chip = upd7725.Cpu("upd7725", fill=0).reset()
+    chip.stores.load_program(ENABLE_INTERRUPTS)
+    return chip
+
+
+def interrupted(chip: Part, taken: bool) -> tuple[Any, ...]:
+    registers = chip.registers
+    return (taken, registers.pc, registers.sp, tuple(registers.stack), chip.cycles, chip.steps)
+
+
+def interrupted_between_steps() -> tuple[Any, ...]:
+    chip = an_interruptible_part()
+    for _ in range(BEFORE_THE_INTERRUPT):
+        chip.step()
+    taken = chip.irq()
+    chip.step()
+    return interrupted(chip, taken)
+
+
+def interrupted_between_ticks() -> tuple[Any, ...]:
+    chip = an_interruptible_part()
+    clock = upd7725.Clock(chip)
+    try:
+        clock.run_for(BEFORE_THE_INTERRUPT)
+        taken = chip.irq()
+        clock.tick()
+        return interrupted(chip, taken)
+    finally:
+        clock.close()
+
+
 class TickTest(unittest.TestCase):
     def a_clock(self, chip: Part) -> upd7725.Clock:
         clock = upd7725.Clock(chip)
@@ -230,6 +267,18 @@ class TheLastCycleOfAnInstructionFinishesItTest(unittest.TestCase):
 
         # Act
         found = within(lambda: every_prefix_ticked(closing=True))
+
+        # Assert
+        self.assertEqual(found, ("returned", expected))
+
+
+class AnInterruptOfferedToAPausedClockTest(unittest.TestCase):
+    def test_is_taken_at_once_as_it_is_between_steps(self) -> None:
+        # Arrange
+        expected = interrupted_between_steps()
+
+        # Act
+        found = within(interrupted_between_ticks)
 
         # Assert
         self.assertEqual(found, ("returned", expected))

@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** 个器件，**1,120** 种编码逐字段遍历，**22,240** 条指令比对，**0** 处不一致，**1,045** 个测试，**100%** 语句与分支覆盖率，无任何依赖
+**2** 个器件，**1,120** 种编码逐字段遍历，**22,240** 条指令比对，**0** 处不一致，**1,046** 个测试，**100%** 语句与分支覆盖率，无任何依赖
 
 ```python
 from upd7725 import Cpu
@@ -353,7 +353,7 @@ True this clock has been closed
 
 迭代一个时钟会使它 tick。器件在 tick 期间抛出的异常会从 `tick()` 抛出，并且时钟随之关闭。
 
-NEC 说明本器件在一个外部时钟周期内执行一条指令，所以周期边界与指令边界是同一个位置。`Clock` 为本器件提供与家族中其他成员相同的接口，但没有更细的粒度，`step()` 是更快的调用。时钟在一个线程上运行器件，并在每个周期阻塞它，因为 Python 无法挂起调用栈。
+NEC 说明本器件在一个外部时钟周期内执行一条指令，所以周期边界与指令边界是同一个位置。`Clock` 为本器件提供与家族中其他成员相同的接口，但没有更细的粒度，`step()` 是更快的调用。时钟在一个线程上运行器件，并在每个周期阻塞它，因为 Python 无法挂起调用栈。只有该线程会阻塞：在时钟暂停时调用的 `irq()` 会像在两次 `step()` 之间一样立即生效，其周期计入 `cpu.cycles`，但不计为 tick。
 
 <a id="models"></a>
 

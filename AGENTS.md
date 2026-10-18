@@ -30,7 +30,9 @@ Three ways to run it, sharing one place where a cycle is spent:
   instruction cannot be cut in half.
 - `Clock(cpu).tick()` advances exactly one cycle and stops, on a thread, because
   Python cannot suspend a call stack. Far slower, and the only way to change what
-  a read answers mid-instruction.
+  a read answers mid-instruction. Only the clock's own thread stops: `irq()`
+  called while it is paused acts at once, as between two steps, and its cycle
+  counts in `cycles` without being a tick.
 
 `irq_line` is a line rather than an event, read where the document says the part
 reads it. `on_cycle` is called once per cycle, after that cycle's activity.

@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** 款晶片，逐欄位走訪 **1,120** 種編碼，比對 **22,240** 條指令，**0** 處分歧，**1,045** 項測試，**100%** 語句與分支覆蓋率，無任何依賴
+**2** 款晶片，逐欄位走訪 **1,120** 種編碼，比對 **22,240** 條指令，**0** 處分歧，**1,046** 項測試，**100%** 語句與分支覆蓋率，無任何依賴
 
 ```python
 from upd7725 import Cpu
@@ -353,7 +353,7 @@ True this clock has been closed
 
 迭代時鐘即令其前進一個節拍。晶片在節拍期間引發的例外會從 `tick()` 拋出，時鐘隨之關閉。
 
-NEC 指明該晶片在一個外部時鐘週期內執行一條指令，因此週期邊界與指令邊界是同一位置。`Clock` 為此晶片提供與家族其他成員相同的介面，但沒有更細的解析度，`step()` 是較快的呼叫。時鐘在一條執行緒上執行晶片，並在每個週期阻塞它，因為 Python 無法暫停呼叫堆疊。
+NEC 指明該晶片在一個外部時鐘週期內執行一條指令，因此週期邊界與指令邊界是同一位置。`Clock` 為此晶片提供與家族其他成員相同的介面，但沒有更細的解析度，`step()` 是較快的呼叫。時鐘在一條執行緒上執行晶片，並在每個週期阻塞它，因為 Python 無法暫停呼叫堆疊。只有該執行緒會阻塞：在時鐘暫停時呼叫的 `irq()` 會像在兩次 `step()` 之間一樣立即生效，其週期計入 `cpu.cycles`，但不計為 tick。
 
 <a id="models"></a>
 
