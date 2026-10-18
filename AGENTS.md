@@ -104,9 +104,9 @@ never exercises it.
 ## Every gate, in the order to run them
 
 ```bash
-ruff format --check .                                  # formatting
-ruff check .                                           # lint, zero warnings
-mypy                                                   # types, strict
+uvx ruff@0.16.3 format --check .                      # formatting
+uvx ruff@0.16.3 check .                               # lint, zero warnings
+uvx --python 3.12 --with types-setuptools==84.0.0.20260812 mypy==1.14.1  # types, strict
 pnpm run format:check                                  # every JSON file
 uvx yamllint==1.38.0 --strict .
 cov=(uvx --python 3.12 --from coverage==7.6.10 --with setuptools==84.0.0 coverage)
