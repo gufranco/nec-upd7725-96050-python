@@ -314,8 +314,8 @@ class Cpu:
 
         self._multiply()
         before = self.cycles
-        self.spend()
         self.steps += 1
+        self.spend()
         return self.cycles - before
 
     def run_for(self, cycles: int) -> int:
