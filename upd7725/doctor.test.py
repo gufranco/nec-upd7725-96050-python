@@ -8,15 +8,12 @@ import tempfile
 import unittest
 import unittest.mock
 from pathlib import Path
-from typing import TYPE_CHECKING, NoReturn
+from typing import NoReturn
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import upd7725
 from upd7725 import doctor
-
-if TYPE_CHECKING:
-    from conformance.printed import Part
 
 
 class Complaint(Exception):
@@ -37,7 +34,7 @@ def complain() -> NoReturn:
     raise Complaint("the pin did nothing")
 
 
-def a_part_whose_reset_fails(name: str) -> Part:
+def a_part_whose_reset_fails(name: str) -> upd7725.Cpu7725:
     part = upd7725.Cpu(name)
     part.on_cycle = complain
     return part

@@ -6,14 +6,11 @@ import sys
 import threading
 import unittest
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import upd7725
-
-if TYPE_CHECKING:
-    from conformance.printed import Part
 
 FAILURE = "something went wrong inside an instruction"
 
@@ -22,7 +19,7 @@ BUDGET = 4
 PATIENCE_SECONDS = 10.0
 
 
-def a_processor() -> Part:
+def a_processor() -> upd7725.Cpu7725:
     return upd7725.Cpu("upd96050", fill=0).reset()
 
 
@@ -59,13 +56,13 @@ PROGRAM_WORDS = 64
 RANDOM_INSTRUCTIONS = 24
 
 
-def a_random_program() -> Part:
+def a_random_program() -> upd7725.Cpu7725:
     chip = upd7725.Cpu("upd96050", fill=0)
     chip.stores.load_program(random.Random(PROGRAM_SEED).randbytes(PROGRAM_WORDS * 3))
     return chip.reset()
 
 
-def observed(chip: Part) -> tuple[Any, ...]:
+def observed(chip: upd7725.Cpu7725) -> tuple[Any, ...]:
     registers = chip.registers
     names = ("pc", "rp", "dp", "sp", "k", "l", "m", "n", "a", "b", "tr", "trb", "dr", "si", "so")
     scratch = chip.stores.scratch
@@ -114,13 +111,13 @@ ENABLE_INTERRUPTS = bytes.fromhex("C02007")
 BEFORE_THE_INTERRUPT = 2
 
 
-def an_interruptible_part() -> Part:
+def an_interruptible_part() -> upd7725.Cpu7725:
     chip = upd7725.Cpu("upd7725", fill=0).reset()
     chip.stores.load_program(ENABLE_INTERRUPTS)
     return chip
 
 
-def interrupted(chip: Part, taken: bool) -> tuple[Any, ...]:
+def interrupted(chip: upd7725.Cpu7725, taken: bool) -> tuple[Any, ...]:
     registers = chip.registers
     return (taken, registers.pc, registers.sp, tuple(registers.stack), chip.cycles, chip.steps)
 
@@ -147,7 +144,7 @@ def interrupted_between_ticks() -> tuple[Any, ...]:
 
 
 class TickTest(unittest.TestCase):
-    def a_clock(self, chip: Part) -> upd7725.Clock:
+    def a_clock(self, chip: upd7725.Cpu7725) -> upd7725.Clock:
         clock = upd7725.Clock(chip)
         self.addCleanup(clock.close)
         return clock
