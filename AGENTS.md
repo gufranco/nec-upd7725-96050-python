@@ -150,6 +150,8 @@ aspired to. A new branch without a test fails the build.
 | Commits | [Conventional Commits](https://www.conventionalcommits.org/); subject under 50 characters |
 | Releases | semantic-release from `main`; never tag by hand |
 | A program image | Never committed, never vendored, never encoded, never generated |
+| [`upd7725/core.py`](upd7725/core.py) length | Past 500 lines under the exemption for a single calculation engine sharing intermediate state: one `Cpu` whose four instruction forms read and write the same registers, both flag sets, the three stores and the cycle count within each step |
+| [`conformance/reference.py`](conformance/reference.py) length | Past 500 lines under the same exemption: one table-driven `Upd96050` whose handlers share its register file and flags, kept whole because it is a transcription whose structure must stay re-derivable |
 
 The linter's ignores in [`pyproject.toml`](pyproject.toml) carry no comments, so
 their reasons live here:
