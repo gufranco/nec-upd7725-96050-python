@@ -255,6 +255,7 @@ the part did not ask for attention within 50 instructions
 | `upd7725.Model` | `name`、`aliases`、`summary`、`counter_bits`、`table_bits`、`pointer_bits`、`stack_levels`と、派生値の`program_words`、`table_words`、`scratch_words`、`stack_pointer_bits`です。`build(*arguments, **options)`はこのモデルからチップを構築し、`Cpu`がモデルの後に受け取る引数を受け取ります |
 | `upd7725.UNSET_SEED` | シードを指定しないときに使われるシード、`0x5A5A5A5A`です |
 | `upd7725.scramble(size, seed=UNSET_SEED)` | `seed`から導出した`size`個の32ビット値で、電源投入時の状態の元になります |
+| `upd7725.Cpu7725` | `Cpu`がどちらのパーツにも返す、型チェック用のクラスです。パーツはモデルを選ぶ`Cpu`で作ります |
 | `upd7725.Store`, `upd7725.Stores` | 上で説明したストアのクラスです |
 | `upd7725.Clock` | 1サイクルずつのステップ実行で、[1サイクルずつ動かす](#driving-it-one-cycle-at-a-time)で説明します |
 | `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | プログラムワードの読み取りで、[実行せずに読む](#reading-without-running)で説明します |

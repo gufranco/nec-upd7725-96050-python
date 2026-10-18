@@ -2,14 +2,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import upd7725
 
-if TYPE_CHECKING:
-    from upd7725.core import Cpu
-
-    Part = Cpu
+Part = upd7725.Cpu7725
 
 RECORD = Path(__file__).resolve().parent / "hardware.json"
 

@@ -12,6 +12,7 @@ from . import opcodes as opcodes
 from . import ports as ports
 from . import registers as registers
 from .clock import Clock
+from .core import Cpu as Cpu7725
 from .errors import (
     ClockClosed,
     NeverReady,
@@ -44,6 +45,7 @@ __all__ = [
     "Clock",
     "ClockClosed",
     "Cpu",
+    "Cpu7725",
     "Flags",
     "Host",
     "Instruction",

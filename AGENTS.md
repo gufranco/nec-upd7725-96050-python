@@ -21,6 +21,12 @@ into all belong to whoever models that board.
 The part is powered and not reset when it is built. `reset()` is the caller's to
 call, because no board hands over a processor that has reset itself.
 
+`Cpu` is a factory that picks the model, so it cannot name the type it returns.
+That type is exported as `Cpu7725`, the class both parts are built from, the way
+`mos65xx` exports `Cpu65816`. Annotate with it, and never import
+`upd7725.core.Cpu` to get the same thing: tests and conformance tools use the
+public interface only.
+
 Three ways to run it, sharing one place where a cycle is spent:
 
 - `step()` runs one instruction and returns the cycles it cost. Every instruction

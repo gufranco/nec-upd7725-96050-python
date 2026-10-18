@@ -255,6 +255,7 @@ The program is one word, `ld $1234,dr`. Writing the data register sets RQM, whic
 | `upd7725.Model` | `name`, `aliases`, `summary`, `counter_bits`, `table_bits`, `pointer_bits`, `stack_levels`, and the derived `program_words`, `table_words`, `scratch_words` and `stack_pointer_bits`. `build(*arguments, **options)` builds a part from it, taking what `Cpu` takes after the model |
 | `upd7725.UNSET_SEED` | The seed used when none is given, `0x5A5A5A5A` |
 | `upd7725.scramble(size, seed=UNSET_SEED)` | `size` 32-bit values derived from `seed`, the source of the power-on state |
+| `upd7725.Cpu7725` | The class `Cpu` returns for either part, for type checks. Build a part with `Cpu`, which picks the model |
 | `upd7725.Store`, `upd7725.Stores` | The store classes described above |
 | `upd7725.Clock` | Stepping one cycle at a time, under [Driving it one cycle at a time](#driving-it-one-cycle-at-a-time) |
 | `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | Reading program words, under [Reading without running](#reading-without-running) |

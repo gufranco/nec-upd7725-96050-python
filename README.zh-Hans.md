@@ -255,6 +255,7 @@ the part did not ask for attention within 50 instructions
 | `upd7725.Model` | `name`、`aliases`、`summary`、`counter_bits`、`table_bits`、`pointer_bits`、`stack_levels`，以及派生的 `program_words`、`table_words`、`scratch_words` 和 `stack_pointer_bits`。`build(*arguments, **options)` 据此构建一个器件，接受 `Cpu` 在型号之后接受的参数 |
 | `upd7725.UNSET_SEED` | 未给出种子时使用的种子，`0x5A5A5A5A` |
 | `upd7725.scramble(size, seed=UNSET_SEED)` | 由 `seed` 派生的 `size` 个 32 位值，是上电状态的来源 |
+| `upd7725.Cpu7725` | `Cpu` 为任一部件返回的类，用于类型检查。部件用 `Cpu` 构建，由它选择型号 |
 | `upd7725.Store`, `upd7725.Stores` | 上文描述的存储区类 |
 | `upd7725.Clock` | 每次单步一个周期，见[逐周期驱动](#driving-it-one-cycle-at-a-time) |
 | `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | 读取程序字，见[不运行而读取](#reading-without-running) |
