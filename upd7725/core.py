@@ -12,6 +12,7 @@ from .flags import (
     record_right_shift,
 )
 from .memory import UNSET_SEED, Stores, scramble
+from .pins import reversed_bits, serial_width
 from .registers import Registers
 
 WORD_MASK = 0xFFFF
@@ -412,8 +413,12 @@ class Cpu:
             return registers.dr
         if source == FROM_STATUS:
             return int(registers.sr)
-        if source in (FROM_SERIAL_HIGH, FROM_SERIAL_LOW):
+        if source == FROM_SERIAL_HIGH:
+            registers.sr.siack = False
             return registers.si
+        if source == FROM_SERIAL_LOW:
+            registers.sr.siack = False
+            return reversed_bits(registers.si, serial_width(registers.sr.sic))
         if source == FROM_K:
             return registers.word("k")
         if source == FROM_L:
@@ -484,6 +489,7 @@ class Cpu:
             registers.sr.assign(int(registers.sr) & STATUS_KEPT | value & STATUS_TAKEN)
         elif destination in (TO_SERIAL_LOW, TO_SERIAL_HIGH):
             registers.so = value
+            registers.sr.soack = True
         elif destination == TO_K:
             registers.k = value
         elif destination == TO_K_AND_TABLE:

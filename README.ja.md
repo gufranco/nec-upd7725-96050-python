@@ -8,7 +8,7 @@ NECのデジタルシグナルプロセッサuPD7725とuPD96050をPythonで実�
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2**種類のチップ、フィールドごとに網羅した**1,120**通りのエンコーディング、比較した**22,240**命令、不一致**0**件、**1,048**件のテスト、ステートメントとブランチの**100%**カバレッジ、依存パッケージなし
+**2**種類のチップ、フィールドごとに網羅した**1,120**通りのエンコーディング、比較した**22,240**命令、不一致**0**件、**1,051**件のテスト、ステートメントとブランチの**100%**カバレッジ、依存パッケージなし
 
 ```python
 from upd7725 import Cpu
@@ -90,7 +90,7 @@ python3 upd7725/doctor.py
 | `irq_line`           | レベルとしての割り込み線です                                                                                                  |
 | `on_cycle`           | `None`、またはサイクルごとに引数なしで呼ばれる関数です                                                                        |
 
-`registers.pc`、`rp`、`dp`、`sp`は書き込まれた値をチップ固有の幅でマスクします。`k`、`l`、`m`、`n`、`a`、`b`は16ビットを保持し、符号付きで読み出されます。`registers.word(name)`はそのいずれも符号なし16ビットワードとして読みます。`tr`、`trb`、`dr`、`si`、`so`は普通の整数です。`registers.stack`はチップのスタックと同じ長さのリストで、`registers.sr`はステータスワードです。ビット`p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm`、`drs`はデータシートのFigure 3が示す位置にあり、`int(registers.sr)`はそれらを1ワードとして読み、`registers.sr.assign(word)`は1ワードからそれらを設定します。`registers.sr.siack`と`registers.sr.soack`は、SIACKとSOACKによる条件ジャンプが読むシリアル入力と出力の肯定応答です。このパッケージはどちらも設定しないため、それらのジャンプを使うホストが自分で設定します。どちらもワードには含まれません。
+`registers.pc`、`rp`、`dp`、`sp`は書き込まれた値をチップ固有の幅でマスクします。`k`、`l`、`m`、`n`、`a`、`b`は16ビットを保持し、符号付きで読み出されます。`registers.word(name)`はそのいずれも符号なし16ビットワードとして読みます。`tr`、`trb`、`dr`、`si`、`so`は普通の整数です。`registers.stack`はチップのスタックと同じ長さのリストで、`registers.sr`はステータスワードです。ビット`p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm`、`drs`はデータシートのFigure 3が示す位置にあり、`int(registers.sr)`はそれらを1ワードとして読み、`registers.sr.assign(word)`は1ワードからそれらを設定します。`registers.sr.siack`と`registers.sr.soack`は、SIACKとSOACKによる条件ジャンプが読むシリアル入力と出力の肯定応答です。どちらもワードには含まれません。SIからの転送は`siack`をクリアし、SOへの転送は`soack`を立てます。
 
 ```python
 from upd7725 import Cpu, disassemble
@@ -472,7 +472,7 @@ python3 conformance/alu_flags.test.py
 
 1つ目のコマンドはゲートで、リポジトリ外のものを何も必要としません。2つ目は、別の構造で書かれた第2の実装である[`conformance/reference.py`](conformance/reference.py)を、コーパスの終わりより先のケースでモデルと並べてステップ実行します。3つ目は16種類すべてのALU演算を、1989年のデータブックのTable 6と照合します。この表は各フラグについて、影響を受けるか、リセットされるか、保持されるか、不定かを示しています。モデルはすべてのセルと一致します。
 
-[`conformance/hardware.json`](conformance/hardware.json)には、文書から取ったすべての事実が、出典の文とページとともに収められています。データシートとコーパスが食い違う場合はデータシートを優先し、コーパスを取り直します。これは2回起きており、[`conformance/pinned.json`](conformance/pinned.json)に両方が記録されています。1つはスタックの深さで、出回っているどの実装も16としていますが、NECは4と記載しています。もう1つは、算術演算がデータ転送の転送先として自分自身のアキュムレータを指定する581件のケースで、NECはこの場合その演算がNOPになると述べています。
+[`conformance/hardware.json`](conformance/hardware.json)には、文書から取ったすべての事実が、出典の文とページとともに収められています。データシートとコーパスが食い違う場合はデータシートを優先し、コーパスを取り直します。これは3回起きており、[`conformance/pinned.json`](conformance/pinned.json)にそれぞれが記録されています。1つはスタックの深さで、出回っているどの実装も16としていますが、NECは4と記載しています。2つ目は、算術演算がデータ転送の転送先として自分自身のアキュムレータを指定する581件のケースで、NECはこの場合その演算がNOPになると述べています。3つ目はシリアルレジスタを通してワードを転送する1,895件のケースで、NECはSILが入力をビット反転して読むこと、SOへの転送がSOACKを立てること、SIからの転送がSIACKをクリアすることを記載しています。
 
 コーパスはエミュレータから記録したものなので、NECが記載していない事柄についてのみ判断の根拠になります。[`conformance/divergences.json`](conformance/divergences.json)には2つの情報源が食い違う箇所がすべて収められています。[OPEN-QUESTIONS.md](OPEN-QUESTIONS.md)には未解決の3つの問いと、それぞれを解決する計測が記されています。
 

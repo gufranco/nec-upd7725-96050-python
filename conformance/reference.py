@@ -211,8 +211,8 @@ SOURCES: "tuple[Callable[[Upd96050], int], ...]" = (
     lambda chip: chip._read_data_and_ask(),
     lambda chip: n16(chip.regs.dr),
     lambda chip: n16(int(chip.regs.sr)),
-    lambda chip: n16(chip.regs.si),
-    lambda chip: n16(chip.regs.si),
+    lambda chip: chip._read_serial(reversed_order=False),
+    lambda chip: chip._read_serial(reversed_order=True),
     lambda chip: n16(chip.regs.k),
     lambda chip: n16(chip.regs.l),
     lambda chip: n16(chip.dataRAM[chip.regs.dp]),
@@ -332,6 +332,14 @@ class Upd96050:
         self.regs.m = i16(product >> 15)
         self.regs.n = i16(product << 1)
 
+    def _read_serial(self, reversed_order: bool) -> int:
+        self.regs.sr.siack = 0
+        if not reversed_order:
+            return n16(self.regs.si)
+        width = 8 if self.regs.sr.sic else 16
+        kept = n16(self.regs.si) >> width << width
+        return kept | int(f"{self.regs.si & (1 << width) - 1:0{width}b}"[::-1], 2)
+
     def _read_data_and_ask(self) -> int:
         self.regs.sr.rqm = 1
         return n16(self.regs.dr)
@@ -446,6 +454,7 @@ class Upd96050:
             registers.sr.assign(n16(kept | value & ~STATUS_KEPT_BY_THE_PART))
         elif destination in (8, 9):
             registers.so = value
+            registers.sr.soack = 1
         elif destination == 10:
             registers.k = i16(value)
         elif destination == 11:

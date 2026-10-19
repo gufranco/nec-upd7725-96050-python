@@ -9,6 +9,7 @@ from . import flags as flags
 from . import memory as memory
 from . import models as models
 from . import opcodes as opcodes
+from . import pins as pins
 from . import ports as ports
 from . import registers as registers
 from .clock import Clock

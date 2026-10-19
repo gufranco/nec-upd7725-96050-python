@@ -437,6 +437,21 @@
           "appliesTo": ["upd7725"],
           "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for.",
           "unreachable": "The pulse and recovery times are how long a host must hold and release the line, and the model takes the line as an edge with no width."
+        },
+        "serialInputBitOrder": {
+          "value": {
+            "SIM": "firstBitHighest",
+            "SIL": "firstBitLowest"
+          },
+          "document": "dataBook",
+          "section": "printed page 2-34, Table 11. SRC Field",
+          "filePage": 83,
+          "quote": "(2) First bit in goes to MSB, last bit to LSB. (3) First bit goes to LSB, last bit to MSB (bit reversed).",
+          "foundBy": "Reading this table's notes. Both implementations here, and the emulator the corpus was recorded from, read the two source codes as one register, so the recording carried the same word for both.",
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_serial.test.py::SerialFactTest.test_the_two_input_sources_read_the_word_in_the_printed_orders"
+          ]
         }
       },
       "predecessorForContrast": {

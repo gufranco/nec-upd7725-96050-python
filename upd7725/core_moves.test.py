@@ -65,7 +65,7 @@ EVERY_SOURCE_READS = {
     FROM_DATA: 0x9999,
     FROM_STATUS: 0x0003,
     FROM_SERIAL_HIGH: 0xAAAA,
-    FROM_SERIAL_LOW: 0xAAAA,
+    FROM_SERIAL_LOW: 0x5555,
     FROM_K: 0xBBBB,
     FROM_L: 0xCCCC,
     FROM_SCRATCH: 0xDDDD,
@@ -257,6 +257,37 @@ class SourceTest(unittest.TestCase):
 
         # Assert
         self.assertFalse(found.registers.sr.rqm)
+
+    def test_reading_either_serial_input_form_clears_its_acknowledge(self) -> None:
+        # Arrange
+        parts = []
+        for source in (FROM_SERIAL_HIGH, FROM_SERIAL_LOW):
+            part = a_part()
+            part.registers.sr.siack = True
+            part.stores.program[0] = an_operation(src=source, dst=TO_TR)
+            parts.append(part)
+
+        # Act
+        for part in parts:
+            part.step()
+
+        # Assert
+        self.assertEqual([part.registers.sr.siack for part in parts], [False, False])
+
+    def test_writing_either_serial_output_form_sets_its_acknowledge(self) -> None:
+        # Arrange
+        parts = []
+        for destination in (TO_SERIAL_LOW, TO_SERIAL_HIGH):
+            part = a_part()
+            part.stores.program[0] = a_load(0x1234, destination)
+            parts.append(part)
+
+        # Act
+        for part in parts:
+            part.step()
+
+        # Assert
+        self.assertEqual([part.registers.sr.soack for part in parts], [True, True])
 
     def test_the_saturating_source_answers_the_larger_value_while_the_sign_is_clear(self) -> None:
         # Arrange

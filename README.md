@@ -8,7 +8,7 @@ English | [日本語](README.ja.md) | [简体中文](README.zh-Hans.md) | [繁�
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **1,048** tests, **100%** statement and branch coverage, no dependencies
+**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **1,051** tests, **100%** statement and branch coverage, no dependencies
 
 ```python
 from upd7725 import Cpu
@@ -90,7 +90,7 @@ Releases follow [Semantic Versioning](https://semver.org/) and are cut from the 
 | `irq_line`           | The interrupt line as a level                                                                                                   |
 | `on_cycle`           | `None`, or a function called with no arguments after every cycle                                                                |
 
-`registers.pc`, `rp`, `dp` and `sp` mask what is written to them to the part's own widths. `k`, `l`, `m`, `n`, `a` and `b` hold 16 bits and read back signed. `registers.word(name)` reads any of them as an unsigned 16-bit word. `tr`, `trb`, `dr`, `si` and `so` are plain integers. `registers.stack` is a list as long as the part's stack, and `registers.sr` is the status word: the bits `p0`, `p1`, `ei`, `sic`, `soc`, `drc`, `dma`, `usf0`, `usf1`, `rqm` and `drs` sit where Figure 3 of the data sheet puts them, `int(registers.sr)` reads them as one word, and `registers.sr.assign(word)` sets them from one. `registers.sr.siack` and `registers.sr.soack` are the serial input and output acknowledgements the conditional jumps on SIACK and SOACK read. Nothing in this package sets them, so a host that drives those jumps sets them itself, and neither is part of the word.
+`registers.pc`, `rp`, `dp` and `sp` mask what is written to them to the part's own widths. `k`, `l`, `m`, `n`, `a` and `b` hold 16 bits and read back signed. `registers.word(name)` reads any of them as an unsigned 16-bit word. `tr`, `trb`, `dr`, `si` and `so` are plain integers. `registers.stack` is a list as long as the part's stack, and `registers.sr` is the status word: the bits `p0`, `p1`, `ei`, `sic`, `soc`, `drc`, `dma`, `usf0`, `usf1`, `rqm` and `drs` sit where Figure 3 of the data sheet puts them, `int(registers.sr)` reads them as one word, and `registers.sr.assign(word)` sets them from one. `registers.sr.siack` and `registers.sr.soack` are the serial input and output acknowledgements the conditional jumps on SIACK and SOACK read, and neither is part of the word. A move from SI clears `siack` and a move to SO sets `soack`.
 
 ```python
 from upd7725 import Cpu, disassemble
@@ -466,7 +466,7 @@ python3 conformance/alu_flags.test.py
 
 The first command is the gate, and it needs nothing outside the repository. The second steps [`conformance/reference.py`](conformance/reference.py), a second implementation written to a different shape, against the model on cases past the end of the corpus. The third drives all sixteen ALU operations against Table 6 of the 1989 data book, which states for each flag whether it is affected, reset, held or indefinite. The model agrees with every cell.
 
-[`conformance/hardware.json`](conformance/hardware.json) holds every fact taken from a document, with the sentence it came from and the page. When the data sheet and the corpus disagree, the data sheet wins and the corpus is retaken. That happened twice, and [`conformance/pinned.json`](conformance/pinned.json) records both: the stack depth, which every implementation in the field gives as sixteen and NEC prints as four, and 581 cases where an arithmetic operation names its own accumulator as the destination of the data move, which NEC says turns the operation into a NOP.
+[`conformance/hardware.json`](conformance/hardware.json) holds every fact taken from a document, with the sentence it came from and the page. When the data sheet and the corpus disagree, the data sheet wins and the corpus is retaken. That happened three times, and [`conformance/pinned.json`](conformance/pinned.json) records each: the stack depth, which every implementation in the field gives as sixteen and NEC prints as four; 581 cases where an arithmetic operation names its own accumulator as the destination of the data move, which NEC says turns the operation into a NOP; and 1,895 cases that move a word through the serial registers, where NEC prints that SIL reads the input bit reversed, that a move to SO sets SOACK and that a move from SI clears SIACK.
 
 The corpus was recorded from an emulator, so it decides only what NEC did not print. [`conformance/divergences.json`](conformance/divergences.json) holds every place two sources part. [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) names three questions still open and the measurement that would close each one.
 

@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** 款晶片，逐欄位走訪 **1,120** 種編碼，比對 **22,240** 條指令，**0** 處分歧，**1,048** 項測試，**100%** 語句與分支覆蓋率，無任何依賴
+**2** 款晶片，逐欄位走訪 **1,120** 種編碼，比對 **22,240** 條指令，**0** 處分歧，**1,051** 項測試，**100%** 語句與分支覆蓋率，無任何依賴
 
 ```python
 from upd7725 import Cpu
@@ -90,7 +90,7 @@ python3 upd7725/doctor.py
 | `irq_line`           | 以電平表示的中斷線                                                                                          |
 | `on_cycle`           | `None`，或在每個週期後以無參數呼叫的函式                                                                    |
 
-`registers.pc`、`rp`、`dp` 與 `sp` 會將寫入的值遮罩至晶片自身的寬度。`k`、`l`、`m`、`n`、`a` 與 `b` 持有 16 位元，讀回時為有號數。`registers.word(name)` 將其中任何一個讀作無號 16 位元字。`tr`、`trb`、`dr`、`si` 與 `so` 是普通整數。`registers.stack` 是長度與晶片堆疊相同的清單，`registers.sr` 是狀態字：位元 `p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm` 與 `drs` 位於數據表 Figure 3 所示的位置，`int(registers.sr)` 將它們讀作一個字，`registers.sr.assign(word)` 則從一個字設定它們。`registers.sr.siack` 與 `registers.sr.soack` 是串列輸入與輸出的應答，SIACK 與 SOACK 條件跳轉會讀取它們。本套件不會設定它們，因此使用這些跳轉的主機須自行設定；兩者皆不屬於狀態字。
+`registers.pc`、`rp`、`dp` 與 `sp` 會將寫入的值遮罩至晶片自身的寬度。`k`、`l`、`m`、`n`、`a` 與 `b` 持有 16 位元，讀回時為有號數。`registers.word(name)` 將其中任何一個讀作無號 16 位元字。`tr`、`trb`、`dr`、`si` 與 `so` 是普通整數。`registers.stack` 是長度與晶片堆疊相同的清單，`registers.sr` 是狀態字：位元 `p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm` 與 `drs` 位於數據表 Figure 3 所示的位置，`int(registers.sr)` 將它們讀作一個字，`registers.sr.assign(word)` 則從一個字設定它們。`registers.sr.siack` 與 `registers.sr.soack` 是串列輸入與輸出的應答，SIACK 與 SOACK 條件跳轉會讀取它們。兩者皆不屬於狀態字。從 SI 搬移會清除 `siack`，搬移到 SO 會設定 `soack`。
 
 ```python
 from upd7725 import Cpu, disassemble
@@ -472,7 +472,7 @@ python3 conformance/alu_flags.test.py
 
 第一條命令是關卡檢查，除本儲存庫外不需要任何東西。第二條命令單步執行 [`conformance/reference.py`](conformance/reference.py)，這是以不同結構編寫的第二個實現，在語料庫結束之後的案例上與模型對照。第三條命令以 1989 年數據手冊的 Table 6 驅動全部十六種 ALU 運算，該表列明每個旗標是受影響、重設、保持還是不確定。模型與表中每一格都一致。
 
-[`conformance/hardware.json`](conformance/hardware.json) 持有取自文件的每一項事實，連同其出處的句子與頁碼。數據表與語料庫不一致時，以數據表為準，並重新錄製語料庫。這種情況發生過兩次，[`conformance/pinned.json`](conformance/pinned.json) 記錄了這兩次：一次是堆疊深度，業界所有實現都定為十六，而 NEC 印的是四；另一次是 581 個案例，其中算術運算將自己的累加器指定為數據搬移的目的地，NEC 指出這會使該運算變成 NOP。
+[`conformance/hardware.json`](conformance/hardware.json) 持有取自文件的每一項事實，連同其出處的句子與頁碼。數據表與語料庫不一致時，以數據表為準，並重新錄製語料庫。這種情況發生過三次，[`conformance/pinned.json`](conformance/pinned.json) 記錄了每一次：第一次是堆疊深度，業界所有實現都定為十六，而 NEC 印的是四；第二次是 581 個案例，其中算術運算將自己的累加器指定為數據搬移的目的地，NEC 指出這會使該運算變成 NOP；第三次是 1,895 個經串列暫存器搬移字的案例，NEC 印明 SIL 按位元反轉讀取輸入、搬移到 SO 會設定 SOACK、從 SI 搬移會清除 SIACK。
 
 語料庫是從模擬器錄製的，因此只裁定 NEC 未印出的內容。[`conformance/divergences.json`](conformance/divergences.json) 持有兩個來源出現分歧的每一處。[OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) 列出三個仍未解決的問題，以及能解決每個問題的測量。
 
