@@ -8,7 +8,7 @@ NECのデジタルシグナルプロセッサuPD7725とuPD96050をPythonで実�
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2**種類のチップ、フィールドごとに網羅した**1,120**通りのエンコーディング、比較した**22,240**命令、不一致**0**件、**1,094**件のテスト、ステートメントとブランチの**100%**カバレッジ、依存パッケージなし
+**2**種類のチップ、フィールドごとに網羅した**1,120**通りのエンコーディング、比較した**22,240**命令、不一致**0**件、**1,111**件のテスト、ステートメントとブランチの**100%**カバレッジ、依存パッケージなし
 
 ```python
 from upd7725 import Cpu
@@ -340,16 +340,17 @@ True 0x1234 False
 
 ### コマンドラインツール
 
-| コマンド                               | 引数                                                          | 終了コード                                                                                    |
-| :------------------------------------- | :------------------------------------------------------------ | :-------------------------------------------------------------------------------------------- |
-| `python3 upd7725/doctor.py`            | なし                                                          | すべてのチェックに合格すれば0、それ以外は1                                                    |
-| `python3 -m conformance.instructions`  | `--corpus PATH`、`--cases N`、`--record`、`--retake`          | 不一致がなければ0、1件でもあれば1、引数が不正なら2                                            |
-| `python3 -m conformance.differential`  | `--from N`、`--cases N`（既定値5,000）、`--seconds S`         | 2つの実装が一致すれば0、一致しなければ1、引数が不正なら2                                      |
-| `python3 -m conformance.speed`         | `--instructions N`（既定値200,000）、`--repeats N`（既定値7） | 下限以上なら0、下回れば1、引数が不正なら2                                                     |
-| `python3 -m conformance.documents`     | `--check`、`--only SUBSTRING`                                 | すべてのドキュメントがダイジェストと一致すれば0、それ以外は1                                  |
-| `python3 -m conformance.quotes`        | なし                                                          | すべての引用が見つかるか、ドキュメントが1つもなければ0、それ以外は1                           |
-| `python3 -m conformance.links`         | なし                                                          | このファイル内のリンクが404または410を返せば1、それ以外は0                                    |
-| `python3 -m conformance.package WHEEL` | 監査するwheel                                                 | すべてのモジュールが含まれ、テストが1つも含まれなければ0、それ以外は1、wheelを指定しなければ2 |
+| コマンド                               | 引数                                                                           | 終了コード                                                                                                         |
+| :------------------------------------- | :----------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------- |
+| `python3 upd7725/doctor.py`            | なし                                                                           | すべてのチェックに合格すれば0、それ以外は1                                                                         |
+| `python3 -m conformance.instructions`  | `--corpus PATH`、`--cases N`、`--record`、`--retake`                           | 不一致がなければ0、1件でもあれば1、引数が不正なら2                                                                 |
+| `python3 -m conformance.differential`  | `--from N`、`--cases N`（既定値5,000）、`--seconds S`                          | 2つの実装が一致すれば0、一致しなければ1、引数が不正なら2                                                           |
+| `python3 -m conformance.speed`         | `--instructions N`（既定値200,000）、`--repeats N`（既定値7）                  | 下限以上なら0、下回れば1、引数が不正なら2                                                                          |
+| `python3 -m conformance.documents`     | `--check`、`--only SUBSTRING`                                                  | すべてのドキュメントがダイジェストと一致すれば0、それ以外は1                                                       |
+| `python3 -m conformance.quotes`        | なし                                                                           | すべての引用が見つかるか、ドキュメントが1つもなければ0、それ以外は1                                                |
+| `python3 -m conformance.links`         | なし                                                                           | このファイル内のリンクが404または410を返せば1、それ以外は0                                                         |
+| `python3 -m conformance.stack IMAGE`   | 大きい方のチップ用のイメージ1つ以上、プログラム16384ワードとテーブル2048ワード | すべてのイメージが8段のスタックに収まれば0、収まらないか上限を示せないものがあれば1、イメージがないか長さが違えば2 |
+| `python3 -m conformance.package WHEEL` | 監査するwheel                                                                  | すべてのモジュールが含まれ、テストが1つも含まれなければ0、それ以外は1、wheelを指定しなければ2                      |
 
 `--record`単独ではコーパスの上書きを拒否します。`--record --retake`は上書きを行い、修正されたハードウェアの事実を反映するときにだけ使います。
 

@@ -17,7 +17,8 @@
       "referenceDoes": "Secondary sources give 16384 program words, 2048 data ROM words, 2048 data RAM words and eight stack levels.",
       "packageFollows": "reference",
       "reasoning": "Secondary sources for this family are emulators, which is the weakest evidence this project accepts for a fact a manufacturer would have printed. Three of the four figures have a second witness that is not an emulator: a published image for the larger part is exactly 16384 program words of three bytes plus 2048 table words of two bytes, so a wrong size would fail to load it. The stack depth has no such witness and rests on the secondary source alone.",
-      "wouldSettleIt": "An NEC data sheet for the uPD96050, or a measurement: push past eight levels on a real part and see where it wraps."
+      "wouldSettleIt": "An NEC data sheet for the uPD96050, or a measurement: push past eight levels on a real part and see where it wraps. For the program side alone, a run of the second image that records its stack pointer over every command it accepts would bound it the way the census bounds the first.",
+      "census": "conformance/stack.py walks every path a published image for the larger part can take from reset and from the interrupt vector, without running it. The image whose SHA-256 begins 55c697e864562445 reaches 533 words from reset, calls one level deep, never sets the interrupt enable bit and jumps through no register, so it needs one of the eight levels. The image whose SHA-256 begins 651b82a1e26c4fa8 jumps through the output register at address 13H, to a word it reads from its table at an index the host's data supplies, so a static walk stops there after 110 words and gives that image no bound. This bounds what one program needs. It says nothing about how deep the part's stack is."
     },
     {
       "id": "the-corpus-was-recorded-from-an-emulator",

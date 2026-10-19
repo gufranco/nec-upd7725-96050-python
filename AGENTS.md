@@ -125,6 +125,7 @@ for f in upd7725/*.test.py conformance/*.test.py; do "${cov[@]}" run -a "$f"; do
 "${cov[@]}" report                                     # fails below 100%
 python3 -m conformance.instructions                    # the gate
 python3 -m conformance.differential                    # unbounded, optional locally
+python3 -m conformance.stack IMAGE [IMAGE ...]         # images for the larger part, held locally
 ```
 
 Coverage is collected by running each test file under `coverage run -a`, not by a
@@ -217,6 +218,7 @@ conformance/
   oracle.py           one case through it, in the shape the recordings are in
   instructions.py     the gate: every form, against the recordings
   differential.py     the two implementations against each other, unbounded
+  stack.py            the deepest call a program image can make, walked without running it
   corpus.json         22,240 recorded states
   pinned.json         which implementation, at which commit
 ```

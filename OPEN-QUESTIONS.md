@@ -61,9 +61,22 @@ uPD77C25 and 77P25, and the uPD77810, and the string 96050 appears on none of
 its pages. The only near hit is a uPD9605, which is a PCM codec. A later book
 than that one has not been located.
 
+**What the programs need, as far as a census reaches.**
+[`conformance/stack.py`](conformance/stack.py) walks every path a published
+image for the larger part can take from reset and from the interrupt vector,
+without running it. The image whose SHA-256 begins `55c697e864562445` reaches
+533 words, calls one level deep, never sets the interrupt enable bit and jumps
+through no register, so it needs one of the eight levels. The image whose
+SHA-256 begins `651b82a1e26c4fa8` jumps through the output register at address
+13H, to a word read from its table at an index the host's data supplies, so the
+walk stops there and gives it no bound. That is a bound on what one program
+needs, not a figure for the part.
+
 **What would settle it.** An NEC data sheet for the uPD96050, or a measurement:
 push past eight levels on a real part and see where the return address comes
-from.
+from. For the program side alone, a run of the second image that records the
+stack pointer across every command it accepts would bound it as the census
+bounds the first.
 
 ## Where the source is a recording rather than a part
 

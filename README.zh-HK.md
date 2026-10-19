@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** 款晶片，逐欄位走訪 **1,120** 種編碼，比對 **22,240** 條指令，**0** 處分歧，**1,094** 項測試，**100%** 語句與分支覆蓋率，無任何依賴
+**2** 款晶片，逐欄位走訪 **1,120** 種編碼，比對 **22,240** 條指令，**0** 處分歧，**1,111** 項測試，**100%** 語句與分支覆蓋率，無任何依賴
 
 ```python
 from upd7725 import Cpu
@@ -340,16 +340,17 @@ True 0x1234 False
 
 ### 命令列工具
 
-| 命令                                   | 參數                                                      | 結束碼                                                                  |
-| :------------------------------------- | :-------------------------------------------------------- | :---------------------------------------------------------------------- |
-| `python3 upd7725/doctor.py`            | 無                                                        | 所有檢查通過時為 0，否則為 1                                            |
-| `python3 -m conformance.instructions`  | `--corpus PATH`、`--cases N`、`--record`、`--retake`      | 無分歧時為 0，有任何分歧時為 1，參數錯誤時為 2                          |
-| `python3 -m conformance.differential`  | `--from N`、`--cases N` 預設為 5,000、`--seconds S`       | 兩個實現一致時為 0，不一致時為 1，參數錯誤時為 2                        |
-| `python3 -m conformance.speed`         | `--instructions N` 預設為 200,000，`--repeats N` 預設為 7 | 達到或高於下限時為 0，低於下限時為 1，參數錯誤時為 2                    |
-| `python3 -m conformance.documents`     | `--check`、`--only SUBSTRING`                             | 每份文件都與其摘要相符時為 0，否則為 1                                  |
-| `python3 -m conformance.quotes`        | 無                                                        | 每段引文都找到或沒有任何文件時為 0，否則為 1                            |
-| `python3 -m conformance.links`         | 無                                                        | 本檔案中有連結回應 404 或 410 時為 1，否則為 0                          |
-| `python3 -m conformance.package WHEEL` | 要審核的 wheel                                            | 每個模組都已打包且沒有打包任何測試時為 0，否則為 1，未指定 wheel 時為 2 |
+| 命令                                   | 參數                                                      | 結束碼                                                                                    |
+| :------------------------------------- | :-------------------------------------------------------- | :---------------------------------------------------------------------------------------- |
+| `python3 upd7725/doctor.py`            | 無                                                        | 所有檢查通過時為 0，否則為 1                                                              |
+| `python3 -m conformance.instructions`  | `--corpus PATH`、`--cases N`、`--record`、`--retake`      | 無分歧時為 0，有任何分歧時為 1，參數錯誤時為 2                                            |
+| `python3 -m conformance.differential`  | `--from N`、`--cases N` 預設為 5,000、`--seconds S`       | 兩個實現一致時為 0，不一致時為 1，參數錯誤時為 2                                          |
+| `python3 -m conformance.speed`         | `--instructions N` 預設為 200,000，`--repeats N` 預設為 7 | 達到或高於下限時為 0，低於下限時為 1，參數錯誤時為 2                                      |
+| `python3 -m conformance.documents`     | `--check`、`--only SUBSTRING`                             | 每份文件都與其摘要相符時為 0，否則為 1                                                    |
+| `python3 -m conformance.quotes`        | 無                                                        | 每段引文都找到或沒有任何文件時為 0，否則為 1                                              |
+| `python3 -m conformance.links`         | 無                                                        | 本檔案中有連結回應 404 或 410 時為 1，否則為 0                                            |
+| `python3 -m conformance.stack IMAGE`   | 一個或多個較大晶片的映像，16384 個程式字與 2048 個表字    | 每個映像都不超過 8 級堆疊時為 0，有映像超過或無法確定上限時為 1，未給映像或長度不對時為 2 |
+| `python3 -m conformance.package WHEEL` | 要審核的 wheel                                            | 每個模組都已打包且沒有打包任何測試時為 0，否則為 1，未指定 wheel 時為 2                   |
 
 單獨使用 `--record` 會拒絕覆寫語料庫。`--record --retake` 會覆寫它，且只用於帶入一項已更正的硬件事實。
 
