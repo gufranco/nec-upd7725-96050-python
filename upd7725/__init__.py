@@ -26,6 +26,7 @@ from .flags import Flags
 from .memory import UNSET_SEED, Store, Stores, scramble
 from .models import MODELS, Model
 from .opcodes import Instruction, decode, disassemble
+from .pins import Pins
 from .ports import DATA, STATUS, Host
 from .version import VERSION
 
@@ -53,6 +54,7 @@ __all__ = [
     "Model",
     "NeverReady",
     "NotWholeWords",
+    "Pins",
     "RunLimit",
     "Store",
     "Stores",

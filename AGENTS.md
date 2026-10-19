@@ -53,6 +53,10 @@ What a host can see of all this is two addresses, and that lives in
 register and the other is a status word, and the only thing a host learns about
 the program inside is one bit: whether the part is waiting for it.
 
+The serial port and the DMA request live in [`upd7725/pins.py`](upd7725/pins.py)
+as `cpu.pins`. Its inputs are levels the host sets between cycles, and `spend()`
+samples them once a cycle, so an edge acts at the end of the cycle that sees it.
+
 Every cycle passes through `spend()` and nowhere else. A counter kept in one
 method and a hook called from another drift the first time somebody adds a cycle
 to only one of them, and nothing catches it. Keep it that way.
@@ -93,7 +97,7 @@ are held and which the manufacturer declines to define. Every one of those is
 recorded in [`conformance/hardware.json`](conformance/hardware.json) with the
 quote it came from, and driven against a run.
 
-**Not settled: 3 things**, each named in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md)
+**Not settled: 6 things**, each named in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md)
 with the measurement that would close it. The largest is that one of the two
 parts has no manufacturer document at all, so what is asserted about it rests on
 secondary sources, and secondary sources for this family are emulators. Do not
@@ -205,6 +209,7 @@ upd7725/
   registers.py    the register file, at each part's own widths
   memory.py       program, table and scratch, filled rather than cleared
   ports.py        the host side: the handshake and both transfer widths
+  pins.py         the serial port and the DMA request, sampled once a cycle
   models.py       the two parts, and what separates them
   doctor.py       what this machine actually has
 conformance/

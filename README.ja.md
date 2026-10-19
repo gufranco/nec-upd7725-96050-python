@@ -8,7 +8,7 @@ NECのデジタルシグナルプロセッサuPD7725とuPD96050をPythonで実�
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2**種類のチップ、フィールドごとに網羅した**1,120**通りのエンコーディング、比較した**22,240**命令、不一致**0**件、**1,051**件のテスト、ステートメントとブランチの**100%**カバレッジ、依存パッケージなし
+**2**種類のチップ、フィールドごとに網羅した**1,120**通りのエンコーディング、比較した**22,240**命令、不一致**0**件、**1,094**件のテスト、ステートメントとブランチの**100%**カバレッジ、依存パッケージなし
 
 ```python
 from upd7725 import Cpu
@@ -89,8 +89,9 @@ python3 upd7725/doctor.py
 | `steps`              | 直前のリセット以降の命令数です                                                                                                |
 | `irq_line`           | レベルとしての割り込み線です                                                                                                  |
 | `on_cycle`           | `None`、またはサイクルごとに引数なしで呼ばれる関数です                                                                        |
+| `pins`               | シリアルポートとDMA要求で、[シリアルポートとDMA要求](#the-serial-port-and-the-dma-request)で説明します                        |
 
-`registers.pc`、`rp`、`dp`、`sp`は書き込まれた値をチップ固有の幅でマスクします。`k`、`l`、`m`、`n`、`a`、`b`は16ビットを保持し、符号付きで読み出されます。`registers.word(name)`はそのいずれも符号なし16ビットワードとして読みます。`tr`、`trb`、`dr`、`si`、`so`は普通の整数です。`registers.stack`はチップのスタックと同じ長さのリストで、`registers.sr`はステータスワードです。ビット`p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm`、`drs`はデータシートのFigure 3が示す位置にあり、`int(registers.sr)`はそれらを1ワードとして読み、`registers.sr.assign(word)`は1ワードからそれらを設定します。`registers.sr.siack`と`registers.sr.soack`は、SIACKとSOACKによる条件ジャンプが読むシリアル入力と出力の肯定応答です。どちらもワードには含まれません。SIからの転送は`siack`をクリアし、SOへの転送は`soack`を立てます。
+`registers.pc`、`rp`、`dp`、`sp`は書き込まれた値をチップ固有の幅でマスクします。`k`、`l`、`m`、`n`、`a`、`b`は16ビットを保持し、符号付きで読み出されます。`registers.word(name)`はそのいずれも符号なし16ビットワードとして読みます。`tr`、`trb`、`dr`、`si`、`so`は普通の整数です。`registers.stack`はチップのスタックと同じ長さのリストで、`registers.sr`はステータスワードです。ビット`p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm`、`drs`はデータシートのFigure 3が示す位置にあり、`int(registers.sr)`はそれらを1ワードとして読み、`registers.sr.assign(word)`は1ワードからそれらを設定します。`registers.sr.siack`と`registers.sr.soack`は、SIACKとSOACKによる条件ジャンプが読むシリアル入力と出力の肯定応答です。どちらもワードには含まれません。シリアル入力にワード全体が届くと`siack`が立ち、SIからの転送がそれをクリアします。SOへの転送は`soack`を立て、ワードがシフトレジスタへ移るとそれがクリアされます。
 
 ```python
 from upd7725 import Cpu, disassemble
@@ -247,6 +248,67 @@ the part did not ask for attention within 50 instructions
 
 プログラムは1ワード、`ld $1234,dr`です。データレジスタへの書き込みはRQMを立てます。RQMは`STATUS`のバイトのビット7です。ホストは1234を2回の読み出しで受け取り、2回目でRQMがクリアされます。リセット後、同じワードが再び要求し、ホストは代わりにBEEFを送ります。その後に要求するものはないため、最後の`settle`は諦めます。
 
+<a id="the-serial-port-and-the-dma-request"></a>
+
+### シリアルポートとDMA要求
+
+`cpu.pins`は、ホストバスの外にある線を保持する`Pins`です。入力はホストがサイクルの合間に設定するレベルで、チップは各サイクルの最後にそれらを1回サンプリングします。エッジとは、前回のサンプリングで見たレベルからの変化です。
+
+| 属性                       | 意味                                                                                                                           |
+| :------------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
+| `sck`                      | シリアルクロック入力です。立ち上がりエッジで1ビットをシフトインし、立ち下がりエッジで1ビットをシフトアウトします               |
+| `si`, `sien`               | シリアルデータ入力とそのイネーブルです。`sien`がローの間だけビットがシフトインします                                           |
+| `soen`                     | シリアル出力イネーブルです。ローの間だけビットがシフトアウトします                                                             |
+| `so`                       | シリアルデータ出力です。`0`か`1`、またはハイインピーダンスのとき`None`です                                                     |
+| `sorq`                     | シリアル出力要求です。ワードがロードされた後の立ち上がりクロックで立ち上がり、最後のビットの後の立ち上がりクロックで下がります |
+| `drq`                      | DMA要求です。DMAモードではRQMを立てる転送がこれを立て、転送を完了させるホストのアクセスがこれを下げます                        |
+| `shifting_in`, `bits_in`   | 入力シフトレジスタと、進行中のワードについてそれが保持しているビット数です                                                     |
+| `shifting_out`, `bits_out` | 出力シフトレジスタと、まだ送るべきビット数です                                                                                 |
+| `msb_first`                | SOへの直前の転送が、最上位ビットから送るSOMを指定したか、最下位ビットから送るSOLを指定したかです                               |
+
+ステータスワードのSICとSOCは、クリアのとき各ワードを16ビットに、セットのとき8ビットにします。届いたワード全体はビットが来た順に、最初のビットを最上位として`registers.si`に入り、SIACKを立てます。SIMからの転送はそのまま読み、SILからの転送はビットを反転して読み、どちらもSIACKをクリアします。SOへの転送はSOACKを立て、`soen`がローの状態での最初の立ち下がりクロックがワードをシフトレジスタに取り込み、SOACKをクリアします。
+
+```python
+from upd7725 import Cpu, Host
+
+cpu = Cpu("upd7725", fill=0)
+cpu.reset()
+cpu.stores.load_program(bytes.fromhex("E970C9"))
+pins = cpu.pins
+pins.bits_out = 0
+cpu.step()
+print(cpu.registers.sr.soack, pins.sorq, pins.so)
+
+pins.soen = False
+sent = []
+for _ in range(16):
+    pins.sck = True
+    cpu.step()
+    pins.sck = False
+    cpu.step()
+    sent.append(pins.so)
+print(cpu.registers.sr.soack, pins.sorq, "".join(map(str, sent)))
+
+pins.sck = True
+cpu.step()
+print(pins.sorq)
+
+cpu.reset()
+cpu.stores.load_program(bytes.fromhex("C20007C48D06"))
+cpu.run_for(2)
+host = Host(cpu)
+print(pins.drq, hex(host.take()), pins.drq)
+```
+
+```
+True False None
+False True 1010010111000011
+False
+True 0x1234 False
+```
+
+`E970C9`は`ld $A5C3,som`です。この転送はSOACKを立て、まだ何もワードを求めていません。イネーブルがローの状態で、16回の立ち下がりクロックがA5C3を最上位ビットから送ります。最初の立ち下がりがワードを取り込んでSOACKをクリアし、SORQは最後のビットの後の立ち上がりクロックまでハイのままです。シフトレジスタはシードが決める値を持って立ち上がるため、最初に`bits_out`を0にしています。誰もクリアしていないチップは、書き込まれたワードの前に、それまで保持していたものを送ります。2つ目のプログラムはDMAビットを立ててデータレジスタをロードし、これがDRQを立て、ホストが受け取る2バイト目がそれを下げます。
+
 ### モジュールの内容
 
 | 名前                                                           | 内容                                                                                                                                                                                                                                                                                         |
@@ -260,6 +322,7 @@ the part did not ask for attention within 50 instructions
 | `upd7725.Clock`                                                | 1サイクルずつのステップ実行で、[1サイクルずつ動かす](#driving-it-one-cycle-at-a-time)で説明します                                                                                                                                                                                            |
 | `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | プログラムワードの読み取りで、[実行せずに読む](#reading-without-running)で説明します                                                                                                                                                                                                         |
 | `upd7725.Flags`                                                | フラグの集合です。`Flags.of(word)`は6ビットを展開し、`copy()`は複製を作ります                                                                                                                                                                                                                |
+| `upd7725.Pins`                                                 | シリアルポートとDMA要求で、[シリアルポートとDMA要求](#the-serial-port-and-the-dma-request)で説明します                                                                                                                                                                                       |
 | `upd7725.__version__`                                          | インストールされているバージョンです                                                                                                                                                                                                                                                         |
 
 ### エラー
@@ -474,7 +537,7 @@ python3 conformance/alu_flags.test.py
 
 [`conformance/hardware.json`](conformance/hardware.json)には、文書から取ったすべての事実が、出典の文とページとともに収められています。データシートとコーパスが食い違う場合はデータシートを優先し、コーパスを取り直します。これは3回起きており、[`conformance/pinned.json`](conformance/pinned.json)にそれぞれが記録されています。1つはスタックの深さで、出回っているどの実装も16としていますが、NECは4と記載しています。2つ目は、算術演算がデータ転送の転送先として自分自身のアキュムレータを指定する581件のケースで、NECはこの場合その演算がNOPになると述べています。3つ目はシリアルレジスタを通してワードを転送する1,895件のケースで、NECはSILが入力をビット反転して読むこと、SOへの転送がSOACKを立てること、SIからの転送がSIACKをクリアすることを記載しています。
 
-コーパスはエミュレータから記録したものなので、NECが記載していない事柄についてのみ判断の根拠になります。[`conformance/divergences.json`](conformance/divergences.json)には2つの情報源が食い違う箇所がすべて収められています。[OPEN-QUESTIONS.md](OPEN-QUESTIONS.md)には未解決の3つの問いと、それぞれを解決する計測が記されています。
+コーパスはエミュレータから記録したものなので、NECが記載していない事柄についてのみ判断の根拠になります。[`conformance/divergences.json`](conformance/divergences.json)には2つの情報源が食い違う箇所がすべて収められています。[OPEN-QUESTIONS.md](OPEN-QUESTIONS.md)には未解決の6つの問いと、それぞれを解決する計測が記されています。
 
 ## 開発に参加する
 

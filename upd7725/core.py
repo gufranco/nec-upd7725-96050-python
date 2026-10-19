@@ -12,7 +12,7 @@ from .flags import (
     record_right_shift,
 )
 from .memory import UNSET_SEED, Stores, scramble
-from .pins import reversed_bits, serial_width
+from .pins import Pins, reversed_bits, serial_width
 from .registers import Registers
 
 WORD_MASK = 0xFFFF
@@ -20,6 +20,10 @@ WORD_MASK = 0xFFFF
 RESET_CYCLES = 4
 
 INTERRUPT_VECTOR = 0x100
+
+REGISTER_VALUES = 12
+
+PIN_VALUES = 4
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
@@ -202,6 +206,7 @@ class Cpu:
         "irq_line",
         "model",
         "on_cycle",
+        "pins",
         "registers",
         "steps",
         "stores",
@@ -216,6 +221,7 @@ class Cpu:
     steps: int
     on_cycle: Callable[[], None] | None
     irq_line: bool
+    pins: Pins
 
     def __init__(
         self,
@@ -249,10 +255,11 @@ class Cpu:
         self.steps = 0
         self.on_cycle = None
         self.irq_line = False
+        self.pins = Pins()
         self.power_on(seed)
 
     def power_on(self, seed: int = UNSET_SEED) -> None:
-        undefined = scramble(12, seed)
+        undefined = scramble(REGISTER_VALUES + PIN_VALUES, seed)
         registers = self.registers
         registers.pc = undefined[0]
         registers.rp = undefined[1]
@@ -267,7 +274,8 @@ class Cpu:
         registers.tr = undefined[10] & WORD_MASK
         registers.dr = undefined[11] & WORD_MASK
         for slot in range(len(registers.stack)):
-            registers.stack[slot] = undefined[slot % len(undefined)] & registers.counter_mask
+            registers.stack[slot] = undefined[slot % REGISTER_VALUES] & registers.counter_mask
+        self.pins.power_on(undefined[REGISTER_VALUES:])
 
     def reset(self) -> Cpu:
         self.registers.pc = 0
@@ -278,6 +286,7 @@ class Cpu:
 
     def spend(self) -> None:
         self.cycles += 1
+        self.pins.sample(self.registers)
         if self.on_cycle is not None:
             self.on_cycle()
 
@@ -407,7 +416,7 @@ class Cpu:
         if source == FROM_SATURATION:
             return SIGN - int(self.flags_a.s1)
         if source == FROM_DATA_AND_ASK:
-            registers.sr.rqm = True
+            self._ask()
             return registers.dr
         if source == FROM_DATA:
             return registers.dr
@@ -484,12 +493,13 @@ class Cpu:
             registers.rp = value
         elif destination == TO_DATA:
             registers.dr = value
-            registers.sr.rqm = True
+            self._ask()
         elif destination == TO_STATUS:
             registers.sr.assign(int(registers.sr) & STATUS_KEPT | value & STATUS_TAKEN)
         elif destination in (TO_SERIAL_LOW, TO_SERIAL_HIGH):
             registers.so = value
             registers.sr.soack = True
+            self.pins.msb_first = destination == TO_SERIAL_HIGH
         elif destination == TO_K:
             registers.k = value
         elif destination == TO_K_AND_TABLE:
@@ -504,6 +514,12 @@ class Cpu:
             registers.trb = value
         else:
             self.stores.scratch[registers.dp] = value
+
+    def _ask(self) -> None:
+        status = self.registers.sr
+        status.rqm = True
+        if status.dma:
+            self.pins.drq = True
 
     def _step_pointer(self, dpl: int, dphm: int) -> None:
         registers = self.registers

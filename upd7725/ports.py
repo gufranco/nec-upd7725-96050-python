@@ -49,13 +49,13 @@ class Host:
         status = registers.sr
 
         if status.drc:
-            status.rqm = False
+            self._complete()
             return registers.dr & 0xFF
         if not status.drs:
             status.drs = True
             return registers.dr & 0xFF
 
-        status.rqm = False
+        self._complete()
         status.drs = False
         return registers.dr >> 8 & 0xFF
 
@@ -64,7 +64,7 @@ class Host:
         status = registers.sr
 
         if status.drc:
-            status.rqm = False
+            self._complete()
             registers.dr = registers.dr & 0xFF00 | value
             return
         if not status.drs:
@@ -72,9 +72,13 @@ class Host:
             registers.dr = registers.dr & 0xFF00 | value
             return
 
-        status.rqm = False
+        self._complete()
         status.drs = False
         registers.dr = value << 8 | registers.dr & 0x00FF
+
+    def _complete(self) -> None:
+        self.chip.registers.sr.rqm = False
+        self.chip.pins.drq = False
 
     def send_bytes(self, values: Iterable[int], limit: int = DEFAULT_LIMIT) -> None:
         for value in values:

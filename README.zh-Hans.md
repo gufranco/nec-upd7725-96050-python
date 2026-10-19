@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** 个器件，**1,120** 种编码逐字段遍历，**22,240** 条指令比对，**0** 处不一致，**1,051** 个测试，**100%** 语句与分支覆盖率，无任何依赖
+**2** 个器件，**1,120** 种编码逐字段遍历，**22,240** 条指令比对，**0** 处不一致，**1,094** 个测试，**100%** 语句与分支覆盖率，无任何依赖
 
 ```python
 from upd7725 import Cpu
@@ -89,8 +89,9 @@ python3 upd7725/doctor.py
 | `steps`              | 自上次复位以来的指令数                                                                                        |
 | `irq_line`           | 以电平表示的中断线                                                                                            |
 | `on_cycle`           | `None`，或每个周期后以无参数方式调用的函数                                                                    |
+| `pins`               | 串行端口与 DMA 请求，见[串行端口与 DMA 请求](#the-serial-port-and-the-dma-request)                            |
 
-`registers.pc`、`rp`、`dp` 和 `sp` 会把写入的值按器件自身的宽度掩码。`k`、`l`、`m`、`n`、`a` 和 `b` 持有 16 位，读回时为有符号数。`registers.word(name)` 把其中任意一个读作无符号 16 位字。`tr`、`trb`、`dr`、`si` 和 `so` 是普通整数。`registers.stack` 是一个与器件堆栈等长的列表，`registers.sr` 是状态字：`p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm` 和 `drs` 各位位于数据表 Figure 3 所示的位置，`int(registers.sr)` 把它们读作一个字，`registers.sr.assign(word)` 从一个字设置它们。`registers.sr.siack` 和 `registers.sr.soack` 是串行输入和输出的应答，SIACK 和 SOACK 条件跳转读取它们。两者都不属于状态字。从 SI 传送会清除 `siack`，传送到 SO 会置位 `soack`。
+`registers.pc`、`rp`、`dp` 和 `sp` 会把写入的值按器件自身的宽度掩码。`k`、`l`、`m`、`n`、`a` 和 `b` 持有 16 位，读回时为有符号数。`registers.word(name)` 把其中任意一个读作无符号 16 位字。`tr`、`trb`、`dr`、`si` 和 `so` 是普通整数。`registers.stack` 是一个与器件堆栈等长的列表，`registers.sr` 是状态字：`p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm` 和 `drs` 各位位于数据表 Figure 3 所示的位置，`int(registers.sr)` 把它们读作一个字，`registers.sr.assign(word)` 从一个字设置它们。`registers.sr.siack` 和 `registers.sr.soack` 是串行输入和输出的应答，SIACK 和 SOACK 条件跳转读取它们。两者都不属于状态字。串行输入收到一个完整的字会置位 `siack`，从 SI 传送会清除它。传送到 SO 会置位 `soack`，字移入移位寄存器时会清除它。
 
 ```python
 from upd7725 import Cpu, disassemble
@@ -247,6 +248,67 @@ the part did not ask for attention within 50 instructions
 
 程序只有一个字 `ld $1234,dr`。写入数据寄存器会置位 RQM，即 `STATUS` 处字节的第 7 位。主机分两次读取 1234，第二次读取清除 RQM。复位之后同一个字再次发出请求，主机发送 BEEF 取而代之。其后没有任何指令发出请求，所以最后一次 `settle` 放弃。
 
+<a id="the-serial-port-and-the-dma-request"></a>
+
+### 串行端口与 DMA 请求
+
+`cpu.pins` 是一个 `Pins`，持有主机总线之外的各条线。输入是主机在周期之间设置的电平，器件在每个周期的最后对它们采样一次。边沿是相对上一次采样所见电平的变化。
+
+| 属性                       | 含义                                                                               |
+| :------------------------- | :--------------------------------------------------------------------------------- |
+| `sck`                      | 串行时钟输入。上升沿移入一位，下降沿移出一位                                       |
+| `si`, `sien`               | 串行数据输入及其使能。只有 `sien` 为低时才移入位                                   |
+| `soen`                     | 串行输出使能。只有它为低时才移出位                                                 |
+| `so`                       | 串行数据输出：`0` 或 `1`，处于高阻态时为 `None`                                    |
+| `sorq`                     | 串行输出请求。字装入后的上升时钟沿使它升起，最后一位之后的上升时钟沿使它落下       |
+| `drq`                      | DMA 请求。在 DMA 模式下，置位 RQM 的传送会升起它，完成传输的那次主机访问会使它落下 |
+| `shifting_in`, `bits_in`   | 输入移位寄存器，以及它持有的当前字的位数                                           |
+| `shifting_out`, `bits_out` | 输出移位寄存器，以及它仍需发送的位数                                               |
+| `msb_first`                | 最近一次传送到 SO 时指定的是先发最高位的 SOM，还是先发最低位的 SOL                 |
+
+状态字中的 SIC 和 SOC 为零时把每个字设为 16 位，置位时设为 8 位。完整到达的字按位到达的顺序放入 `registers.si`，第一位在最高位，并置位 SIACK。从 SIM 传送按原样读取，从 SIL 传送按位反转读取，两者都会清除 SIACK。传送到 SO 会置位 SOACK，在 `soen` 为低时的第一个下降时钟沿把字取入移位寄存器并清除 SOACK。
+
+```python
+from upd7725 import Cpu, Host
+
+cpu = Cpu("upd7725", fill=0)
+cpu.reset()
+cpu.stores.load_program(bytes.fromhex("E970C9"))
+pins = cpu.pins
+pins.bits_out = 0
+cpu.step()
+print(cpu.registers.sr.soack, pins.sorq, pins.so)
+
+pins.soen = False
+sent = []
+for _ in range(16):
+    pins.sck = True
+    cpu.step()
+    pins.sck = False
+    cpu.step()
+    sent.append(pins.so)
+print(cpu.registers.sr.soack, pins.sorq, "".join(map(str, sent)))
+
+pins.sck = True
+cpu.step()
+print(pins.sorq)
+
+cpu.reset()
+cpu.stores.load_program(bytes.fromhex("C20007C48D06"))
+cpu.run_for(2)
+host = Host(cpu)
+print(pins.drq, hex(host.take()), pins.drq)
+```
+
+```
+True False None
+False True 1010010111000011
+False
+True 0x1234 False
+```
+
+`E970C9` 是 `ld $A5C3,som`。该传送置位 SOACK，此时还没有任何东西索取这个字。使能为低时，十六个下降时钟沿把 A5C3 从最高位开始发出。其中第一个取入该字并清除 SOACK，SORQ 一直保持高电平，直到最后一位之后的上升时钟沿。先把 `bits_out` 设为 0，是因为移位寄存器上电时持有种子决定的值，所以没有人清零的器件会先发出它之前持有的内容，然后才是写入的字。第二段程序置位 DMA 位并装入数据寄存器，这会升起 DRQ，主机取走的第二个字节使它落下。
+
 ### 模块内容
 
 | 名称                                                           | 内容                                                                                                                                                                                                                                                             |
@@ -260,6 +322,7 @@ the part did not ask for attention within 50 instructions
 | `upd7725.Clock`                                                | 每次单步一个周期，见[逐周期驱动](#driving-it-one-cycle-at-a-time)                                                                                                                                                                                                |
 | `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | 读取程序字，见[不运行而读取](#reading-without-running)                                                                                                                                                                                                           |
 | `upd7725.Flags`                                                | 标志集合。`Flags.of(word)` 解包六个位，`copy()` 复制一份                                                                                                                                                                                                         |
+| `upd7725.Pins`                                                 | 串行端口与 DMA 请求，见[串行端口与 DMA 请求](#the-serial-port-and-the-dma-request)                                                                                                                                                                               |
 | `upd7725.__version__`                                          | 已安装的版本                                                                                                                                                                                                                                                     |
 
 ### 错误
@@ -474,7 +537,7 @@ python3 conformance/alu_flags.test.py
 
 [`conformance/hardware.json`](conformance/hardware.json) 保存了取自文档的每一项事实，以及其来源语句和页码。当数据表与语料库不一致时，以数据表为准，并重新录制语料库。这种情况发生过三次，[`conformance/pinned.json`](conformance/pinned.json) 记录了每一处：一是堆栈深度，业界每个实现都给出十六，而 NEC 印的是四；二是 581 个用例，其中算术运算把自己的累加器指定为数据传送的目标，NEC 说这会把该运算变为 NOP；三是 1,895 个经由串行寄存器传送字的用例，NEC 印明 SIL 按位反转读取输入、传送到 SO 会置位 SOACK、从 SI 传送会清除 SIACK。
 
-语料库是从模拟器录制的，因此它只决定 NEC 没有印出的内容。[`conformance/divergences.json`](conformance/divergences.json) 保存了两个来源存在分歧的每一处。[OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) 列出三个仍未解决的问题，以及能解决每个问题的测量。
+语料库是从模拟器录制的，因此它只决定 NEC 没有印出的内容。[`conformance/divergences.json`](conformance/divergences.json) 保存了两个来源存在分歧的每一处。[OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) 列出六个仍未解决的问题，以及能解决每个问题的测量。
 
 ## 参与开发
 

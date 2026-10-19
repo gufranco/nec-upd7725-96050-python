@@ -8,7 +8,7 @@ English | [日本語](README.ja.md) | [简体中文](README.zh-Hans.md) | [繁�
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **1,051** tests, **100%** statement and branch coverage, no dependencies
+**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **1,094** tests, **100%** statement and branch coverage, no dependencies
 
 ```python
 from upd7725 import Cpu
@@ -79,18 +79,19 @@ Releases follow [Semantic Versioning](https://semver.org/) and are cut from the 
 
 ### State
 
-| Attribute            | Meaning                                                                                                                         |
-| :------------------- | :------------------------------------------------------------------------------------------------------------------------------ |
-| `model`              | The `Model` record the part was built from                                                                                      |
-| `registers`          | The register file, described below                                                                                              |
-| `flags_a`, `flags_b` | The six flags of each accumulator: `s1`, `s0`, `c`, `z`, `ov1`, `ov0`. `int()` packs them with `ov0` in bit 0 and `s1` in bit 5 |
-| `stores`             | The three stores, described below                                                                                               |
-| `cycles`             | Cycles since the part was built. A reset adds to it                                                                             |
-| `steps`              | Instructions since the last reset                                                                                               |
-| `irq_line`           | The interrupt line as a level                                                                                                   |
-| `on_cycle`           | `None`, or a function called with no arguments after every cycle                                                                |
+| Attribute            | Meaning                                                                                                                          |
+| :------------------- | :------------------------------------------------------------------------------------------------------------------------------- |
+| `model`              | The `Model` record the part was built from                                                                                       |
+| `registers`          | The register file, described below                                                                                               |
+| `flags_a`, `flags_b` | The six flags of each accumulator: `s1`, `s0`, `c`, `z`, `ov1`, `ov0`. `int()` packs them with `ov0` in bit 0 and `s1` in bit 5  |
+| `stores`             | The three stores, described below                                                                                                |
+| `cycles`             | Cycles since the part was built. A reset adds to it                                                                              |
+| `steps`              | Instructions since the last reset                                                                                                |
+| `irq_line`           | The interrupt line as a level                                                                                                    |
+| `on_cycle`           | `None`, or a function called with no arguments after every cycle                                                                 |
+| `pins`               | The serial port and the DMA request, described under [The serial port and the DMA request](#the-serial-port-and-the-dma-request) |
 
-`registers.pc`, `rp`, `dp` and `sp` mask what is written to them to the part's own widths. `k`, `l`, `m`, `n`, `a` and `b` hold 16 bits and read back signed. `registers.word(name)` reads any of them as an unsigned 16-bit word. `tr`, `trb`, `dr`, `si` and `so` are plain integers. `registers.stack` is a list as long as the part's stack, and `registers.sr` is the status word: the bits `p0`, `p1`, `ei`, `sic`, `soc`, `drc`, `dma`, `usf0`, `usf1`, `rqm` and `drs` sit where Figure 3 of the data sheet puts them, `int(registers.sr)` reads them as one word, and `registers.sr.assign(word)` sets them from one. `registers.sr.siack` and `registers.sr.soack` are the serial input and output acknowledgements the conditional jumps on SIACK and SOACK read, and neither is part of the word. A move from SI clears `siack` and a move to SO sets `soack`.
+`registers.pc`, `rp`, `dp` and `sp` mask what is written to them to the part's own widths. `k`, `l`, `m`, `n`, `a` and `b` hold 16 bits and read back signed. `registers.word(name)` reads any of them as an unsigned 16-bit word. `tr`, `trb`, `dr`, `si` and `so` are plain integers. `registers.stack` is a list as long as the part's stack, and `registers.sr` is the status word: the bits `p0`, `p1`, `ei`, `sic`, `soc`, `drc`, `dma`, `usf0`, `usf1`, `rqm` and `drs` sit where Figure 3 of the data sheet puts them, `int(registers.sr)` reads them as one word, and `registers.sr.assign(word)` sets them from one. `registers.sr.siack` and `registers.sr.soack` are the serial input and output acknowledgements the conditional jumps on SIACK and SOACK read, and neither is part of the word. A whole word arriving on the serial input sets `siack` and a move from SI clears it. A move to SO sets `soack` and the word leaving for the shift register clears it.
 
 ```python
 from upd7725 import Cpu, disassemble
@@ -247,6 +248,65 @@ the part did not ask for attention within 50 instructions
 
 The program is one word, `ld $1234,dr`. Writing the data register sets RQM, which is bit 7 of the byte at `STATUS`. The host takes 1234 in two reads, and the second clears RQM. After a reset the same word asks again, and the host sends BEEF in its place. Nothing after it asks, so the last `settle` gives up.
 
+### The serial port and the DMA request
+
+`cpu.pins` is a `Pins` holding the lines outside the host bus. The inputs are levels the host sets between cycles, and the part samples them once a cycle, as the last thing the cycle does. An edge is a change from the level seen at the previous sample.
+
+| Attribute                  | Meaning                                                                                                                         |
+| :------------------------- | :------------------------------------------------------------------------------------------------------------------------------ |
+| `sck`                      | The serial clock input. A rising edge shifts a bit in, and a falling edge shifts a bit out                                      |
+| `si`, `sien`               | The serial data input and its enable. A bit shifts in only while `sien` is low                                                  |
+| `soen`                     | The serial output enable. A bit shifts out only while it is low                                                                 |
+| `so`                       | The serial data output: `0` or `1`, or `None` when it is at high impedance                                                      |
+| `sorq`                     | The serial output request. It rises on the rising clock after a word is loaded and falls on the rising clock after the last bit |
+| `drq`                      | The DMA request. In DMA mode a move that raises RQM raises it, and the host access that completes the transfer lowers it        |
+| `shifting_in`, `bits_in`   | The input shift register and the bits it holds of the word in progress                                                          |
+| `shifting_out`, `bits_out` | The output shift register and the bits it still has to send                                                                     |
+| `msb_first`                | Whether the last move to SO named SOM, which sends the top bit first, rather than SOL, which sends the bottom bit first         |
+
+SIC and SOC in the status word set each word to 16 bits when clear and 8 when set. A whole word arriving lands in `registers.si` in the order the bits came, the first one highest, and sets SIACK. A move from SIM reads it that way and a move from SIL reads it bit reversed, and either clears SIACK. A move to SO sets SOACK, and the first falling clock with `soen` low takes the word into the shift register and clears it.
+
+```python
+from upd7725 import Cpu, Host
+
+cpu = Cpu("upd7725", fill=0)
+cpu.reset()
+cpu.stores.load_program(bytes.fromhex("E970C9"))
+pins = cpu.pins
+pins.bits_out = 0
+cpu.step()
+print(cpu.registers.sr.soack, pins.sorq, pins.so)
+
+pins.soen = False
+sent = []
+for _ in range(16):
+    pins.sck = True
+    cpu.step()
+    pins.sck = False
+    cpu.step()
+    sent.append(pins.so)
+print(cpu.registers.sr.soack, pins.sorq, "".join(map(str, sent)))
+
+pins.sck = True
+cpu.step()
+print(pins.sorq)
+
+cpu.reset()
+cpu.stores.load_program(bytes.fromhex("C20007C48D06"))
+cpu.run_for(2)
+host = Host(cpu)
+print(pins.drq, hex(host.take()), pins.drq)
+```
+
+```
+True False None
+False True 1010010111000011
+False
+True 0x1234 False
+```
+
+`E970C9` is `ld $A5C3,som`. The move sets SOACK, and nothing has asked for the word yet. With the enable low, sixteen falling clocks send A5C3 top bit first. The first of them takes the word and clears SOACK, and SORQ stays high until the rising clock after the last bit. `bits_out` is set to 0 first because the shift registers come up holding what the seed says, so a part nobody cleared sends what it held before the word written to it. The second program sets the DMA bit and loads the data register, which raises DRQ, and the second byte the host takes lowers it.
+
 ### Module contents
 
 | Name                                                           | Content                                                                                                                                                                                                                                                                             |
@@ -260,6 +320,7 @@ The program is one word, `ld $1234,dr`. Writing the data register sets RQM, whic
 | `upd7725.Clock`                                                | Stepping one cycle at a time, under [Driving it one cycle at a time](#driving-it-one-cycle-at-a-time)                                                                                                                                                                               |
 | `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | Reading program words, under [Reading without running](#reading-without-running)                                                                                                                                                                                                    |
 | `upd7725.Flags`                                                | The flag set. `Flags.of(word)` unpacks six bits and `copy()` duplicates one                                                                                                                                                                                                         |
+| `upd7725.Pins`                                                 | The serial port and the DMA request, under [The serial port and the DMA request](#the-serial-port-and-the-dma-request)                                                                                                                                                              |
 | `upd7725.__version__`                                          | The installed version                                                                                                                                                                                                                                                               |
 
 ### Errors
@@ -468,7 +529,7 @@ The first command is the gate, and it needs nothing outside the repository. The 
 
 [`conformance/hardware.json`](conformance/hardware.json) holds every fact taken from a document, with the sentence it came from and the page. When the data sheet and the corpus disagree, the data sheet wins and the corpus is retaken. That happened three times, and [`conformance/pinned.json`](conformance/pinned.json) records each: the stack depth, which every implementation in the field gives as sixteen and NEC prints as four; 581 cases where an arithmetic operation names its own accumulator as the destination of the data move, which NEC says turns the operation into a NOP; and 1,895 cases that move a word through the serial registers, where NEC prints that SIL reads the input bit reversed, that a move to SO sets SOACK and that a move from SI clears SIACK.
 
-The corpus was recorded from an emulator, so it decides only what NEC did not print. [`conformance/divergences.json`](conformance/divergences.json) holds every place two sources part. [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) names three questions still open and the measurement that would close each one.
+The corpus was recorded from an emulator, so it decides only what NEC did not print. [`conformance/divergences.json`](conformance/divergences.json) holds every place two sources part. [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) names six questions still open and the measurement that would close each one.
 
 ## Working on it
 

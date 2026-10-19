@@ -35,7 +35,7 @@
       "why": "The data book prints that the two source codes for the serial input read one word in opposite bit orders, SIM with the first bit highest and SIL bit reversed, and its timing examples draw a move to SO setting SOAK and a move from SI clearing SIAK. Both implementations here read SIM and SIL as the same word and left both flags alone, and so does the emulator the corpus was recorded from, so the recording carried it.",
       "whatChanged": "A move from SIL reads the input register bit reversed across the word width SIC selects. A move from SIM or SIL clears SIAK. A move to SOL or SOM sets SOAK. Nothing else.",
       "howMuch": "1,895 of the 22,240 recorded cases, which is 8.5%: 344 moving from SIM, 643 from SIL, 284 and 297 operations moving to SOL and SOM, and 180 and 147 loads to SOL and SOM. No other case changed.",
-      "evidenceItRestsOn": "conformance/hardware.json, upd7725.facts.serialInputBitOrder, quoting Table 11 of the data book's uPD77C25 section, and the timing examples in Figures 11 and 12 of the same section, printed pages 2-47 and 2-48, which draw a move from SI lowering SIAK and a move to SO raising SOAK.",
+      "evidenceItRestsOn": "conformance/hardware.json, upd7725.facts.serialInputBitOrder, serialInputAcknowledge and serialOutputAcknowledge, quoting Table 11 and Figures 11 and 12 of the data book's uPD77C25 section.",
       "corroboration": "The two implementations here were changed separately and agree on every recorded case and on 20,000 cases past the end of the corpus, which is what conformance/differential.py re-runs."
     }
   ],

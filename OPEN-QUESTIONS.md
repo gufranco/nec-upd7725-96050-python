@@ -29,9 +29,9 @@ almost everything below.
 ## What would settle almost all of them
 
 A recording taken off a real part: drive known inputs through a known program and
-capture the state after each instruction. Two of the four entries below close
-immediately with such a recording, and a third closes with a data sheet nobody
-has yet found.
+capture the state after each instruction, and watch the serial pins while it
+runs. Every open entry below except the first closes with such a recording, and
+the first closes with a data sheet nobody has yet found.
 
 ## Where the manufacturer wrote nothing
 
@@ -131,6 +131,52 @@ and marks the same two operations carry-reset. Neither is this part. The 7281 is
 a dataflow processor with a different architecture, and a sibling agreeing about
 flags is not a sibling agreeing about fill bits. Reading either across would
 turn a documented unknown into an undocumented assumption that looks sourced.
+
+## Where the serial port's drawings leave a choice
+
+The pins themselves are printed: which edge of SCK moves a bit each way, what
+SIEN, SOEN and SORQ do, how wide a word is, and which order each source and
+destination code uses. What follows is what the drawings leave open.
+
+### When the serial input acknowledge rises and what lowers it.
+
+**The document says.** Figure 11 of the data book draws SIAK rising after the
+last bit has been clocked in and falling during the instruction its note marks,
+a move from SI. The note's first line says that move sets the flag. Figure 2
+draws SI ACK rising about half a serial clock after the last bit, where Figure
+11 draws it about one serial clock after.
+
+**What this project does.** Follows the two waveforms: a whole word arriving
+raises SIAK at the sample that sees the last bit's rising edge, and a move from
+SI lowers it.
+
+**What would settle it.** A real part: clock a word in and poll JSIAK every
+instruction, then move from SI and poll again.
+
+### Which half of a sixteen-bit serial register an eight-bit word occupies.
+
+**The document says.** That SIC and SOC select 8-bit or 16-bit transfers, and
+which end of the word each code sends or reads first. Not which bits of the
+sixteen-bit register an eight-bit word uses, nor what the other eight hold.
+
+**What this project does.** Uses the low byte. An arriving byte lands there with
+the high byte cleared, SIL reverses only the low byte, and SOM sends bit 7
+first.
+
+**What would settle it.** A real part in 8-bit mode: clock a known byte in and
+read it, then load SO with a word whose two bytes differ and watch which leaves.
+
+### What the serial shift registers hold at power on and after a reset.
+
+**The document says.** That RST initializes the internal logic and sets the
+program counter to 0, without listing what else it sets.
+
+**What this project does.** Brings the shift registers and their bit counts up
+from the seed, like every other register, and leaves them through `reset()`,
+because the program counter is the only thing the document says a reset sets.
+
+**What would settle it.** A real part: after power on, and again after a reset,
+clock a known word in and see whether it arrives whole.
 
 ## What is not in question
 

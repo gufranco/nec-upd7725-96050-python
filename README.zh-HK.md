@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** 款晶片，逐欄位走訪 **1,120** 種編碼，比對 **22,240** 條指令，**0** 處分歧，**1,051** 項測試，**100%** 語句與分支覆蓋率，無任何依賴
+**2** 款晶片，逐欄位走訪 **1,120** 種編碼，比對 **22,240** 條指令，**0** 處分歧，**1,094** 項測試，**100%** 語句與分支覆蓋率，無任何依賴
 
 ```python
 from upd7725 import Cpu
@@ -89,8 +89,9 @@ python3 upd7725/doctor.py
 | `steps`              | 自上次重設以來的指令數                                                                                      |
 | `irq_line`           | 以電平表示的中斷線                                                                                          |
 | `on_cycle`           | `None`，或在每個週期後以無參數呼叫的函式                                                                    |
+| `pins`               | 串列埠與 DMA 請求，見[串列埠與 DMA 請求](#the-serial-port-and-the-dma-request)                              |
 
-`registers.pc`、`rp`、`dp` 與 `sp` 會將寫入的值遮罩至晶片自身的寬度。`k`、`l`、`m`、`n`、`a` 與 `b` 持有 16 位元，讀回時為有號數。`registers.word(name)` 將其中任何一個讀作無號 16 位元字。`tr`、`trb`、`dr`、`si` 與 `so` 是普通整數。`registers.stack` 是長度與晶片堆疊相同的清單，`registers.sr` 是狀態字：位元 `p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm` 與 `drs` 位於數據表 Figure 3 所示的位置，`int(registers.sr)` 將它們讀作一個字，`registers.sr.assign(word)` 則從一個字設定它們。`registers.sr.siack` 與 `registers.sr.soack` 是串列輸入與輸出的應答，SIACK 與 SOACK 條件跳轉會讀取它們。兩者皆不屬於狀態字。從 SI 搬移會清除 `siack`，搬移到 SO 會設定 `soack`。
+`registers.pc`、`rp`、`dp` 與 `sp` 會將寫入的值遮罩至晶片自身的寬度。`k`、`l`、`m`、`n`、`a` 與 `b` 持有 16 位元，讀回時為有號數。`registers.word(name)` 將其中任何一個讀作無號 16 位元字。`tr`、`trb`、`dr`、`si` 與 `so` 是普通整數。`registers.stack` 是長度與晶片堆疊相同的清單，`registers.sr` 是狀態字：位元 `p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm` 與 `drs` 位於數據表 Figure 3 所示的位置，`int(registers.sr)` 將它們讀作一個字，`registers.sr.assign(word)` 則從一個字設定它們。`registers.sr.siack` 與 `registers.sr.soack` 是串列輸入與輸出的應答，SIACK 與 SOACK 條件跳轉會讀取它們。兩者皆不屬於狀態字。串列輸入收到一個完整的字會設定 `siack`，從 SI 搬移會清除它。搬移到 SO 會設定 `soack`，字移入移位暫存器時會清除它。
 
 ```python
 from upd7725 import Cpu, disassemble
@@ -247,6 +248,67 @@ the part did not ask for attention within 50 instructions
 
 程式只有一個字：`ld $1234,dr`。寫入數據暫存器會設定 RQM，即 `STATUS` 位元組的位元 7。主機分兩次讀取取得 1234，第二次讀取清除 RQM。重設後，同一個字再次發出請求，主機改為送入 BEEF。之後再沒有任何請求，因此最後的 `settle` 放棄。
 
+<a id="the-serial-port-and-the-dma-request"></a>
+
+### 串列埠與 DMA 請求
+
+`cpu.pins` 是一個 `Pins`，持有主機匯流排以外的各條線。輸入是主機在週期之間設定的電平，晶片在每個週期的最後對它們取樣一次。邊沿是相對上一次取樣所見電平的變化。
+
+| 屬性                       | 含義                                                                                 |
+| :------------------------- | :----------------------------------------------------------------------------------- |
+| `sck`                      | 串列時鐘輸入。上升沿移入一個位元，下降沿移出一個位元                                 |
+| `si`, `sien`               | 串列數據輸入及其致能。只有 `sien` 為低時才移入位元                                   |
+| `soen`                     | 串列輸出致能。只有它為低時才移出位元                                                 |
+| `so`                       | 串列數據輸出：`0` 或 `1`，處於高阻抗時為 `None`                                      |
+| `sorq`                     | 串列輸出請求。字載入後的上升時鐘沿令它升起，最後一個位元之後的上升時鐘沿令它落下     |
+| `drq`                      | DMA 請求。在 DMA 模式下，設定 RQM 的搬移會令它升起，完成傳輸的那次主機存取會令它落下 |
+| `shifting_in`, `bits_in`   | 輸入移位暫存器，以及它持有的當前字的位元數                                           |
+| `shifting_out`, `bits_out` | 輸出移位暫存器，以及它仍須送出的位元數                                               |
+| `msb_first`                | 最近一次搬移到 SO 時指定的是先送最高位元的 SOM，還是先送最低位元的 SOL               |
+
+狀態字中的 SIC 與 SOC 清除時把每個字設為 16 位元，設定時設為 8 位元。完整到達的字按位元到達的次序放入 `registers.si`，第一個位元在最高位，並設定 SIACK。從 SIM 搬移按原樣讀取，從 SIL 搬移按位元反轉讀取，兩者都會清除 SIACK。搬移到 SO 會設定 SOACK，在 `soen` 為低時的第一個下降時鐘沿把字取入移位暫存器並清除 SOACK。
+
+```python
+from upd7725 import Cpu, Host
+
+cpu = Cpu("upd7725", fill=0)
+cpu.reset()
+cpu.stores.load_program(bytes.fromhex("E970C9"))
+pins = cpu.pins
+pins.bits_out = 0
+cpu.step()
+print(cpu.registers.sr.soack, pins.sorq, pins.so)
+
+pins.soen = False
+sent = []
+for _ in range(16):
+    pins.sck = True
+    cpu.step()
+    pins.sck = False
+    cpu.step()
+    sent.append(pins.so)
+print(cpu.registers.sr.soack, pins.sorq, "".join(map(str, sent)))
+
+pins.sck = True
+cpu.step()
+print(pins.sorq)
+
+cpu.reset()
+cpu.stores.load_program(bytes.fromhex("C20007C48D06"))
+cpu.run_for(2)
+host = Host(cpu)
+print(pins.drq, hex(host.take()), pins.drq)
+```
+
+```
+True False None
+False True 1010010111000011
+False
+True 0x1234 False
+```
+
+`E970C9` 是 `ld $A5C3,som`。該搬移設定 SOACK，此時尚未有任何東西索取這個字。致能為低時，十六個下降時鐘沿把 A5C3 從最高位元開始送出。其中第一個取入該字並清除 SOACK，SORQ 一直保持高電平，直至最後一個位元之後的上升時鐘沿。先把 `bits_out` 設為 0，是因為移位暫存器上電時持有種子決定的值，所以沒有人清零的晶片會先送出它之前持有的內容，然後才是寫入的字。第二段程式設定 DMA 位元並載入數據暫存器，這會令 DRQ 升起，主機取走的第二個位元組令它落下。
+
 ### 模組內容
 
 | 名稱                                                           | 內容                                                                                                                                                                                                                                                         |
@@ -260,6 +322,7 @@ the part did not ask for attention within 50 instructions
 | `upd7725.Clock`                                                | 每次步進一個週期，見[逐個週期驅動](#driving-it-one-cycle-at-a-time)                                                                                                                                                                                          |
 | `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | 讀取程式字，見[不執行而讀取](#reading-without-running)                                                                                                                                                                                                       |
 | `upd7725.Flags`                                                | 旗標集合。`Flags.of(word)` 解開六個位元，`copy()` 複製一個集合                                                                                                                                                                                               |
+| `upd7725.Pins`                                                 | 串列埠與 DMA 請求，見[串列埠與 DMA 請求](#the-serial-port-and-the-dma-request)                                                                                                                                                                               |
 | `upd7725.__version__`                                          | 已安裝的版本                                                                                                                                                                                                                                                 |
 
 ### 錯誤
@@ -474,7 +537,7 @@ python3 conformance/alu_flags.test.py
 
 [`conformance/hardware.json`](conformance/hardware.json) 持有取自文件的每一項事實，連同其出處的句子與頁碼。數據表與語料庫不一致時，以數據表為準，並重新錄製語料庫。這種情況發生過三次，[`conformance/pinned.json`](conformance/pinned.json) 記錄了每一次：第一次是堆疊深度，業界所有實現都定為十六，而 NEC 印的是四；第二次是 581 個案例，其中算術運算將自己的累加器指定為數據搬移的目的地，NEC 指出這會使該運算變成 NOP；第三次是 1,895 個經串列暫存器搬移字的案例，NEC 印明 SIL 按位元反轉讀取輸入、搬移到 SO 會設定 SOACK、從 SI 搬移會清除 SIACK。
 
-語料庫是從模擬器錄製的，因此只裁定 NEC 未印出的內容。[`conformance/divergences.json`](conformance/divergences.json) 持有兩個來源出現分歧的每一處。[OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) 列出三個仍未解決的問題，以及能解決每個問題的測量。
+語料庫是從模擬器錄製的，因此只裁定 NEC 未印出的內容。[`conformance/divergences.json`](conformance/divergences.json) 持有兩個來源出現分歧的每一處。[OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) 列出六個仍未解決的問題，以及能解決每個問題的測量。
 
 ## 參與開發
 

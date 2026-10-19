@@ -259,7 +259,7 @@
           "note": "Two instruction cycles per serial bit at 8.192 MHz. The port is modelled because the part has it, not because a program here drives it.",
           "appliesTo": ["upd7725"],
           "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for.",
-          "unreachable": "The model holds the serial registers as whole words and has no serial clock that shifts them a bit at a time."
+          "unreachable": "The serial clock is an input the host drives, and the model shifts one bit on each edge it samples rather than timing the edges. A figure in nanoseconds is a limit on how fast a host may drive it."
         },
         "instructionElementOrder": {
           "value": ["multiply", "data move", "arithmetic", "pointer modification", "return"],
@@ -438,6 +438,44 @@
           "whyNotBoth": "An electrical characteristic, measured in the data sheet for this part. No document for the uPD96050 was located, so carrying the number across would be a claim about a part nobody here has read a specification for.",
           "unreachable": "The pulse and recovery times are how long a host must hold and release the line, and the model takes the line as an edge with no width."
         },
+        "serialInputEdge": {
+          "value": "rising",
+          "document": "dataBook",
+          "section": "printed page 2-47, Serial Input",
+          "filePage": 96,
+          "quote": "Data bits are shifted in on the rising edge of SCK if SIEN is asserted.",
+          "note": "SIEN is active low in every timing figure, so asserted is low. The edge is sampled once per instruction cycle, the finest interval this model has, and a clock held at one level shifts nothing more.",
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_serial.test.py::SerialFactTest.test_a_bit_shifts_in_on_the_printed_edge_of_the_serial_clock"
+          ]
+        },
+        "serialOutputEdge": {
+          "value": "falling",
+          "document": "dataBook",
+          "section": "printed page 2-30, Figure 2. Serial I/O Timing",
+          "filePage": 79,
+          "quote": "Data clocked out on falling edge of SCK.",
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_serial.test.py::SerialFactTest.test_a_bit_shifts_out_on_the_printed_edge_of_the_serial_clock"
+          ]
+        },
+        "serialWordWidths": {
+          "value": {
+            "clear": 16,
+            "set": 8
+          },
+          "quote": "SOC (SO Control) SOC = 0 (16-bit mode) SOC = 1 (8-bit mode) SIC (SI Control) SIC = 0 (16-bit mode) SIC = 1 (8-bit mode)",
+          "assembled": true,
+          "page": 12,
+          "note": "Table 4. The text layer prints the zero as a letter O and drops the equals signs, so the words are the table's and the order is the table's, read from the page.",
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_serial.test.py::SerialFactTest.test_an_input_word_is_as_long_as_its_control_bit_says",
+            "conformance/printed_serial.test.py::SerialFactTest.test_an_output_word_is_as_long_as_its_control_bit_says"
+          ]
+        },
         "serialInputBitOrder": {
           "value": {
             "SIM": "firstBitHighest",
@@ -451,6 +489,105 @@
           "appliesTo": ["upd7725", "upd96050"],
           "heldBy": [
             "conformance/printed_serial.test.py::SerialFactTest.test_the_two_input_sources_read_the_word_in_the_printed_orders"
+          ]
+        },
+        "serialOutputBitOrder": {
+          "value": {
+            "SOL": "lowestFirst",
+            "SOM": "highestFirst"
+          },
+          "document": "dataBook",
+          "section": "printed page 2-35, Table 13. DST Field",
+          "filePage": 84,
+          "quote": "(1) LSB is first bit out. (2) MSB is first bit out.",
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_serial.test.py::SerialFactTest.test_the_two_output_destinations_send_in_the_printed_orders"
+          ]
+        },
+        "serialOutputRequest": {
+          "value": {
+            "risesWhen": "loaded",
+            "fallsWhen": "wholeWordTransferred"
+          },
+          "quote": "SORQ [Serial Data Output Request] This output specifies to an external device that the serial data register has been loaded and is ready for output. SORQ is reset when the entire 8-or 16-bit word has been transferred.",
+          "page": 6,
+          "note": "Serial Output Case 2 in the data book places both changes on a rising edge of SCK: SORQ rises a delay after the rising edge following the load, and is removed after the rising edge at which the last bit is used.",
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_serial.test.py::SerialFactTest.test_the_output_request_rises_once_the_register_is_loaded",
+            "conformance/printed_serial.test.py::SerialFactTest.test_and_falls_once_the_whole_word_has_gone"
+          ]
+        },
+        "serialOutputAcknowledge": {
+          "value": {
+            "setBy": "a move to SO",
+            "clearedBy": "the first falling clock that takes the word"
+          },
+          "document": "dataBook",
+          "section": "printed page 2-48, Figure 12. Serial Output Timing Example",
+          "filePage": 97,
+          "quote": "Notes: [1] Setting SOAK flag to 1 [MOV @SO, XXX] [2] The SOAK flag is recognized as 0 from this instruction",
+          "assembled": true,
+          "note": "Read from the waveform as well as the notes. SOAK rises during the instruction that moves a word to SO and falls a clock after the falling edge of SCK at which, with SOEN low, the first bit leaves. Figure 2 of the data sheet draws the same flag as SO ACK falling where SO Load moves the word into the shift register.",
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_serial.test.py::SerialFactTest.test_a_move_to_the_output_register_sets_its_acknowledge",
+            "conformance/printed_serial.test.py::SerialFactTest.test_and_the_word_leaving_for_the_shifter_clears_it"
+          ]
+        },
+        "serialInputAcknowledge": {
+          "value": {
+            "setBy": "a whole word arriving",
+            "clearedBy": "a move from SI"
+          },
+          "document": "dataBook",
+          "section": "printed page 2-47, Figure 11. Serial Input Timing Example",
+          "filePage": 96,
+          "quote": "Notes: [1] Setting SIAK flag to 1 [MOV XXX, SI] The SIAK flag is recognized as 0 from this instruction",
+          "assembled": true,
+          "note": "The waveform shows SIAK rising after the last bit has been clocked in and falling during the instruction the note marks, a move from SI. The note's first line says that move sets the flag, which the waveform beside it does not draw. Figure 2 of the data sheet draws SI ACK rising after SI Load, when the last bit arrives. This model follows the two waveforms, and divergences.json carries the disagreement.",
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_serial.test.py::SerialFactTest.test_a_whole_word_arriving_sets_the_input_acknowledge",
+            "conformance/printed_serial.test.py::SerialFactTest.test_and_a_move_from_the_input_register_clears_it"
+          ]
+        },
+        "serialOutputFloats": {
+          "value": "highImpedance",
+          "quote": "SO [Serial Data Output] This three-state port outputs 8- or 16-bit data words to an external device such as a D/A converter.",
+          "page": 6,
+          "note": "Figure 2 draws the output at high impedance while SOEN is high and after the last bit.",
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_serial.test.py::SerialFactTest.test_the_output_lets_go_while_its_enable_is_high"
+          ]
+        },
+        "dmaRequest": {
+          "value": {
+            "raisedBy": "a data register access that sets RQM, in DMA mode",
+            "loweredBy": "the host access that completes the transfer"
+          },
+          "quote": "When in DMA mode, DACK input resets DRQ output when data transfer is completed.",
+          "page": 11,
+          "note": "The data book's DMA Operation figures, printed pages 2-41 and 2-42, show DRQ rising at the clock edge ending the instruction that set RQM, and falling after DACK of the last byte: the only byte in 8-bit mode, the second in 16-bit mode. DACK low is the same select as A0 and CS low, so a host access to the data register is the acknowledged access.",
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_serial.test.py::DmaFactTest.test_in_dma_mode_the_program_touching_the_data_register_raises_the_request",
+            "conformance/printed_serial.test.py::DmaFactTest.test_the_access_that_completes_the_transfer_lowers_it"
+          ]
+        },
+        "dmaRequestWithoutFlag": {
+          "value": false,
+          "document": "dataBook",
+          "section": "printed page 2-34, Table 11. SRC Field",
+          "filePage": 83,
+          "quote": "(1) DR to IDB, RQM not set. In DMA, DRQ not set.",
+          "assembled": true,
+          "note": "The note to DRNF. The text layer prints DMA as OMA, so the words were read from the page.",
+          "appliesTo": ["upd7725", "upd96050"],
+          "heldBy": [
+            "conformance/printed_serial.test.py::DmaFactTest.test_the_move_that_sets_no_flag_raises_no_request"
           ]
         }
       },

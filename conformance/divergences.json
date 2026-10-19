@@ -69,6 +69,42 @@
       "packageFollows": "reference",
       "reasoning": "Following the recording here is visible rather than hidden: it makes the zero flag unreachable for those two operations, while the manufacturer's table marks that flag as derived from the result. Both statements can be true at once, and they are, but the reason the flag never fires is a choice taken from an emulator.",
       "wouldSettleIt": "A sentence in an NEC document about what a multi-bit shift shifts in, or a measurement on a real part: shift a known value and read the low bits back."
+    },
+    {
+      "id": "what-sets-and-clears-the-serial-input-acknowledge",
+      "parts": ["upd77c25", "upd96050"],
+      "severity": "low",
+      "status": "open",
+      "topic": "When the serial input acknowledge rises and what lowers it.",
+      "documentSays": "Figure 11 of the data book draws SIAK rising after the last bit has been clocked in and falling during the instruction its note marks, a move from SI, and the note's first line says that move sets the flag. Figure 2 draws SI ACK rising after SI Load, about half a serial clock after the last bit, where Figure 11 draws it about one serial clock after.",
+      "referenceDoes": "Nothing: the emulator the corpus came from never sets or clears either acknowledge.",
+      "packageFollows": "document",
+      "reasoning": "The two waveforms agree that a whole word arriving raises the flag and a move from SI lowers it, and the model takes that. It raises the flag at the sample that sees the last bit's rising edge, which is the earliest the drawings allow. The note's first line contradicts the waveform beside it, and the delay between the edge and the flag differs between the two figures by up to one serial clock, so neither the wording nor the exact clock is settled.",
+      "wouldSettleIt": "A measurement on a real part: clock a word in and poll JSIAK every instruction, then move from SI and poll again."
+    },
+    {
+      "id": "where-an-eight-bit-serial-word-sits",
+      "parts": ["upd77c25", "upd96050"],
+      "severity": "low",
+      "status": "open",
+      "topic": "Which half of a sixteen-bit serial register an eight-bit word occupies.",
+      "documentSays": "That SIC and SOC select 8-bit or 16-bit transfers, that SIM puts the first bit at the MSB and SIL bit reverses it, and that SOM sends the MSB first. It does not say which bits of the sixteen-bit register an eight-bit word uses, nor what the other eight hold.",
+      "referenceDoes": "Nothing: the emulator the corpus came from moves no serial bits.",
+      "packageFollows": "neither",
+      "reasoning": "The model places an eight-bit word in the low byte: an arriving one lands there with the high byte cleared, SIL reverses only the low byte and leaves the high byte as it was, and SOM sends bit 7 first. That is a choice this package makes, and a part that used the high byte would read every eight-bit word differently.",
+      "wouldSettleIt": "A measurement on a real part: in 8-bit mode, clock in a known byte and move SI to an accumulator, then load SO with a word whose two bytes differ and watch which byte leaves."
+    },
+    {
+      "id": "the-serial-port-at-power-on",
+      "parts": ["upd77c25", "upd96050"],
+      "severity": "low",
+      "status": "open",
+      "topic": "What the serial shift registers hold at power on and after a reset.",
+      "documentSays": "That RST initializes the internal logic and sets the program counter to 0. It does not list what else the reset sets, and says nothing about the shift registers or their bit counts.",
+      "referenceDoes": "Nothing: the emulator the corpus came from has no shift registers.",
+      "packageFollows": "neither",
+      "reasoning": "The shift registers and the count of bits each holds come up from the seed, as every other register does, and reset() leaves them alone because the only thing the document says a reset sets is the program counter. A host that needs a clean word boundary sets the counts itself, as the README's example does.",
+      "wouldSettleIt": "A measurement on a real part: after power on, and again after a reset, clock a known word in and see whether it arrives whole."
     }
   ],
   "writtenUpIn": "OPEN-QUESTIONS.md, which names every entry that is not closed"
