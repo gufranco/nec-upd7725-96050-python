@@ -8,7 +8,7 @@ English | [日本語](README.ja.md) | [简体中文](README.zh-Hans.md) | [繁�
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **1,111** tests, **100%** statement and branch coverage, no dependencies
+**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **1,127** tests, **100%** statement and branch coverage, no dependencies
 
 ```python
 from upd7725 import Cpu
@@ -338,17 +338,18 @@ All six are importable from `upd7725`.
 
 ### Command-line tools
 
-| Command                                | Arguments                                                                        | Exit codes                                                                                                                           |
-| :------------------------------------- | :------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------- |
-| `python3 upd7725/doctor.py`            | None                                                                             | 0 when every check passes, 1 otherwise                                                                                               |
-| `python3 -m conformance.instructions`  | `--corpus PATH`, `--cases N`, `--record`, `--retake`                             | 0 with no disagreement, 1 with any, 2 for a bad argument                                                                             |
-| `python3 -m conformance.differential`  | `--from N`, `--cases N` with 5,000 as default, `--seconds S`                     | 0 when the two implementations agree, 1 when they do not, 2 for a bad argument                                                       |
-| `python3 -m conformance.speed`         | `--instructions N` with 200,000 as default, `--repeats N` with 7 as default      | 0 at or above the floor, 1 below it, 2 for a bad argument                                                                            |
-| `python3 -m conformance.documents`     | `--check`, `--only SUBSTRING`                                                    | 0 when every document matches its digest, 1 otherwise                                                                                |
-| `python3 -m conformance.quotes`        | None                                                                             | 0 when every quote is found or no document is present, 1 otherwise                                                                   |
-| `python3 -m conformance.links`         | None                                                                             | 1 when a link in this file answers 404 or 410, 0 otherwise                                                                           |
-| `python3 -m conformance.stack IMAGE`   | One or more images for the larger part, 16384 program words and 2048 table words | 0 when every image stays within 8 stack levels, 1 when one does not or cannot be bounded, 2 with no image or one of the wrong length |
-| `python3 -m conformance.package WHEEL` | The wheel to audit                                                               | 0 when every module ships and no test does, 1 otherwise, 2 with no wheel named                                                       |
+| Command                                  | Arguments                                                                                                               | Exit codes                                                                                                                                              |
+| :--------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `python3 upd7725/doctor.py`              | None                                                                                                                    | 0 when every check passes, 1 otherwise                                                                                                                  |
+| `python3 -m conformance.instructions`    | `--corpus PATH`, `--cases N`, `--record`, `--retake`                                                                    | 0 with no disagreement, 1 with any, 2 for a bad argument                                                                                                |
+| `python3 -m conformance.differential`    | `--from N`, `--cases N` with 5,000 as default, `--seconds S`                                                            | 0 when the two implementations agree, 1 when they do not, 2 for a bad argument                                                                          |
+| `python3 -m conformance.speed`           | `--instructions N` with 200,000 as default, `--repeats N` with 7 as default                                             | 0 at or above the floor, 1 below it, 2 for a bad argument                                                                                               |
+| `python3 -m conformance.documents`       | `--check`, `--only SUBSTRING`                                                                                           | 0 when every document matches its digest, 1 otherwise                                                                                                   |
+| `python3 -m conformance.quotes`          | None                                                                                                                    | 0 when every quote is found or no document is present, 1 otherwise                                                                                      |
+| `python3 -m conformance.links`           | None                                                                                                                    | 1 when a link in this file answers 404 or 410, 0 otherwise                                                                                              |
+| `python3 -m conformance.stack IMAGE`     | One or more images for the larger part, 16384 program words and 2048 table words                                        | 0 when every image stays within 8 stack levels, 1 when one does not or cannot be bounded, 2 with no image or one of the wrong length                    |
+| `python3 -m conformance.testroms FOLDER` | The folder holding the test images listed in `conformance/testroms.json`, and `--record` to rewrite the measured corpus | 0 when every image found matches its recorded census and fits its stack, 1 otherwise, and 0 with no folder named, after saying that nothing was checked |
+| `python3 -m conformance.package WHEEL`   | The wheel to audit                                                                                                      | 0 when every module ships and no test does, 1 otherwise, 2 with no wheel named                                                                          |
 
 `--record` alone refuses to overwrite the corpus. `--record --retake` overwrites it, and is only for carrying a corrected hardware fact.
 

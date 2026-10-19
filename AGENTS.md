@@ -111,6 +111,40 @@ for it, and a case in `conformance/instructions.py`'s `PARTS` so every recorded
 case runs on it too. Adding a part without extending `PARTS` means the corpus
 never exercises it.
 
+## Test cartridges
+
+[`conformance/testroms.json`](conformance/testroms.json) lists seven program
+images, five for the smaller part and two for the larger, each keyed by the
+SHA-256 of the file on disk and never committed. They live in
+`snes-roms/5 Tools & Service Test Carts/CPU/` in the local library. None of
+them is a test program and none reports a verdict, and no exchange with an
+answer taken from a source outside this member is pinned here, so nothing is
+`run`. Every one is `read`:
+
+```bash
+python3 -m conformance.testroms "../snes-roms/5 Tools & Service Test Carts/CPU"
+python3 -m conformance.testroms --record FOLDER   # only after a census change
+```
+
+The runner walks each image with `conformance/stack.py` and compares what it
+finds against [`conformance/testroms_measured.json`](conformance/testroms_measured.json):
+how many words are reached, how deep calls nest from reset and from the
+interrupt vector, and whether that fits the part's stack. With no folder named
+it says that nothing was checked and exits 0, and CI runs it that way. The
+recorded census is replayed by `conformance/testroms.test.py` on a machine that
+holds no image. On 2026-10-19 every image for the smaller part nested at most
+three calls deep, inside the four levels NEC prints. One image for the larger
+part needs one level; the other jumps through the output register at 13H and
+cannot be bounded by a walk.
+
+The files on disk store every word low byte first. Reversing the bytes of each
+three-byte program word and each two-byte table word gives the image named by
+`canonicalSha256`, which is the digest `snes-dsp-python` and `snes-st-python`
+key their manifests on. That is why none of the seven matches those manifests by its own digest, and the runner accepts either layout.
+
+Running a program, with a host writing commands and reading answers, belongs to
+`snes-dsp-python` and `snes-st-python`, which drive these images.
+
 ## Every gate, in the order to run them
 
 ```bash
@@ -126,6 +160,7 @@ for f in upd7725/*.test.py conformance/*.test.py; do "${cov[@]}" run -a "$f"; do
 python3 -m conformance.instructions                    # the gate
 python3 -m conformance.differential                    # unbounded, optional locally
 python3 -m conformance.stack IMAGE [IMAGE ...]         # images for the larger part, held locally
+python3 -m conformance.testroms FOLDER                 # the test images, held locally
 ```
 
 Coverage is collected by running each test file under `coverage run -a`, not by a
@@ -219,6 +254,9 @@ conformance/
   instructions.py     the gate: every form, against the recordings
   differential.py     the two implementations against each other, unbounded
   stack.py            the deepest call a program image can make, walked without running it
+  testroms.py         the test images, read by digest and held to their recorded census
+  testroms.json       every test image that exercises this member, and its outcome
+  testroms_measured.json  what that census found, replayed with no image present
   corpus.json         22,240 recorded states
   pinned.json         which implementation, at which commit
 ```

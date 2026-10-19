@@ -1,0 +1,86 @@
+{
+  "upd7725-03ef4ef2": {
+    "canonicalMatches": true,
+    "deepest": 2,
+    "enablesInterrupts": false,
+    "fromInterrupt": 1,
+    "fromReset": 2,
+    "indirect": [],
+    "model": "upd7725",
+    "reached": 1747,
+    "recursive": [],
+    "verdict": "within"
+  },
+  "upd7725-0971b08f": {
+    "canonicalMatches": true,
+    "deepest": 3,
+    "enablesInterrupts": false,
+    "fromInterrupt": 3,
+    "fromReset": 3,
+    "indirect": [],
+    "model": "upd7725",
+    "reached": 1541,
+    "recursive": [],
+    "verdict": "within"
+  },
+  "upd7725-752d03b2": {
+    "canonicalMatches": true,
+    "deepest": 3,
+    "enablesInterrupts": false,
+    "fromInterrupt": 3,
+    "fromReset": 3,
+    "indirect": [],
+    "model": "upd7725",
+    "reached": 1742,
+    "recursive": [],
+    "verdict": "within"
+  },
+  "upd7725-91e87d11": {
+    "canonicalMatches": true,
+    "deepest": 2,
+    "enablesInterrupts": false,
+    "fromInterrupt": 0,
+    "fromReset": 2,
+    "indirect": [],
+    "model": "upd7725",
+    "reached": 1148,
+    "recursive": [],
+    "verdict": "within"
+  },
+  "upd7725-d789cb3c": {
+    "canonicalMatches": true,
+    "deepest": 2,
+    "enablesInterrupts": false,
+    "fromInterrupt": 0,
+    "fromReset": 2,
+    "indirect": [],
+    "model": "upd7725",
+    "reached": 1149,
+    "recursive": [],
+    "verdict": "within"
+  },
+  "upd96050-8b2b3f3f": {
+    "canonicalMatches": true,
+    "deepest": 0,
+    "enablesInterrupts": false,
+    "fromInterrupt": 0,
+    "fromReset": 0,
+    "indirect": [19],
+    "model": "upd96050",
+    "reached": 110,
+    "recursive": [],
+    "verdict": "unbounded"
+  },
+  "upd96050-fa9bced8": {
+    "canonicalMatches": true,
+    "deepest": 1,
+    "enablesInterrupts": false,
+    "fromInterrupt": 1,
+    "fromReset": 1,
+    "indirect": [],
+    "model": "upd96050",
+    "reached": 533,
+    "recursive": [],
+    "verdict": "within"
+  }
+}

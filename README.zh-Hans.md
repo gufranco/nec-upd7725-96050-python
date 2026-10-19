@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**2** 个器件，**1,120** 种编码逐字段遍历，**22,240** 条指令比对，**0** 处不一致，**1,111** 个测试，**100%** 语句与分支覆盖率，无任何依赖
+**2** 个器件，**1,120** 种编码逐字段遍历，**22,240** 条指令比对，**0** 处不一致，**1,127** 个测试，**100%** 语句与分支覆盖率，无任何依赖
 
 ```python
 from upd7725 import Cpu
@@ -340,17 +340,18 @@ True 0x1234 False
 
 ### 命令行工具
 
-| 命令                                   | 参数                                                        | 退出码                                                                                    |
-| :------------------------------------- | :---------------------------------------------------------- | :---------------------------------------------------------------------------------------- |
-| `python3 upd7725/doctor.py`            | 无                                                          | 所有检查都通过时为 0，否则为 1                                                            |
-| `python3 -m conformance.instructions`  | `--corpus PATH`, `--cases N`, `--record`, `--retake`        | 没有不一致时为 0，有任何不一致时为 1，参数错误时为 2                                      |
-| `python3 -m conformance.differential`  | `--from N`、`--cases N`（默认 5,000）、`--seconds S`        | 两个实现一致时为 0，不一致时为 1，参数错误时为 2                                          |
-| `python3 -m conformance.speed`         | `--instructions N`（默认 200,000）、`--repeats N`（默认 7） | 达到或高于下限时为 0，低于下限时为 1，参数错误时为 2                                      |
-| `python3 -m conformance.documents`     | `--check`, `--only SUBSTRING`                               | 每份文档都与其摘要匹配时为 0，否则为 1                                                    |
-| `python3 -m conformance.quotes`        | 无                                                          | 每条引文都找到或没有任何文档时为 0，否则为 1                                              |
-| `python3 -m conformance.links`         | 无                                                          | 本文件中有链接返回 404 或 410 时为 1，否则为 0                                            |
-| `python3 -m conformance.stack IMAGE`   | 一个或多个较大器件的映像，16384 个程序字和 2048 个表字      | 每个映像都不超过 8 级堆栈时为 0，有映像超过或无法确定上限时为 1，未给映像或长度不对时为 2 |
-| `python3 -m conformance.package WHEEL` | 要审查的 wheel                                              | 每个模块都已包含且不含任何测试时为 0，否则为 1，未指定 wheel 时为 2                       |
+| 命令                                     | 参数                                                                                | 退出码                                                                                                     |
+| :--------------------------------------- | :---------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------- |
+| `python3 upd7725/doctor.py`              | 无                                                                                  | 所有检查都通过时为 0，否则为 1                                                                             |
+| `python3 -m conformance.instructions`    | `--corpus PATH`, `--cases N`, `--record`, `--retake`                                | 没有不一致时为 0，有任何不一致时为 1，参数错误时为 2                                                       |
+| `python3 -m conformance.differential`    | `--from N`、`--cases N`（默认 5,000）、`--seconds S`                                | 两个实现一致时为 0，不一致时为 1，参数错误时为 2                                                           |
+| `python3 -m conformance.speed`           | `--instructions N`（默认 200,000）、`--repeats N`（默认 7）                         | 达到或高于下限时为 0，低于下限时为 1，参数错误时为 2                                                       |
+| `python3 -m conformance.documents`       | `--check`, `--only SUBSTRING`                                                       | 每份文档都与其摘要匹配时为 0，否则为 1                                                                     |
+| `python3 -m conformance.quotes`          | 无                                                                                  | 每条引文都找到或没有任何文档时为 0，否则为 1                                                               |
+| `python3 -m conformance.links`           | 无                                                                                  | 本文件中有链接返回 404 或 410 时为 1，否则为 0                                                             |
+| `python3 -m conformance.stack IMAGE`     | 一个或多个较大器件的映像，16384 个程序字和 2048 个表字                              | 每个映像都不超过 8 级堆栈时为 0，有映像超过或无法确定上限时为 1，未给映像或长度不对时为 2                  |
+| `python3 -m conformance.testroms FOLDER` | 存放 `conformance/testroms.json` 所列测试映像的文件夹，加 `--record` 则重写测量语料 | 找到的每个映像都与记录的调查结果一致且不超出堆栈时为 0，否则为 1，未指定文件夹时说明未检查任何内容并返回 0 |
+| `python3 -m conformance.package WHEEL`   | 要审查的 wheel                                                                      | 每个模块都已包含且不含任何测试时为 0，否则为 1，未指定 wheel 时为 2                                        |
 
 单独使用 `--record` 会拒绝覆盖语料库。`--record --retake` 会覆盖它，仅用于引入一项更正后的硬件事实。
 

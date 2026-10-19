@@ -129,6 +129,9 @@ jobs:
       - name: Every quoted sentence, against the document it came from, where present
         run: python -m conformance.quotes
 
+      - name: Every test image, against its recorded census, where present
+        run: python -m conformance.testroms
+
       - name: The model has not become several times slower, outside coverage
         run: python -m conformance.speed
 
