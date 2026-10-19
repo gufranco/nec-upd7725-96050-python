@@ -99,6 +99,19 @@ def a_running_part() -> Part:
 
 TESTED_DIRECTORIES = ("upd7725", "conformance")
 
+LONG_FILES: dict[str, str] = {
+    "upd7725/core.py": (
+        "A single calculation engine sharing intermediate state: one Cpu whose four"
+        " instruction forms read and write the same registers, both flag sets, the three"
+        " stores and the cycle count within each step"
+    ),
+    "conformance/reference.py": (
+        "A single calculation engine: one table-driven Upd96050 whose handlers share its"
+        " register file and flags, kept whole because it is a transcription whose"
+        " structure must stay re-derivable"
+    ),
+}
+
 MACHINES = {
     "zilog-z80-python": (
         "ZX Spectrum",
