@@ -30,10 +30,10 @@ The three bytes are one 24-bit program word, `C00A81`. Its top two bits select t
 
 ## Install
 
-| Requirement | Version |
-|:--|:--|
-| Python | 3.12 or newer |
-| git | Any |
+| Requirement | Version       |
+| :---------- | :------------ |
+| Python      | 3.12 or newer |
+| git         | Any           |
 
 ```bash
 git clone https://github.com/gufranco/nec-upd7725-96050-python.git
@@ -55,40 +55,40 @@ Releases follow [Semantic Versioning](https://semver.org/) and are cut from the 
 
 `upd7725.Cpu(model, memory=None, *, fill=0, sources=None, seed=UNSET_SEED)` builds one part, powered and not reset.
 
-| Argument | Meaning |
-|:--|:--|
-| `model` | Required. A model name or alias from the table under [Models](#models). Leaving it out raises `UnknownModelError` |
-| `memory` | A `Stores` to use. Left out, the part builds one at its own sizes |
-| `fill` | What an unwritten word of each store reads as, masked to the store's width. `0` when left out |
+| Argument  | Meaning                                                                                                                                                  |
+| :-------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`   | Required. A model name or alias from the table under [Models](#models). Leaving it out raises `UnknownModelError`                                        |
+| `memory`  | A `Stores` to use. Left out, the part builds one at its own sizes                                                                                        |
+| `fill`    | What an unwritten word of each store reads as, masked to the store's width. `0` when left out                                                            |
 | `sources` | A mapping from `"program"`, `"table"` or `"scratch"` to a function of the address. A store with a source reads unwritten words from it instead of `fill` |
-| `seed` | The power-on scramble of the registers. Two parts built with one seed hold the same values |
+| `seed`    | The power-on scramble of the registers. Two parts built with one seed hold the same values                                                               |
 
 ### Calls
 
-| Call | Effect | Returns |
-|:--|:--|:--|
-| `reset()` | What the RESET pin does: sets the program counter to 0, sets `steps` to 0, and spends 4 cycles | The part |
-| `step()` | Runs one instruction | The cycles it cost, which is 1 for every instruction |
-| `run_for(cycles)` | Runs whole instructions until at least `cycles` have passed | The cycles spent |
-| `run_until(check, limit=None)` | Steps while `check(cpu)` is false. Raises `RunLimit` after `limit` instructions | The part |
-| `held()` | Whether the part has stopped advancing its program. This part has no halt | `False` |
-| `irq()` | Raises the interrupt line. On the rising edge, with the EI bit of the status word set, it pushes the program counter, jumps to 100H and spends 1 cycle | `True` when the interrupt was taken |
-| `lower_irq()` | Lowers the interrupt line, so the next `irq()` is a new edge | `None` |
-| `power_on(seed=UNSET_SEED)` | Scrambles the registers again from `seed`, as construction does | `None` |
-| `spend()` | Counts one cycle and calls `on_cycle`. Every cycle the part spends goes through it | `None` |
+| Call                           | Effect                                                                                                                                                 | Returns                                              |
+| :----------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------- |
+| `reset()`                      | What the RESET pin does: sets the program counter to 0, sets `steps` to 0, and spends 4 cycles                                                         | The part                                             |
+| `step()`                       | Runs one instruction                                                                                                                                   | The cycles it cost, which is 1 for every instruction |
+| `run_for(cycles)`              | Runs whole instructions until at least `cycles` have passed                                                                                            | The cycles spent                                     |
+| `run_until(check, limit=None)` | Steps while `check(cpu)` is false. Raises `RunLimit` after `limit` instructions                                                                        | The part                                             |
+| `held()`                       | Whether the part has stopped advancing its program. This part has no halt                                                                              | `False`                                              |
+| `irq()`                        | Raises the interrupt line. On the rising edge, with the EI bit of the status word set, it pushes the program counter, jumps to 100H and spends 1 cycle | `True` when the interrupt was taken                  |
+| `lower_irq()`                  | Lowers the interrupt line, so the next `irq()` is a new edge                                                                                           | `None`                                               |
+| `power_on(seed=UNSET_SEED)`    | Scrambles the registers again from `seed`, as construction does                                                                                        | `None`                                               |
+| `spend()`                      | Counts one cycle and calls `on_cycle`. Every cycle the part spends goes through it                                                                     | `None`                                               |
 
 ### State
 
-| Attribute | Meaning |
-|:--|:--|
-| `model` | The `Model` record the part was built from |
-| `registers` | The register file, described below |
+| Attribute            | Meaning                                                                                                                         |
+| :------------------- | :------------------------------------------------------------------------------------------------------------------------------ |
+| `model`              | The `Model` record the part was built from                                                                                      |
+| `registers`          | The register file, described below                                                                                              |
 | `flags_a`, `flags_b` | The six flags of each accumulator: `s1`, `s0`, `c`, `z`, `ov1`, `ov0`. `int()` packs them with `ov0` in bit 0 and `s1` in bit 5 |
-| `stores` | The three stores, described below |
-| `cycles` | Cycles since the part was built. A reset adds to it |
-| `steps` | Instructions since the last reset |
-| `irq_line` | The interrupt line as a level |
-| `on_cycle` | `None`, or a function called with no arguments after every cycle |
+| `stores`             | The three stores, described below                                                                                               |
+| `cycles`             | Cycles since the part was built. A reset adds to it                                                                             |
+| `steps`              | Instructions since the last reset                                                                                               |
+| `irq_line`           | The interrupt line as a level                                                                                                   |
+| `on_cycle`           | `None`, or a function called with no arguments after every cycle                                                                |
 
 `registers.pc`, `rp`, `dp` and `sp` mask what is written to them to the part's own widths. `k`, `l`, `m`, `n`, `a` and `b` hold 16 bits and read back signed. `registers.word(name)` reads any of them as an unsigned 16-bit word. `tr`, `trb`, `dr`, `si` and `so` are plain integers. `registers.stack` is a list as long as the part's stack, and `registers.sr` is the status word: the bits `p0`, `p1`, `ei`, `sic`, `soc`, `drc`, `dma`, `usf0`, `usf1`, `rqm` and `drs` sit where Figure 3 of the data sheet puts them, `int(registers.sr)` reads them as one word, and `registers.sr.assign(word)` sets them from one. `registers.sr.siack` and `registers.sr.soack` are the serial input and output acknowledgements the conditional jumps on SIACK and SOACK read. Nothing in this package sets them, so a host that drives those jumps sets them itself, and neither is part of the word.
 
@@ -155,16 +155,16 @@ The first word, `ld $0080,sr`, sets the EI bit, and the zero words after it do n
 
 `cpu.stores` is a `Stores` holding `program`, `table` and `scratch`. Each is a `Store` exactly as long as the register that addresses it.
 
-| Name | Content |
-|:--|:--|
-| `Stores(program_words, table_words, scratch_words, fill=0, sources=None)` | The three stores at the given sizes |
-| `stores.program`, `stores.table`, `stores.scratch` | 24-bit program words, 16-bit table words, 16-bit scratch words |
-| `stores.load_program(image)` | Writes an image from address 0, three bytes to a word, high byte first |
-| `stores.load_table(image)` | The same for the table, two bytes to a word |
-| `stores.read_byte(at)`, `stores.write_byte(at, value)` | One byte of scratch. An even address is the low byte of word `at // 2` and an odd one the high byte |
-| `Store(words, bits, fill=0, source=None)` | One store. `store[at]` reads and writes a word, with `at` taken modulo the length and the value masked to `bits` |
-| `store.changed()` | Every written word that differs from what it read before, by address |
-| `store.words`, `store.bits`, `store.mask`, `store.source` | The length, the width, the mask for that width, and the source function or `None` |
+| Name                                                                      | Content                                                                                                          |
+| :------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------------- |
+| `Stores(program_words, table_words, scratch_words, fill=0, sources=None)` | The three stores at the given sizes                                                                              |
+| `stores.program`, `stores.table`, `stores.scratch`                        | 24-bit program words, 16-bit table words, 16-bit scratch words                                                   |
+| `stores.load_program(image)`                                              | Writes an image from address 0, three bytes to a word, high byte first                                           |
+| `stores.load_table(image)`                                                | The same for the table, two bytes to a word                                                                      |
+| `stores.read_byte(at)`, `stores.write_byte(at, value)`                    | One byte of scratch. An even address is the low byte of word `at // 2` and an odd one the high byte              |
+| `Store(words, bits, fill=0, source=None)`                                 | One store. `store[at]` reads and writes a word, with `at` taken modulo the length and the value masked to `bits` |
+| `store.changed()`                                                         | Every written word that differs from what it read before, by address                                             |
+| `store.words`, `store.bits`, `store.mask`, `store.source`                 | The length, the width, the mask for that width, and the source function or `None`                                |
 
 ```python
 from upd7725 import Cpu, NotWholeWords, TooLarge
@@ -206,14 +206,14 @@ Table address 1024 wraps to 0 on a uPD7725, whose table is 1024 words long. A lo
 
 A host sees two addresses: `upd7725.DATA`, which is 0, and `upd7725.STATUS`, which is 1. `upd7725.Host(cpu)` drives them.
 
-| Call | Effect |
-|:--|:--|
-| `asking` | True while the RQM bit is set, which is when the part waits for the host |
-| `settle(limit=200000)` | Steps the part until it asks. Returns the instructions it stepped, and raises `NeverReady` after `limit` |
-| `read(address)` | `STATUS` reads the high 8 bits of the status word. `DATA` reads one byte of the data register and clears RQM once the transfer is complete. Any other address reads 0 |
-| `write(address, value)` | `DATA` writes one byte of the data register. A write to any other address does nothing, because the status word is read only |
-| `send_bytes(values, limit=200000)`, `take_bytes(count, limit=200000)` | Settles before each byte, then writes or reads it |
-| `send(word, limit=200000)`, `take(limit=200000)` | A 16-bit word as two bytes, low byte first |
+| Call                                                                  | Effect                                                                                                                                                                |
+| :-------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `asking`                                                              | True while the RQM bit is set, which is when the part waits for the host                                                                                              |
+| `settle(limit=200000)`                                                | Steps the part until it asks. Returns the instructions it stepped, and raises `NeverReady` after `limit`                                                              |
+| `read(address)`                                                       | `STATUS` reads the high 8 bits of the status word. `DATA` reads one byte of the data register and clears RQM once the transfer is complete. Any other address reads 0 |
+| `write(address, value)`                                               | `DATA` writes one byte of the data register. A write to any other address does nothing, because the status word is read only                                          |
+| `send_bytes(values, limit=200000)`, `take_bytes(count, limit=200000)` | Settles before each byte, then writes or reads it                                                                                                                     |
+| `send(word, limit=200000)`, `take(limit=200000)`                      | A 16-bit word as two bytes, low byte first                                                                                                                            |
 
 With the DRC bit clear the data register moves 16 bits, a byte at a time, and DRS marks the half already moved. With DRC set it moves 8 bits.
 
@@ -249,44 +249,44 @@ The program is one word, `ld $1234,dr`. Writing the data register sets RQM, whic
 
 ### Module contents
 
-| Name | Content |
-|:--|:--|
-| `upd7725.MODELS` | The two `Model` records, keyed by canonical name |
-| `upd7725.Model` | `name`, `aliases`, `summary`, `counter_bits`, `table_bits`, `pointer_bits`, `stack_levels`, and the derived `program_words`, `table_words`, `scratch_words` and `stack_pointer_bits`. `build(*arguments, **options)` builds a part from it, taking what `Cpu` takes after the model |
-| `upd7725.UNSET_SEED` | The seed used when none is given, `0x5A5A5A5A` |
-| `upd7725.scramble(size, seed=UNSET_SEED)` | `size` 32-bit values derived from `seed`, the source of the power-on state |
-| `upd7725.Cpu7725` | The class `Cpu` returns for either part, for type checks. Build a part with `Cpu`, which picks the model |
-| `upd7725.Store`, `upd7725.Stores` | The store classes described above |
-| `upd7725.Clock` | Stepping one cycle at a time, under [Driving it one cycle at a time](#driving-it-one-cycle-at-a-time) |
-| `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | Reading program words, under [Reading without running](#reading-without-running) |
-| `upd7725.Flags` | The flag set. `Flags.of(word)` unpacks six bits and `copy()` duplicates one |
-| `upd7725.__version__` | The installed version |
+| Name                                                           | Content                                                                                                                                                                                                                                                                             |
+| :------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `upd7725.MODELS`                                               | The two `Model` records, keyed by canonical name                                                                                                                                                                                                                                    |
+| `upd7725.Model`                                                | `name`, `aliases`, `summary`, `counter_bits`, `table_bits`, `pointer_bits`, `stack_levels`, and the derived `program_words`, `table_words`, `scratch_words` and `stack_pointer_bits`. `build(*arguments, **options)` builds a part from it, taking what `Cpu` takes after the model |
+| `upd7725.UNSET_SEED`                                           | The seed used when none is given, `0x5A5A5A5A`                                                                                                                                                                                                                                      |
+| `upd7725.scramble(size, seed=UNSET_SEED)`                      | `size` 32-bit values derived from `seed`, the source of the power-on state                                                                                                                                                                                                          |
+| `upd7725.Cpu7725`                                              | The class `Cpu` returns for either part, for type checks. Build a part with `Cpu`, which picks the model                                                                                                                                                                            |
+| `upd7725.Store`, `upd7725.Stores`                              | The store classes described above                                                                                                                                                                                                                                                   |
+| `upd7725.Clock`                                                | Stepping one cycle at a time, under [Driving it one cycle at a time](#driving-it-one-cycle-at-a-time)                                                                                                                                                                               |
+| `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | Reading program words, under [Reading without running](#reading-without-running)                                                                                                                                                                                                    |
+| `upd7725.Flags`                                                | The flag set. `Flags.of(word)` unpacks six bits and `copy()` duplicates one                                                                                                                                                                                                         |
+| `upd7725.__version__`                                          | The installed version                                                                                                                                                                                                                                                               |
 
 ### Errors
 
-| Error | Raised when |
-|:--|:--|
+| Error               | Raised when                                                                                                                 |
+| :------------------ | :-------------------------------------------------------------------------------------------------------------------------- |
 | `UnknownModelError` | `Cpu` gets no model, a name no model goes by, or a part this package refuses to model. The message lists the names accepted |
-| `RunLimit` | `run_until` reaches its `limit` |
-| `ClockClosed` | `Clock.tick()` is called after the clock was closed |
-| `NotWholeWords` | `load_program` or `load_table` gets an image that is not a whole number of words |
-| `TooLarge` | `load_program` or `load_table` gets an image longer than the store |
-| `NeverReady` | `Host.settle` reaches its `limit` without the part asking |
+| `RunLimit`          | `run_until` reaches its `limit`                                                                                             |
+| `ClockClosed`       | `Clock.tick()` is called after the clock was closed                                                                         |
+| `NotWholeWords`     | `load_program` or `load_table` gets an image that is not a whole number of words                                            |
+| `TooLarge`          | `load_program` or `load_table` gets an image longer than the store                                                          |
+| `NeverReady`        | `Host.settle` reaches its `limit` without the part asking                                                                   |
 
 All six are importable from `upd7725`.
 
 ### Command-line tools
 
-| Command | Arguments | Exit codes |
-|:--|:--|:--|
-| `python3 upd7725/doctor.py` | None | 0 when every check passes, 1 otherwise |
-| `python3 -m conformance.instructions` | `--corpus PATH`, `--cases N`, `--record`, `--retake` | 0 with no disagreement, 1 with any, 2 for a bad argument |
-| `python3 -m conformance.differential` | `--from N`, `--cases N` with 5,000 as default, `--seconds S` | 0 when the two implementations agree, 1 when they do not, 2 for a bad argument |
-| `python3 -m conformance.speed` | `--instructions N` with 200,000 as default, `--repeats N` with 7 as default | 0 at or above the floor, 1 below it, 2 for a bad argument |
-| `python3 -m conformance.documents` | `--check`, `--only SUBSTRING` | 0 when every document matches its digest, 1 otherwise |
-| `python3 -m conformance.quotes` | None | 0 when every quote is found or no document is present, 1 otherwise |
-| `python3 -m conformance.links` | None | 1 when a link in this file answers 404 or 410, 0 otherwise |
-| `python3 -m conformance.package WHEEL` | The wheel to audit | 0 when every module ships and no test does, 1 otherwise, 2 with no wheel named |
+| Command                                | Arguments                                                                   | Exit codes                                                                     |
+| :------------------------------------- | :-------------------------------------------------------------------------- | :----------------------------------------------------------------------------- |
+| `python3 upd7725/doctor.py`            | None                                                                        | 0 when every check passes, 1 otherwise                                         |
+| `python3 -m conformance.instructions`  | `--corpus PATH`, `--cases N`, `--record`, `--retake`                        | 0 with no disagreement, 1 with any, 2 for a bad argument                       |
+| `python3 -m conformance.differential`  | `--from N`, `--cases N` with 5,000 as default, `--seconds S`                | 0 when the two implementations agree, 1 when they do not, 2 for a bad argument |
+| `python3 -m conformance.speed`         | `--instructions N` with 200,000 as default, `--repeats N` with 7 as default | 0 at or above the floor, 1 below it, 2 for a bad argument                      |
+| `python3 -m conformance.documents`     | `--check`, `--only SUBSTRING`                                               | 0 when every document matches its digest, 1 otherwise                          |
+| `python3 -m conformance.quotes`        | None                                                                        | 0 when every quote is found or no document is present, 1 otherwise             |
+| `python3 -m conformance.links`         | None                                                                        | 1 when a link in this file answers 404 or 410, 0 otherwise                     |
+| `python3 -m conformance.package WHEEL` | The wheel to audit                                                          | 0 when every module ships and no test does, 1 otherwise, 2 with no wheel named |
 
 `--record` alone refuses to overwrite the corpus. `--record --retake` overwrites it, and is only for carrying a corrected hardware fact.
 
@@ -343,12 +343,12 @@ except ClockClosed as error:
 True this clock has been closed
 ```
 
-| Call | Effect |
-|:--|:--|
-| `tick()` | Runs to the end of the next cycle and stops. Returns the cycles this clock has run |
-| `run_for(cycles)` | `cycles` ticks. Returns the cycles this clock has run |
-| `close()` | Stops the part and puts back the `on_cycle` it found. Leaving a `with` block closes it |
-| `cycles`, `closed`, `cpu` | The cycles run, whether it is closed, and the part |
+| Call                      | Effect                                                                                 |
+| :------------------------ | :------------------------------------------------------------------------------------- |
+| `tick()`                  | Runs to the end of the next cycle and stops. Returns the cycles this clock has run     |
+| `run_for(cycles)`         | `cycles` ticks. Returns the cycles this clock has run                                  |
+| `close()`                 | Stops the part and puts back the `on_cycle` it found. Leaving a `with` block closes it |
+| `cycles`, `closed`, `cpu` | The cycles run, whether it is closed, and the part                                     |
 
 Iterating a clock ticks it. An exception the part raises during a tick is raised from `tick()`, and the clock closes.
 
@@ -358,19 +358,19 @@ NEC states the part executes an instruction in one external clock cycle, so a cy
 
 One instruction set, two sizes. Every store is exactly as long as the register that addresses it.
 
-| Build it with | Program store | Table | Scratch | Stack | Program counter |
-|:--|--:|--:|--:|--:|--:|
-| `Cpu("upd7725")` | 2048 x 24 bits | 1024 x 16 | 256 x 16 | 4 | 11 bits |
-| `Cpu("upd96050")` | 16384 x 24 bits | 2048 x 16 | 2048 x 16 | 8 | 14 bits |
+| Build it with     |   Program store |     Table |   Scratch | Stack | Program counter |
+| :---------------- | --------------: | --------: | --------: | ----: | --------------: |
+| `Cpu("upd7725")`  |  2048 x 24 bits | 1024 x 16 |  256 x 16 |     4 |         11 bits |
+| `Cpu("upd96050")` | 16384 x 24 bits | 2048 x 16 | 2048 x 16 |     8 |         14 bits |
 
 NEC's data sheet and data book cover the uPD7725. No NEC document for the uPD96050 was located, so its four figures rest on secondary sources. The record marks it `verified: false`, and [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) says what would settle it.
 
 Each part answers to the numbers NEC sold it under. Case, hyphens and underscores do not matter, so `Cpu("uPD-77C25")` builds a uPD7725.
 
-| Build it with | Also answers to |
-|:--|:--|
-| `Cpu("upd7725")` | `7725`, `upd77c25`, `77c25`, `necupd7725` |
-| `Cpu("upd96050")` | `96050`, `upd96050gf`, `necupd96050` |
+| Build it with     | Also answers to                           |
+| :---------------- | :---------------------------------------- |
+| `Cpu("upd7725")`  | `7725`, `upd77c25`, `77c25`, `necupd7725` |
+| `Cpu("upd96050")` | `96050`, `upd96050gf`, `necupd96050`      |
 
 ```python
 import upd7725
@@ -472,13 +472,13 @@ The corpus was recorded from an emulator, so it decides only what NEC did not pr
 
 ## Working on it
 
-| Need | Where |
-|:--|:--|
-| Every gate and the order to run them | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| The same material for a coding agent | [AGENTS.md](AGENTS.md) |
-| The standard this repository shares with the rest of the family | [FAMILY.md](FAMILY.md) |
-| Bug reports | [GitHub Issues](https://github.com/gufranco/nec-upd7725-96050-python/issues) |
-| Security reports | [SECURITY.md](SECURITY.md) |
+| Need                                                            | Where                                                                        |
+| :-------------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| Every gate and the order to run them                            | [CONTRIBUTING.md](CONTRIBUTING.md)                                           |
+| The same material for a coding agent                            | [AGENTS.md](AGENTS.md)                                                       |
+| The standard this repository shares with the rest of the family | [FAMILY.md](FAMILY.md)                                                       |
+| Bug reports                                                     | [GitHub Issues](https://github.com/gufranco/nec-upd7725-96050-python/issues) |
+| Security reports                                                | [SECURITY.md](SECURITY.md)                                                   |
 
 ```bash
 uvx ruff@0.16.3 format --check .
@@ -494,8 +494,8 @@ Each module has a test file beside it, named `<module>.test.py`, and each runs o
 
 ## References
 
-- NEC Electronics, *uPD77C25/uPD77P25 Digital Signal Processor Data Sheet*, Advance Product Information, August 1987. 36 pages, 1,299,452 bytes, SHA-256 `d043be18d5cd21d90960ffb7e068e3b9a81647c8534a142f29eb11015733d042`. Fetched from https://www.cryptomuseum.com/df/telefunken/e2000/files/uPD77C25.pdf
-- NEC Electronics, *Digital Signal Processor and Speech Processor Products Data Book*, document 50052, 1989. 388 pages, 14,316,524 bytes, SHA-256 `2f0190523de99938cc1da1c138f2c5b7f71573eb11bcb3b0dcdd1da1267e85ce`. Fetched from https://bitsavers.trailing-edge.com/components/nec/_dataBooks/1989_DSP_and_Speech_Products_Data_Book.pdf
+- NEC Electronics, _uPD77C25/uPD77P25 Digital Signal Processor Data Sheet_, Advance Product Information, August 1987. 36 pages, 1,299,452 bytes, SHA-256 `d043be18d5cd21d90960ffb7e068e3b9a81647c8534a142f29eb11015733d042`. Fetched from https://www.cryptomuseum.com/df/telefunken/e2000/files/uPD77C25.pdf
+- NEC Electronics, _Digital Signal Processor and Speech Processor Products Data Book_, document 50052, 1989. 388 pages, 14,316,524 bytes, SHA-256 `2f0190523de99938cc1da1c138f2c5b7f71573eb11bcb3b0dcdd1da1267e85ce`. Fetched from https://bitsavers.trailing-edge.com/components/nec/_dataBooks/1989_DSP_and_Speech_Products_Data_Book.pdf
 - ares, https://github.com/ares-emulator/ares, at the commit [`conformance/pinned.json`](conformance/pinned.json) names, studied for instruction-level behaviour the documents do not give. No code is taken.
 
 Neither document is redistributable, and neither is in this repository. [`conformance/documents.json`](conformance/documents.json) carries the digest, the size and the address of each. `python3 -m conformance.documents` downloads both into `docs/`, which git ignores, and refuses a file whose digest does not match. `python3 -m conformance.quotes` then finds every quoted sentence in them.

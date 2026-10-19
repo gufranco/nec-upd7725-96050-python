@@ -138,20 +138,20 @@ aspired to. A new branch without a test fails the build.
 
 ## Conventions that are not negotiable
 
-| Thing | Rule |
-|:------|:-----|
-| Language | Python only. Nothing else, anywhere in the project |
-| Comments | None in source, and a docstring counts as one |
-| Test layout | `<module>.test.py` beside the module it covers |
-| Test structure | Arrange, act, assert, each opened by its bare marker |
-| Test data | Derived from a seed, never hardcoded |
-| Coverage | 100% statements and branches, enforced |
-| Types | `mypy` at strict, plus every optional error class the version offers |
-| Commits | [Conventional Commits](https://www.conventionalcommits.org/); subject under 50 characters |
-| Releases | semantic-release from `main`; never tag by hand |
-| A program image | Never committed, never vendored, never encoded, never generated |
-| [`upd7725/core.py`](upd7725/core.py) length | Past 500 lines under the exemption for a single calculation engine sharing intermediate state: one `Cpu` whose four instruction forms read and write the same registers, both flag sets, the three stores and the cycle count within each step |
-| [`conformance/reference.py`](conformance/reference.py) length | Past 500 lines under the same exemption: one table-driven `Upd96050` whose handlers share its register file and flags, kept whole because it is a transcription whose structure must stay re-derivable |
+| Thing                                                         | Rule                                                                                                                                                                                                                                           |
+| :------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language                                                      | Python only. Nothing else, anywhere in the project                                                                                                                                                                                             |
+| Comments                                                      | None in source, and a docstring counts as one                                                                                                                                                                                                  |
+| Test layout                                                   | `<module>.test.py` beside the module it covers                                                                                                                                                                                                 |
+| Test structure                                                | Arrange, act, assert, each opened by its bare marker                                                                                                                                                                                           |
+| Test data                                                     | Derived from a seed, never hardcoded                                                                                                                                                                                                           |
+| Coverage                                                      | 100% statements and branches, enforced                                                                                                                                                                                                         |
+| Types                                                         | `mypy` at strict, plus every optional error class the version offers                                                                                                                                                                           |
+| Commits                                                       | [Conventional Commits](https://www.conventionalcommits.org/); subject under 50 characters                                                                                                                                                      |
+| Releases                                                      | semantic-release from `main`; never tag by hand                                                                                                                                                                                                |
+| A program image                                               | Never committed, never vendored, never encoded, never generated                                                                                                                                                                                |
+| [`upd7725/core.py`](upd7725/core.py) length                   | Past 500 lines under the exemption for a single calculation engine sharing intermediate state: one `Cpu` whose four instruction forms read and write the same registers, both flag sets, the three stores and the cycle count within each step |
+| [`conformance/reference.py`](conformance/reference.py) length | Past 500 lines under the same exemption: one table-driven `Upd96050` whose handlers share its register file and flags, kept whole because it is a transcription whose structure must stay re-derivable                                         |
 
 The linter's ignores in [`pyproject.toml`](pyproject.toml) carry no comments, so
 their reasons live here:
@@ -183,6 +183,18 @@ The coverage exclusions carry none either:
   `^def accounts_for_a_reset\(` in the coverage exclusions: this member is not a
   part, so the family tests that build a `Chip` and account for its reset are
   skipped here and their bodies never run.
+
+The formatter's ignores in [`.prettierignore`](.prettierignore) carry no
+comments either, so their reasons live here:
+
+- `pnpm-lock.yaml` and `package-lock.json`: the package manager writes them, in
+  its own layout, on every install.
+- `node_modules/`, `.venv/`, `venv/`, `build/`, `dist/` and `*.egg-info/`:
+  installed or built, never written by hand.
+- `.coverage`, `coverage.json`, `htmlcov/` and the tool caches: the output of a
+  run, never committed.
+- `docs/`, `specs/`, `.work/` and `.claude/`: local working material, never
+  committed.
 
 ## Layout
 
@@ -273,7 +285,7 @@ being made in one of them and forgotten in the others, because a test in this
 repository cannot see the others, so the check is a command rather than a suite:
 
 ```sh
-shared() { sed '/^\*Everything above this line/q' "$1"; }
+shared() { sed '/^_Everything above this line/q' "$1"; }
 
 grep -o 'github\.com/[^/]*/\([a-z0-9-]*\))' FAMILY.md | sed 's|.*/||; s|)||' | sort -u |
 while read -r member; do

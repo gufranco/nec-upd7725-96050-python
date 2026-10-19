@@ -30,10 +30,10 @@ print(f"{cpu.registers.word('a'):04X}", cost, cpu.registers.pc, cpu.cycles, cpu.
 
 ## 安裝
 
-| 需求 | 版本 |
-|:--|:--|
+| 需求   | 版本        |
+| :----- | :---------- |
 | Python | 3.12 或更新 |
-| git | 任何版本 |
+| git    | 任何版本    |
 
 ```bash
 git clone https://github.com/gufranco/nec-upd7725-96050-python.git
@@ -55,40 +55,40 @@ python3 upd7725/doctor.py
 
 `upd7725.Cpu(model, memory=None, *, fill=0, sources=None, seed=UNSET_SEED)` 建立一款晶片，已上電但未重設。
 
-| 參數 | 含義 |
-|:--|:--|
-| `model` | 必填。取自[型號](#models)下表的型號名稱或別名。省略時會引發 `UnknownModelError` |
-| `memory` | 要使用的 `Stores`。省略時，晶片按自身大小建立一個 |
-| `fill` | 各儲存區中未寫入的字讀出的值，按儲存區寬度遮罩。省略時為 `0` |
+| 參數      | 含義                                                                                                                         |
+| :-------- | :--------------------------------------------------------------------------------------------------------------------------- |
+| `model`   | 必填。取自[型號](#models)下表的型號名稱或別名。省略時會引發 `UnknownModelError`                                              |
+| `memory`  | 要使用的 `Stores`。省略時，晶片按自身大小建立一個                                                                            |
+| `fill`    | 各儲存區中未寫入的字讀出的值，按儲存區寬度遮罩。省略時為 `0`                                                                 |
 | `sources` | 由 `"program"`、`"table"` 或 `"scratch"` 對應到以位址為參數之函式的映射。有來源的儲存區從來源讀取未寫入的字，而非使用 `fill` |
-| `seed` | 暫存器的上電擾亂。以同一種子建立的兩款晶片持有相同數值 |
+| `seed`    | 暫存器的上電擾亂。以同一種子建立的兩款晶片持有相同數值                                                                       |
 
 ### 呼叫
 
-| 呼叫 | 效果 | 回傳 |
-|:--|:--|:--|
-| `reset()` | RESET 腳位的作用：將程式計數器設為 0，將 `steps` 設為 0，並花費 4 個週期 | 該晶片 |
-| `step()` | 執行一條指令 | 其花費的週期數，每條指令皆為 1 |
-| `run_for(cycles)` | 執行完整指令，直至至少經過 `cycles` 個週期 | 花費的週期數 |
-| `run_until(check, limit=None)` | 在 `check(cpu)` 為假時持續單步執行。執行 `limit` 條指令後引發 `RunLimit` | 該晶片 |
-| `held()` | 晶片是否已停止推進其程式。此晶片沒有停機狀態 | `False` |
-| `irq()` | 拉高中斷線。在上升沿且狀態字的 EI 位元已設定時，它會推入程式計數器、跳至 100H 並花費 1 個週期 | 中斷被接受時為 `True` |
-| `lower_irq()` | 拉低中斷線，使下一次 `irq()` 成為新的邊沿 | `None` |
-| `power_on(seed=UNSET_SEED)` | 與建構時一樣，以 `seed` 重新擾亂暫存器 | `None` |
-| `spend()` | 計算一個週期並呼叫 `on_cycle`。晶片花費的每個週期都經過它 | `None` |
+| 呼叫                           | 效果                                                                                          | 回傳                           |
+| :----------------------------- | :-------------------------------------------------------------------------------------------- | :----------------------------- |
+| `reset()`                      | RESET 腳位的作用：將程式計數器設為 0，將 `steps` 設為 0，並花費 4 個週期                      | 該晶片                         |
+| `step()`                       | 執行一條指令                                                                                  | 其花費的週期數，每條指令皆為 1 |
+| `run_for(cycles)`              | 執行完整指令，直至至少經過 `cycles` 個週期                                                    | 花費的週期數                   |
+| `run_until(check, limit=None)` | 在 `check(cpu)` 為假時持續單步執行。執行 `limit` 條指令後引發 `RunLimit`                      | 該晶片                         |
+| `held()`                       | 晶片是否已停止推進其程式。此晶片沒有停機狀態                                                  | `False`                        |
+| `irq()`                        | 拉高中斷線。在上升沿且狀態字的 EI 位元已設定時，它會推入程式計數器、跳至 100H 並花費 1 個週期 | 中斷被接受時為 `True`          |
+| `lower_irq()`                  | 拉低中斷線，使下一次 `irq()` 成為新的邊沿                                                     | `None`                         |
+| `power_on(seed=UNSET_SEED)`    | 與建構時一樣，以 `seed` 重新擾亂暫存器                                                        | `None`                         |
+| `spend()`                      | 計算一個週期並呼叫 `on_cycle`。晶片花費的每個週期都經過它                                     | `None`                         |
 
 ### 狀態
 
-| 屬性 | 含義 |
-|:--|:--|
-| `model` | 建立該晶片所用的 `Model` 記錄 |
-| `registers` | 暫存器檔，見下文 |
+| 屬性                 | 含義                                                                                                        |
+| :------------------- | :---------------------------------------------------------------------------------------------------------- |
+| `model`              | 建立該晶片所用的 `Model` 記錄                                                                               |
+| `registers`          | 暫存器檔，見下文                                                                                            |
 | `flags_a`, `flags_b` | 每個累加器的六個旗標：`s1`、`s0`、`c`、`z`、`ov1`、`ov0`。`int()` 將它們打包，`ov0` 在位元 0，`s1` 在位元 5 |
-| `stores` | 三個儲存區，見下文 |
-| `cycles` | 自晶片建立以來的週期數。重設會增加它 |
-| `steps` | 自上次重設以來的指令數 |
-| `irq_line` | 以電平表示的中斷線 |
-| `on_cycle` | `None`，或在每個週期後以無參數呼叫的函式 |
+| `stores`             | 三個儲存區，見下文                                                                                          |
+| `cycles`             | 自晶片建立以來的週期數。重設會增加它                                                                        |
+| `steps`              | 自上次重設以來的指令數                                                                                      |
+| `irq_line`           | 以電平表示的中斷線                                                                                          |
+| `on_cycle`           | `None`，或在每個週期後以無參數呼叫的函式                                                                    |
 
 `registers.pc`、`rp`、`dp` 與 `sp` 會將寫入的值遮罩至晶片自身的寬度。`k`、`l`、`m`、`n`、`a` 與 `b` 持有 16 位元，讀回時為有號數。`registers.word(name)` 將其中任何一個讀作無號 16 位元字。`tr`、`trb`、`dr`、`si` 與 `so` 是普通整數。`registers.stack` 是長度與晶片堆疊相同的清單，`registers.sr` 是狀態字：位元 `p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm` 與 `drs` 位於數據表 Figure 3 所示的位置，`int(registers.sr)` 將它們讀作一個字，`registers.sr.assign(word)` 則從一個字設定它們。`registers.sr.siack` 與 `registers.sr.soack` 是串列輸入與輸出的應答，SIACK 與 SOACK 條件跳轉會讀取它們。本套件不會設定它們，因此使用這些跳轉的主機須自行設定；兩者皆不屬於狀態字。
 
@@ -155,16 +155,16 @@ gave up after 100 instructions at 164
 
 `cpu.stores` 是一個 `Stores`，持有 `program`、`table` 與 `scratch`。每一個都是 `Store`，長度恰好與為其定址的暫存器相符。
 
-| 名稱 | 內容 |
-|:--|:--|
-| `Stores(program_words, table_words, scratch_words, fill=0, sources=None)` | 按指定大小建立的三個儲存區 |
-| `stores.program`, `stores.table`, `stores.scratch` | 24 位元程式字、16 位元表格字、16 位元臨時字 |
-| `stores.load_program(image)` | 從位址 0 開始寫入映像檔，每三個位元組一個字，高位元組在前 |
-| `stores.load_table(image)` | 表格的相同操作，每兩個位元組一個字 |
-| `stores.read_byte(at)`, `stores.write_byte(at, value)` | 臨時儲存區的一個位元組。偶數位址是字 `at // 2` 的低位元組，奇數位址是高位元組 |
-| `Store(words, bits, fill=0, source=None)` | 一個儲存區。`store[at]` 讀寫一個字，`at` 以長度取模，值遮罩至 `bits` |
-| `store.changed()` | 所有寫入值與之前讀出值不同的字，按位址列出 |
-| `store.words`, `store.bits`, `store.mask`, `store.source` | 長度、寬度、該寬度的遮罩，以及來源函式或 `None` |
+| 名稱                                                                      | 內容                                                                          |
+| :------------------------------------------------------------------------ | :---------------------------------------------------------------------------- |
+| `Stores(program_words, table_words, scratch_words, fill=0, sources=None)` | 按指定大小建立的三個儲存區                                                    |
+| `stores.program`, `stores.table`, `stores.scratch`                        | 24 位元程式字、16 位元表格字、16 位元臨時字                                   |
+| `stores.load_program(image)`                                              | 從位址 0 開始寫入映像檔，每三個位元組一個字，高位元組在前                     |
+| `stores.load_table(image)`                                                | 表格的相同操作，每兩個位元組一個字                                            |
+| `stores.read_byte(at)`, `stores.write_byte(at, value)`                    | 臨時儲存區的一個位元組。偶數位址是字 `at // 2` 的低位元組，奇數位址是高位元組 |
+| `Store(words, bits, fill=0, source=None)`                                 | 一個儲存區。`store[at]` 讀寫一個字，`at` 以長度取模，值遮罩至 `bits`          |
+| `store.changed()`                                                         | 所有寫入值與之前讀出值不同的字，按位址列出                                    |
+| `store.words`, `store.bits`, `store.mask`, `store.source`                 | 長度、寬度、該寬度的遮罩，以及來源函式或 `None`                               |
 
 ```python
 from upd7725 import Cpu, NotWholeWords, TooLarge
@@ -206,14 +206,14 @@ TooLarge 2049 words will not fit in a store of 2048
 
 主機看到兩個位址：`upd7725.DATA`，即 0；以及 `upd7725.STATUS`，即 1。`upd7725.Host(cpu)` 驅動它們。
 
-| 呼叫 | 效果 |
-|:--|:--|
-| `asking` | RQM 位元已設定時為 True，即晶片等待主機的時候 |
-| `settle(limit=200000)` | 單步執行晶片直至它發出請求。回傳單步執行的指令數，超過 `limit` 後引發 `NeverReady` |
-| `read(address)` | `STATUS` 讀取狀態字的高 8 位元。`DATA` 讀取數據暫存器的一個位元組，並在傳輸完成時清除 RQM。任何其他位址讀出 0 |
-| `write(address, value)` | `DATA` 寫入數據暫存器的一個位元組。寫入任何其他位址都不起作用，因為狀態字是唯讀的 |
-| `send_bytes(values, limit=200000)`, `take_bytes(count, limit=200000)` | 每個位元組之前先等待晶片發出請求，然後寫入或讀取它 |
-| `send(word, limit=200000)`, `take(limit=200000)` | 一個 16 位元字，分為兩個位元組，低位元組在前 |
+| 呼叫                                                                  | 效果                                                                                                          |
+| :-------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------ |
+| `asking`                                                              | RQM 位元已設定時為 True，即晶片等待主機的時候                                                                 |
+| `settle(limit=200000)`                                                | 單步執行晶片直至它發出請求。回傳單步執行的指令數，超過 `limit` 後引發 `NeverReady`                            |
+| `read(address)`                                                       | `STATUS` 讀取狀態字的高 8 位元。`DATA` 讀取數據暫存器的一個位元組，並在傳輸完成時清除 RQM。任何其他位址讀出 0 |
+| `write(address, value)`                                               | `DATA` 寫入數據暫存器的一個位元組。寫入任何其他位址都不起作用，因為狀態字是唯讀的                             |
+| `send_bytes(values, limit=200000)`, `take_bytes(count, limit=200000)` | 每個位元組之前先等待晶片發出請求，然後寫入或讀取它                                                            |
+| `send(word, limit=200000)`, `take(limit=200000)`                      | 一個 16 位元字，分為兩個位元組，低位元組在前                                                                  |
 
 DRC 位元清除時，數據暫存器以每次一個位元組的方式搬移 16 位元，DRS 標示已搬移的那一半。DRC 設定時，它搬移 8 位元。
 
@@ -249,44 +249,44 @@ the part did not ask for attention within 50 instructions
 
 ### 模組內容
 
-| 名稱 | 內容 |
-|:--|:--|
-| `upd7725.MODELS` | 兩筆 `Model` 記錄，以標準名稱為鍵 |
-| `upd7725.Model` | `name`、`aliases`、`summary`、`counter_bits`、`table_bits`、`pointer_bits`、`stack_levels`，以及衍生的 `program_words`、`table_words`、`scratch_words` 與 `stack_pointer_bits`。`build(*arguments, **options)` 以它建立晶片，接受 `Cpu` 在型號之後接受的參數 |
-| `upd7725.UNSET_SEED` | 未指定種子時使用的種子，`0x5A5A5A5A` |
-| `upd7725.scramble(size, seed=UNSET_SEED)` | 由 `seed` 衍生的 `size` 個 32 位元值，為上電狀態的來源 |
-| `upd7725.Cpu7725` | `Cpu` 為任一部件傳回的類別，用於型別檢查。部件以 `Cpu` 建立，由它選擇型號 |
-| `upd7725.Store`, `upd7725.Stores` | 上述的儲存區類別 |
-| `upd7725.Clock` | 每次步進一個週期，見[逐個週期驅動](#driving-it-one-cycle-at-a-time) |
-| `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | 讀取程式字，見[不執行而讀取](#reading-without-running) |
-| `upd7725.Flags` | 旗標集合。`Flags.of(word)` 解開六個位元，`copy()` 複製一個集合 |
-| `upd7725.__version__` | 已安裝的版本 |
+| 名稱                                                           | 內容                                                                                                                                                                                                                                                         |
+| :------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `upd7725.MODELS`                                               | 兩筆 `Model` 記錄，以標準名稱為鍵                                                                                                                                                                                                                            |
+| `upd7725.Model`                                                | `name`、`aliases`、`summary`、`counter_bits`、`table_bits`、`pointer_bits`、`stack_levels`，以及衍生的 `program_words`、`table_words`、`scratch_words` 與 `stack_pointer_bits`。`build(*arguments, **options)` 以它建立晶片，接受 `Cpu` 在型號之後接受的參數 |
+| `upd7725.UNSET_SEED`                                           | 未指定種子時使用的種子，`0x5A5A5A5A`                                                                                                                                                                                                                         |
+| `upd7725.scramble(size, seed=UNSET_SEED)`                      | 由 `seed` 衍生的 `size` 個 32 位元值，為上電狀態的來源                                                                                                                                                                                                       |
+| `upd7725.Cpu7725`                                              | `Cpu` 為任一部件傳回的類別，用於型別檢查。部件以 `Cpu` 建立，由它選擇型號                                                                                                                                                                                    |
+| `upd7725.Store`, `upd7725.Stores`                              | 上述的儲存區類別                                                                                                                                                                                                                                             |
+| `upd7725.Clock`                                                | 每次步進一個週期，見[逐個週期驅動](#driving-it-one-cycle-at-a-time)                                                                                                                                                                                          |
+| `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | 讀取程式字，見[不執行而讀取](#reading-without-running)                                                                                                                                                                                                       |
+| `upd7725.Flags`                                                | 旗標集合。`Flags.of(word)` 解開六個位元，`copy()` 複製一個集合                                                                                                                                                                                               |
+| `upd7725.__version__`                                          | 已安裝的版本                                                                                                                                                                                                                                                 |
 
 ### 錯誤
 
-| 錯誤 | 引發時機 |
-|:--|:--|
+| 錯誤                | 引發時機                                                                                         |
+| :------------------ | :----------------------------------------------------------------------------------------------- |
 | `UnknownModelError` | `Cpu` 未取得型號、取得沒有任何型號使用的名稱，或取得本套件拒絕建模的晶片。訊息會列出可接受的名稱 |
-| `RunLimit` | `run_until` 達到其 `limit` |
-| `ClockClosed` | 時鐘關閉後仍呼叫 `Clock.tick()` |
-| `NotWholeWords` | `load_program` 或 `load_table` 取得的映像檔不是整數個字 |
-| `TooLarge` | `load_program` 或 `load_table` 取得的映像檔比儲存區長 |
-| `NeverReady` | `Host.settle` 達到其 `limit` 時晶片仍未發出請求 |
+| `RunLimit`          | `run_until` 達到其 `limit`                                                                       |
+| `ClockClosed`       | 時鐘關閉後仍呼叫 `Clock.tick()`                                                                  |
+| `NotWholeWords`     | `load_program` 或 `load_table` 取得的映像檔不是整數個字                                          |
+| `TooLarge`          | `load_program` 或 `load_table` 取得的映像檔比儲存區長                                            |
+| `NeverReady`        | `Host.settle` 達到其 `limit` 時晶片仍未發出請求                                                  |
 
 六者皆可從 `upd7725` 匯入。
 
 ### 命令列工具
 
-| 命令 | 參數 | 結束碼 |
-|:--|:--|:--|
-| `python3 upd7725/doctor.py` | 無 | 所有檢查通過時為 0，否則為 1 |
-| `python3 -m conformance.instructions` | `--corpus PATH`、`--cases N`、`--record`、`--retake` | 無分歧時為 0，有任何分歧時為 1，參數錯誤時為 2 |
-| `python3 -m conformance.differential` | `--from N`、`--cases N` 預設為 5,000、`--seconds S` | 兩個實現一致時為 0，不一致時為 1，參數錯誤時為 2 |
-| `python3 -m conformance.speed` | `--instructions N` 預設為 200,000，`--repeats N` 預設為 7 | 達到或高於下限時為 0，低於下限時為 1，參數錯誤時為 2 |
-| `python3 -m conformance.documents` | `--check`、`--only SUBSTRING` | 每份文件都與其摘要相符時為 0，否則為 1 |
-| `python3 -m conformance.quotes` | 無 | 每段引文都找到或沒有任何文件時為 0，否則為 1 |
-| `python3 -m conformance.links` | 無 | 本檔案中有連結回應 404 或 410 時為 1，否則為 0 |
-| `python3 -m conformance.package WHEEL` | 要審核的 wheel | 每個模組都已打包且沒有打包任何測試時為 0，否則為 1，未指定 wheel 時為 2 |
+| 命令                                   | 參數                                                      | 結束碼                                                                  |
+| :------------------------------------- | :-------------------------------------------------------- | :---------------------------------------------------------------------- |
+| `python3 upd7725/doctor.py`            | 無                                                        | 所有檢查通過時為 0，否則為 1                                            |
+| `python3 -m conformance.instructions`  | `--corpus PATH`、`--cases N`、`--record`、`--retake`      | 無分歧時為 0，有任何分歧時為 1，參數錯誤時為 2                          |
+| `python3 -m conformance.differential`  | `--from N`、`--cases N` 預設為 5,000、`--seconds S`       | 兩個實現一致時為 0，不一致時為 1，參數錯誤時為 2                        |
+| `python3 -m conformance.speed`         | `--instructions N` 預設為 200,000，`--repeats N` 預設為 7 | 達到或高於下限時為 0，低於下限時為 1，參數錯誤時為 2                    |
+| `python3 -m conformance.documents`     | `--check`、`--only SUBSTRING`                             | 每份文件都與其摘要相符時為 0，否則為 1                                  |
+| `python3 -m conformance.quotes`        | 無                                                        | 每段引文都找到或沒有任何文件時為 0，否則為 1                            |
+| `python3 -m conformance.links`         | 無                                                        | 本檔案中有連結回應 404 或 410 時為 1，否則為 0                          |
+| `python3 -m conformance.package WHEEL` | 要審核的 wheel                                            | 每個模組都已打包且沒有打包任何測試時為 0，否則為 1，未指定 wheel 時為 2 |
 
 單獨使用 `--record` 會拒絕覆寫語料庫。`--record --retake` 會覆寫它，且只用於帶入一項已更正的硬件事實。
 
@@ -345,12 +345,12 @@ except ClockClosed as error:
 True this clock has been closed
 ```
 
-| 呼叫 | 效果 |
-|:--|:--|
-| `tick()` | 執行至下一個週期結束並停止。回傳此時鐘已執行的週期數 |
-| `run_for(cycles)` | `cycles` 個節拍。回傳此時鐘已執行的週期數 |
-| `close()` | 停止晶片，並放回它原先找到的 `on_cycle`。離開 `with` 區塊時會將其關閉 |
-| `cycles`, `closed`, `cpu` | 已執行的週期數、是否已關閉，以及該晶片 |
+| 呼叫                      | 效果                                                                  |
+| :------------------------ | :-------------------------------------------------------------------- |
+| `tick()`                  | 執行至下一個週期結束並停止。回傳此時鐘已執行的週期數                  |
+| `run_for(cycles)`         | `cycles` 個節拍。回傳此時鐘已執行的週期數                             |
+| `close()`                 | 停止晶片，並放回它原先找到的 `on_cycle`。離開 `with` 區塊時會將其關閉 |
+| `cycles`, `closed`, `cpu` | 已執行的週期數、是否已關閉，以及該晶片                                |
 
 迭代時鐘即令其前進一個節拍。晶片在節拍期間引發的例外會從 `tick()` 拋出，時鐘隨之關閉。
 
@@ -362,19 +362,19 @@ NEC 指明該晶片在一個外部時鐘週期內執行一條指令，因此週�
 
 同一指令集，兩種大小。每個儲存區的長度都恰好與為其定址的暫存器相符。
 
-| 建立方式 | 程式儲存區 | 表格 | 臨時 | 堆疊 | 程式計數器 |
-|:--|--:|--:|--:|--:|--:|
-| `Cpu("upd7725")` | 2048 x 24 位元 | 1024 x 16 | 256 x 16 | 4 | 11 位元 |
-| `Cpu("upd96050")` | 16384 x 24 位元 | 2048 x 16 | 2048 x 16 | 8 | 14 位元 |
+| 建立方式          |      程式儲存區 |      表格 |      臨時 | 堆疊 | 程式計數器 |
+| :---------------- | --------------: | --------: | --------: | ---: | ---------: |
+| `Cpu("upd7725")`  |  2048 x 24 位元 | 1024 x 16 |  256 x 16 |    4 |    11 位元 |
+| `Cpu("upd96050")` | 16384 x 24 位元 | 2048 x 16 | 2048 x 16 |    8 |    14 位元 |
 
 NEC 的數據表與數據手冊涵蓋 uPD7725。未能找到任何關於 uPD96050 的 NEC 文件，因此其四項數字依據的是二手資料。該記錄將其標為 `verified: false`，[OPEN-QUESTIONS.md](OPEN-QUESTIONS.md) 說明了甚麼能確定這些數字。
 
 每款晶片都可用 NEC 銷售時的型號來指定。大小寫、連字號與底線無關緊要，因此 `Cpu("uPD-77C25")` 會建立 uPD7725。
 
-| 建立方式 | 其他可用名稱 |
-|:--|:--|
-| `Cpu("upd7725")` | `7725`、`upd77c25`、`77c25`、`necupd7725` |
-| `Cpu("upd96050")` | `96050`、`upd96050gf`、`necupd96050` |
+| 建立方式          | 其他可用名稱                              |
+| :---------------- | :---------------------------------------- |
+| `Cpu("upd7725")`  | `7725`、`upd77c25`、`77c25`、`necupd7725` |
+| `Cpu("upd96050")` | `96050`、`upd96050gf`、`necupd96050`      |
 
 ```python
 import upd7725
@@ -478,13 +478,13 @@ python3 conformance/alu_flags.test.py
 
 ## 參與開發
 
-| 需要 | 位置 |
-|:--|:--|
-| 每道關卡檢查及其執行順序 | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| 供編程代理使用的相同內容 | [AGENTS.md](AGENTS.md) |
-| 本儲存庫與家族其他成員共用的標準 | [FAMILY.md](FAMILY.md) |
-| 錯誤報告 | [GitHub Issues](https://github.com/gufranco/nec-upd7725-96050-python/issues) |
-| 安全報告 | [SECURITY.md](SECURITY.md) |
+| 需要                             | 位置                                                                         |
+| :------------------------------- | :--------------------------------------------------------------------------- |
+| 每道關卡檢查及其執行順序         | [CONTRIBUTING.md](CONTRIBUTING.md)                                           |
+| 供編程代理使用的相同內容         | [AGENTS.md](AGENTS.md)                                                       |
+| 本儲存庫與家族其他成員共用的標準 | [FAMILY.md](FAMILY.md)                                                       |
+| 錯誤報告                         | [GitHub Issues](https://github.com/gufranco/nec-upd7725-96050-python/issues) |
+| 安全報告                         | [SECURITY.md](SECURITY.md)                                                   |
 
 ```bash
 uvx ruff@0.16.3 format --check .
@@ -500,8 +500,8 @@ python3 -m coverage report
 
 ## 參考資料
 
-- NEC Electronics，*uPD77C25/uPD77P25 Digital Signal Processor Data Sheet*，Advance Product Information，1987 年 8 月。36 頁，1,299,452 位元組，SHA-256 `d043be18d5cd21d90960ffb7e068e3b9a81647c8534a142f29eb11015733d042`。取自 https://www.cryptomuseum.com/df/telefunken/e2000/files/uPD77C25.pdf
-- NEC Electronics，*Digital Signal Processor and Speech Processor Products Data Book*，文件編號 50052，1989 年。388 頁，14,316,524 位元組，SHA-256 `2f0190523de99938cc1da1c138f2c5b7f71573eb11bcb3b0dcdd1da1267e85ce`。取自 https://bitsavers.trailing-edge.com/components/nec/_dataBooks/1989_DSP_and_Speech_Products_Data_Book.pdf
+- NEC Electronics，_uPD77C25/uPD77P25 Digital Signal Processor Data Sheet_，Advance Product Information，1987 年 8 月。36 頁，1,299,452 位元組，SHA-256 `d043be18d5cd21d90960ffb7e068e3b9a81647c8534a142f29eb11015733d042`。取自 https://www.cryptomuseum.com/df/telefunken/e2000/files/uPD77C25.pdf
+- NEC Electronics，_Digital Signal Processor and Speech Processor Products Data Book_，文件編號 50052，1989 年。388 頁，14,316,524 位元組，SHA-256 `2f0190523de99938cc1da1c138f2c5b7f71573eb11bcb3b0dcdd1da1267e85ce`。取自 https://bitsavers.trailing-edge.com/components/nec/_dataBooks/1989_DSP_and_Speech_Products_Data_Book.pdf
 - ares，https://github.com/ares-emulator/ares ，取 [`conformance/pinned.json`](conformance/pinned.json) 指定的提交，用於研究文件未提供的指令層級行為。未取用任何程式碼。
 
 兩份文件均不可再分發，也都不在本儲存庫中。[`conformance/documents.json`](conformance/documents.json) 載有每份文件的摘要、大小與位址。`python3 -m conformance.documents` 會將兩者下載到 git 忽略的 `docs/`，並拒絕摘要不符的檔案。`python3 -m conformance.quotes` 隨後在其中找出每一個被引用的句子。

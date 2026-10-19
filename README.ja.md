@@ -30,10 +30,10 @@ print(f"{cpu.registers.word('a'):04X}", cost, cpu.registers.pc, cpu.cycles, cpu.
 
 ## インストール
 
-| 要件 | バージョン |
-|:--|:--|
-| Python | 3.12以降 |
-| git | 任意 |
+| 要件   | バージョン |
+| :----- | :--------- |
+| Python | 3.12以降   |
+| git    | 任意       |
 
 ```bash
 git clone https://github.com/gufranco/nec-upd7725-96050-python.git
@@ -55,40 +55,40 @@ python3 upd7725/doctor.py
 
 `upd7725.Cpu(model, memory=None, *, fill=0, sources=None, seed=UNSET_SEED)`は、電源が入った状態でリセット前のチップを1つ構築します。
 
-| 引数 | 意味 |
-|:--|:--|
-| `model` | 必須です。[モデル](#models)の表にあるモデル名または別名です。省略すると`UnknownModelError`が発生します |
-| `memory` | 使用する`Stores`です。省略するとチップ自身のサイズで1つ構築します |
-| `fill` | 各ストアの未書き込みワードを読んだときの値で、ストアの幅でマスクされます。省略時は`0`です |
+| 引数      | 意味                                                                                                                                                          |
+| :-------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model`   | 必須です。[モデル](#models)の表にあるモデル名または別名です。省略すると`UnknownModelError`が発生します                                                        |
+| `memory`  | 使用する`Stores`です。省略するとチップ自身のサイズで1つ構築します                                                                                             |
+| `fill`    | 各ストアの未書き込みワードを読んだときの値で、ストアの幅でマスクされます。省略時は`0`です                                                                     |
 | `sources` | `"program"`、`"table"`、`"scratch"`からアドレスを引数に取る関数へのマッピングです。ソースを持つストアは、未書き込みワードを`fill`の代わりにソースから読みます |
-| `seed` | 電源投入時のレジスタのスクランブルです。同じシードで構築した2つのチップは同じ値を保持します |
+| `seed`    | 電源投入時のレジスタのスクランブルです。同じシードで構築した2つのチップは同じ値を保持します                                                                   |
 
 ### 呼び出し
 
-| 呼び出し | 動作 | 戻り値 |
-|:--|:--|:--|
-| `reset()` | RESETピンの動作です。プログラムカウンタを0に、`steps`を0にし、4サイクルを消費します | チップ |
-| `step()` | 1命令を実行します | 消費したサイクル数で、どの命令でも1です |
-| `run_for(cycles)` | 少なくとも`cycles`が経過するまで命令単位で実行します | 消費したサイクル数 |
-| `run_until(check, limit=None)` | `check(cpu)`が偽の間ステップ実行します。`limit`命令を実行すると`RunLimit`を送出します | チップ |
-| `held()` | チップがプログラムの進行を止めているかどうかです。このチップにはホルト状態がありません | `False` |
-| `irq()` | 割り込み線をアサートします。立ち上がりエッジで、ステータスワードのEIビットが立っていれば、プログラムカウンタをプッシュし、100Hへジャンプし、1サイクルを消費します | 割り込みが受理されたときは`True` |
-| `lower_irq()` | 割り込み線をネゲートし、次の`irq()`を新しいエッジにします | `None` |
-| `power_on(seed=UNSET_SEED)` | 構築時と同じく、`seed`からレジスタを再びスクランブルします | `None` |
-| `spend()` | 1サイクルを数え、`on_cycle`を呼び出します。チップが消費するすべてのサイクルはここを通ります | `None` |
+| 呼び出し                       | 動作                                                                                                                                                              | 戻り値                                  |
+| :----------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------- |
+| `reset()`                      | RESETピンの動作です。プログラムカウンタを0に、`steps`を0にし、4サイクルを消費します                                                                               | チップ                                  |
+| `step()`                       | 1命令を実行します                                                                                                                                                 | 消費したサイクル数で、どの命令でも1です |
+| `run_for(cycles)`              | 少なくとも`cycles`が経過するまで命令単位で実行します                                                                                                              | 消費したサイクル数                      |
+| `run_until(check, limit=None)` | `check(cpu)`が偽の間ステップ実行します。`limit`命令を実行すると`RunLimit`を送出します                                                                             | チップ                                  |
+| `held()`                       | チップがプログラムの進行を止めているかどうかです。このチップにはホルト状態がありません                                                                            | `False`                                 |
+| `irq()`                        | 割り込み線をアサートします。立ち上がりエッジで、ステータスワードのEIビットが立っていれば、プログラムカウンタをプッシュし、100Hへジャンプし、1サイクルを消費します | 割り込みが受理されたときは`True`        |
+| `lower_irq()`                  | 割り込み線をネゲートし、次の`irq()`を新しいエッジにします                                                                                                         | `None`                                  |
+| `power_on(seed=UNSET_SEED)`    | 構築時と同じく、`seed`からレジスタを再びスクランブルします                                                                                                        | `None`                                  |
+| `spend()`                      | 1サイクルを数え、`on_cycle`を呼び出します。チップが消費するすべてのサイクルはここを通ります                                                                       | `None`                                  |
 
 ### 状態
 
-| 属性 | 意味 |
-|:--|:--|
-| `model` | チップの構築元である`Model`レコードです |
-| `registers` | レジスタファイルで、後述します |
+| 属性                 | 意味                                                                                                                          |
+| :------------------- | :---------------------------------------------------------------------------------------------------------------------------- |
+| `model`              | チップの構築元である`Model`レコードです                                                                                       |
+| `registers`          | レジスタファイルで、後述します                                                                                                |
 | `flags_a`, `flags_b` | 各アキュムレータの6つのフラグ、`s1`、`s0`、`c`、`z`、`ov1`、`ov0`です。`int()`は`ov0`をビット0、`s1`をビット5としてまとめます |
-| `stores` | 3つのストアで、後述します |
-| `cycles` | チップの構築以降のサイクル数です。リセットでも加算されます |
-| `steps` | 直前のリセット以降の命令数です |
-| `irq_line` | レベルとしての割り込み線です |
-| `on_cycle` | `None`、またはサイクルごとに引数なしで呼ばれる関数です |
+| `stores`             | 3つのストアで、後述します                                                                                                     |
+| `cycles`             | チップの構築以降のサイクル数です。リセットでも加算されます                                                                    |
+| `steps`              | 直前のリセット以降の命令数です                                                                                                |
+| `irq_line`           | レベルとしての割り込み線です                                                                                                  |
+| `on_cycle`           | `None`、またはサイクルごとに引数なしで呼ばれる関数です                                                                        |
 
 `registers.pc`、`rp`、`dp`、`sp`は書き込まれた値をチップ固有の幅でマスクします。`k`、`l`、`m`、`n`、`a`、`b`は16ビットを保持し、符号付きで読み出されます。`registers.word(name)`はそのいずれも符号なし16ビットワードとして読みます。`tr`、`trb`、`dr`、`si`、`so`は普通の整数です。`registers.stack`はチップのスタックと同じ長さのリストで、`registers.sr`はステータスワードです。ビット`p0`、`p1`、`ei`、`sic`、`soc`、`drc`、`dma`、`usf0`、`usf1`、`rqm`、`drs`はデータシートのFigure 3が示す位置にあり、`int(registers.sr)`はそれらを1ワードとして読み、`registers.sr.assign(word)`は1ワードからそれらを設定します。`registers.sr.siack`と`registers.sr.soack`は、SIACKとSOACKによる条件ジャンプが読むシリアル入力と出力の肯定応答です。このパッケージはどちらも設定しないため、それらのジャンプを使うホストが自分で設定します。どちらもワードには含まれません。
 
@@ -155,16 +155,16 @@ gave up after 100 instructions at 164
 
 `cpu.stores`は`program`、`table`、`scratch`を保持する`Stores`です。それぞれが、そのアドレスを指定するレジスタとちょうど同じ長さの`Store`です。
 
-| 名前 | 内容 |
-|:--|:--|
-| `Stores(program_words, table_words, scratch_words, fill=0, sources=None)` | 指定したサイズの3つのストアです |
-| `stores.program`, `stores.table`, `stores.scratch` | 24ビットのプログラムワード、16ビットのテーブルワード、16ビットのスクラッチワードです |
-| `stores.load_program(image)` | アドレス0からイメージを書き込みます。3バイトで1ワード、上位バイトが先です |
-| `stores.load_table(image)` | テーブルに対して同じことを、2バイトで1ワードとして行います |
-| `stores.read_byte(at)`, `stores.write_byte(at, value)` | スクラッチの1バイトです。偶数アドレスはワード`at // 2`の下位バイト、奇数アドレスは上位バイトです |
-| `Store(words, bits, fill=0, source=None)` | ストア1つです。`store[at]`はワードを読み書きし、`at`は長さを法として扱われ、値は`bits`でマスクされます |
-| `store.changed()` | 書き込まれたワードのうち、以前に読んでいた値と異なるものすべてを、アドレスごとに返します |
-| `store.words`, `store.bits`, `store.mask`, `store.source` | 長さ、幅、その幅のマスク、ソース関数または`None`です |
+| 名前                                                                      | 内容                                                                                                   |
+| :------------------------------------------------------------------------ | :----------------------------------------------------------------------------------------------------- |
+| `Stores(program_words, table_words, scratch_words, fill=0, sources=None)` | 指定したサイズの3つのストアです                                                                        |
+| `stores.program`, `stores.table`, `stores.scratch`                        | 24ビットのプログラムワード、16ビットのテーブルワード、16ビットのスクラッチワードです                   |
+| `stores.load_program(image)`                                              | アドレス0からイメージを書き込みます。3バイトで1ワード、上位バイトが先です                              |
+| `stores.load_table(image)`                                                | テーブルに対して同じことを、2バイトで1ワードとして行います                                             |
+| `stores.read_byte(at)`, `stores.write_byte(at, value)`                    | スクラッチの1バイトです。偶数アドレスはワード`at // 2`の下位バイト、奇数アドレスは上位バイトです       |
+| `Store(words, bits, fill=0, source=None)`                                 | ストア1つです。`store[at]`はワードを読み書きし、`at`は長さを法として扱われ、値は`bits`でマスクされます |
+| `store.changed()`                                                         | 書き込まれたワードのうち、以前に読んでいた値と異なるものすべてを、アドレスごとに返します               |
+| `store.words`, `store.bits`, `store.mask`, `store.source`                 | 長さ、幅、その幅のマスク、ソース関数または`None`です                                                   |
 
 ```python
 from upd7725 import Cpu, NotWholeWords, TooLarge
@@ -206,14 +206,14 @@ TooLarge 2049 words will not fit in a store of 2048
 
 ホストからは2つのアドレスが見えます。0である`upd7725.DATA`と、1である`upd7725.STATUS`です。`upd7725.Host(cpu)`がそれらを操作します。
 
-| 呼び出し | 動作 |
-|:--|:--|
-| `asking` | RQMビットが立っている間、つまりチップがホストを待っている間はTrueです |
-| `settle(limit=200000)` | チップが要求するまでステップ実行します。実行した命令数を返し、`limit`に達すると`NeverReady`を送出します |
-| `read(address)` | `STATUS`はステータスワードの上位8ビットを読みます。`DATA`はデータレジスタの1バイトを読み、転送が完了するとRQMをクリアします。それ以外のアドレスは0を読みます |
-| `write(address, value)` | `DATA`はデータレジスタに1バイトを書き込みます。ステータスワードは読み出し専用のため、それ以外のアドレスへの書き込みは何もしません |
-| `send_bytes(values, limit=200000)`, `take_bytes(count, limit=200000)` | 各バイトの前にsettleしてから、書き込みまたは読み出しを行います |
-| `send(word, limit=200000)`, `take(limit=200000)` | 16ビットワードを2バイトとして、下位バイトから扱います |
+| 呼び出し                                                              | 動作                                                                                                                                                         |
+| :-------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `asking`                                                              | RQMビットが立っている間、つまりチップがホストを待っている間はTrueです                                                                                        |
+| `settle(limit=200000)`                                                | チップが要求するまでステップ実行します。実行した命令数を返し、`limit`に達すると`NeverReady`を送出します                                                      |
+| `read(address)`                                                       | `STATUS`はステータスワードの上位8ビットを読みます。`DATA`はデータレジスタの1バイトを読み、転送が完了するとRQMをクリアします。それ以外のアドレスは0を読みます |
+| `write(address, value)`                                               | `DATA`はデータレジスタに1バイトを書き込みます。ステータスワードは読み出し専用のため、それ以外のアドレスへの書き込みは何もしません                            |
+| `send_bytes(values, limit=200000)`, `take_bytes(count, limit=200000)` | 各バイトの前にsettleしてから、書き込みまたは読み出しを行います                                                                                               |
+| `send(word, limit=200000)`, `take(limit=200000)`                      | 16ビットワードを2バイトとして、下位バイトから扱います                                                                                                        |
 
 DRCビットがクリアのとき、データレジスタは16ビットを1バイトずつ転送し、DRSは転送済みの半分を示します。DRCが立っているときは8ビットを転送します。
 
@@ -249,44 +249,44 @@ the part did not ask for attention within 50 instructions
 
 ### モジュールの内容
 
-| 名前 | 内容 |
-|:--|:--|
-| `upd7725.MODELS` | 2つの`Model`レコードで、正式名をキーとします |
-| `upd7725.Model` | `name`、`aliases`、`summary`、`counter_bits`、`table_bits`、`pointer_bits`、`stack_levels`と、派生値の`program_words`、`table_words`、`scratch_words`、`stack_pointer_bits`です。`build(*arguments, **options)`はこのモデルからチップを構築し、`Cpu`がモデルの後に受け取る引数を受け取ります |
-| `upd7725.UNSET_SEED` | シードを指定しないときに使われるシード、`0x5A5A5A5A`です |
-| `upd7725.scramble(size, seed=UNSET_SEED)` | `seed`から導出した`size`個の32ビット値で、電源投入時の状態の元になります |
-| `upd7725.Cpu7725` | `Cpu`がどちらのパーツにも返す、型チェック用のクラスです。パーツはモデルを選ぶ`Cpu`で作ります |
-| `upd7725.Store`, `upd7725.Stores` | 上で説明したストアのクラスです |
-| `upd7725.Clock` | 1サイクルずつのステップ実行で、[1サイクルずつ動かす](#driving-it-one-cycle-at-a-time)で説明します |
-| `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | プログラムワードの読み取りで、[実行せずに読む](#reading-without-running)で説明します |
-| `upd7725.Flags` | フラグの集合です。`Flags.of(word)`は6ビットを展開し、`copy()`は複製を作ります |
-| `upd7725.__version__` | インストールされているバージョンです |
+| 名前                                                           | 内容                                                                                                                                                                                                                                                                                         |
+| :------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `upd7725.MODELS`                                               | 2つの`Model`レコードで、正式名をキーとします                                                                                                                                                                                                                                                 |
+| `upd7725.Model`                                                | `name`、`aliases`、`summary`、`counter_bits`、`table_bits`、`pointer_bits`、`stack_levels`と、派生値の`program_words`、`table_words`、`scratch_words`、`stack_pointer_bits`です。`build(*arguments, **options)`はこのモデルからチップを構築し、`Cpu`がモデルの後に受け取る引数を受け取ります |
+| `upd7725.UNSET_SEED`                                           | シードを指定しないときに使われるシード、`0x5A5A5A5A`です                                                                                                                                                                                                                                     |
+| `upd7725.scramble(size, seed=UNSET_SEED)`                      | `seed`から導出した`size`個の32ビット値で、電源投入時の状態の元になります                                                                                                                                                                                                                     |
+| `upd7725.Cpu7725`                                              | `Cpu`がどちらのパーツにも返す、型チェック用のクラスです。パーツはモデルを選ぶ`Cpu`で作ります                                                                                                                                                                                                 |
+| `upd7725.Store`, `upd7725.Stores`                              | 上で説明したストアのクラスです                                                                                                                                                                                                                                                               |
+| `upd7725.Clock`                                                | 1サイクルずつのステップ実行で、[1サイクルずつ動かす](#driving-it-one-cycle-at-a-time)で説明します                                                                                                                                                                                            |
+| `upd7725.decode`, `upd7725.disassemble`, `upd7725.Instruction` | プログラムワードの読み取りで、[実行せずに読む](#reading-without-running)で説明します                                                                                                                                                                                                         |
+| `upd7725.Flags`                                                | フラグの集合です。`Flags.of(word)`は6ビットを展開し、`copy()`は複製を作ります                                                                                                                                                                                                                |
+| `upd7725.__version__`                                          | インストールされているバージョンです                                                                                                                                                                                                                                                         |
 
 ### エラー
 
-| エラー | 発生する条件 |
-|:--|:--|
+| エラー              | 発生する条件                                                                                                                                                                                |
+| :------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `UnknownModelError` | `Cpu`にモデルが渡されなかったとき、どのモデルにも該当しない名前が渡されたとき、またはこのパッケージがモデル化を拒否するチップが渡されたときです。メッセージには受け付ける名前が列挙されます |
-| `RunLimit` | `run_until`が`limit`に達したときです |
-| `ClockClosed` | クロックを閉じた後に`Clock.tick()`が呼ばれたときです |
-| `NotWholeWords` | `load_program`または`load_table`が、ワード数が整数にならないイメージを受け取ったときです |
-| `TooLarge` | `load_program`または`load_table`が、ストアより長いイメージを受け取ったときです |
-| `NeverReady` | チップが要求しないまま`Host.settle`が`limit`に達したときです |
+| `RunLimit`          | `run_until`が`limit`に達したときです                                                                                                                                                        |
+| `ClockClosed`       | クロックを閉じた後に`Clock.tick()`が呼ばれたときです                                                                                                                                        |
+| `NotWholeWords`     | `load_program`または`load_table`が、ワード数が整数にならないイメージを受け取ったときです                                                                                                    |
+| `TooLarge`          | `load_program`または`load_table`が、ストアより長いイメージを受け取ったときです                                                                                                              |
+| `NeverReady`        | チップが要求しないまま`Host.settle`が`limit`に達したときです                                                                                                                                |
 
 6つとも`upd7725`からインポートできます。
 
 ### コマンドラインツール
 
-| コマンド | 引数 | 終了コード |
-|:--|:--|:--|
-| `python3 upd7725/doctor.py` | なし | すべてのチェックに合格すれば0、それ以外は1 |
-| `python3 -m conformance.instructions` | `--corpus PATH`、`--cases N`、`--record`、`--retake` | 不一致がなければ0、1件でもあれば1、引数が不正なら2 |
-| `python3 -m conformance.differential` | `--from N`、`--cases N`（既定値5,000）、`--seconds S` | 2つの実装が一致すれば0、一致しなければ1、引数が不正なら2 |
-| `python3 -m conformance.speed` | `--instructions N`（既定値200,000）、`--repeats N`（既定値7） | 下限以上なら0、下回れば1、引数が不正なら2 |
-| `python3 -m conformance.documents` | `--check`、`--only SUBSTRING` | すべてのドキュメントがダイジェストと一致すれば0、それ以外は1 |
-| `python3 -m conformance.quotes` | なし | すべての引用が見つかるか、ドキュメントが1つもなければ0、それ以外は1 |
-| `python3 -m conformance.links` | なし | このファイル内のリンクが404または410を返せば1、それ以外は0 |
-| `python3 -m conformance.package WHEEL` | 監査するwheel | すべてのモジュールが含まれ、テストが1つも含まれなければ0、それ以外は1、wheelを指定しなければ2 |
+| コマンド                               | 引数                                                          | 終了コード                                                                                    |
+| :------------------------------------- | :------------------------------------------------------------ | :-------------------------------------------------------------------------------------------- |
+| `python3 upd7725/doctor.py`            | なし                                                          | すべてのチェックに合格すれば0、それ以外は1                                                    |
+| `python3 -m conformance.instructions`  | `--corpus PATH`、`--cases N`、`--record`、`--retake`          | 不一致がなければ0、1件でもあれば1、引数が不正なら2                                            |
+| `python3 -m conformance.differential`  | `--from N`、`--cases N`（既定値5,000）、`--seconds S`         | 2つの実装が一致すれば0、一致しなければ1、引数が不正なら2                                      |
+| `python3 -m conformance.speed`         | `--instructions N`（既定値200,000）、`--repeats N`（既定値7） | 下限以上なら0、下回れば1、引数が不正なら2                                                     |
+| `python3 -m conformance.documents`     | `--check`、`--only SUBSTRING`                                 | すべてのドキュメントがダイジェストと一致すれば0、それ以外は1                                  |
+| `python3 -m conformance.quotes`        | なし                                                          | すべての引用が見つかるか、ドキュメントが1つもなければ0、それ以外は1                           |
+| `python3 -m conformance.links`         | なし                                                          | このファイル内のリンクが404または410を返せば1、それ以外は0                                    |
+| `python3 -m conformance.package WHEEL` | 監査するwheel                                                 | すべてのモジュールが含まれ、テストが1つも含まれなければ0、それ以外は1、wheelを指定しなければ2 |
 
 `--record`単独ではコーパスの上書きを拒否します。`--record --retake`は上書きを行い、修正されたハードウェアの事実を反映するときにだけ使います。
 
@@ -319,6 +319,7 @@ for _ in range(5):
 `python3 -m conformance.speed`はモデルを計測し、その速度をシリコンの毎秒8,192,000命令に対する割合として出力します。毎秒250,000命令を下回ると失敗します。
 
 <a id="driving-it-one-cycle-at-a-time"></a>
+
 ## 1サイクルずつ動かす
 
 `Clock(cpu)`は任意の2つのサイクルの間でチップを止めます。ボードが読み出しに返す値を変えるのはこの位置です。
@@ -344,35 +345,36 @@ except ClockClosed as error:
 True this clock has been closed
 ```
 
-| 呼び出し | 動作 |
-|:--|:--|
-| `tick()` | 次のサイクルの終わりまで実行して止まります。このクロックが実行したサイクル数を返します |
-| `run_for(cycles)` | `cycles`回ティックします。このクロックが実行したサイクル数を返します |
-| `close()` | チップを止め、見つけたときの`on_cycle`を元に戻します。`with`ブロックを抜けると閉じます |
-| `cycles`, `closed`, `cpu` | 実行したサイクル数、閉じているかどうか、チップです |
+| 呼び出し                  | 動作                                                                                   |
+| :------------------------ | :------------------------------------------------------------------------------------- |
+| `tick()`                  | 次のサイクルの終わりまで実行して止まります。このクロックが実行したサイクル数を返します |
+| `run_for(cycles)`         | `cycles`回ティックします。このクロックが実行したサイクル数を返します                   |
+| `close()`                 | チップを止め、見つけたときの`on_cycle`を元に戻します。`with`ブロックを抜けると閉じます |
+| `cycles`, `closed`, `cpu` | 実行したサイクル数、閉じているかどうか、チップです                                     |
 
 クロックを反復処理するとティックします。ティック中にチップが送出した例外は`tick()`から送出され、クロックは閉じます。
 
 NECは、このチップが1命令を外部クロック1サイクルで実行すると述べているため、サイクルの境界と命令の境界は同じ位置です。`Clock`はこのチップにファミリーの他のモデルと同じインターフェースを与えますが、それより細かい分解能はなく、`step()`のほうが高速です。Pythonはコールスタックを中断できないため、クロックはチップをスレッド上で実行し、各サイクルでブロックします。ブロックするのはそのスレッドだけです。クロックが一時停止している間に呼んだ`irq()`は、2回の`step()`の間と同じくすぐに動作し、そのサイクルは`cpu.cycles`に数えられますがティックには数えられません。
 
 <a id="models"></a>
+
 ## モデル
 
 命令セットは1つ、サイズは2通りです。どのストアも、そのアドレスを指定するレジスタとちょうど同じ長さです。
 
-| 構築方法 | プログラムストア | テーブル | スクラッチ | スタック | プログラムカウンタ |
-|:--|--:|--:|--:|--:|--:|
-| `Cpu("upd7725")` | 2048 x 24ビット | 1024 x 16 | 256 x 16 | 4 | 11ビット |
-| `Cpu("upd96050")` | 16384 x 24ビット | 2048 x 16 | 2048 x 16 | 8 | 14ビット |
+| 構築方法          | プログラムストア |  テーブル | スクラッチ | スタック | プログラムカウンタ |
+| :---------------- | ---------------: | --------: | ---------: | -------: | -----------------: |
+| `Cpu("upd7725")`  |  2048 x 24ビット | 1024 x 16 |   256 x 16 |        4 |           11ビット |
+| `Cpu("upd96050")` | 16384 x 24ビット | 2048 x 16 |  2048 x 16 |        8 |           14ビット |
 
 NECのデータシートとデータブックはuPD7725を扱っています。uPD96050についてのNECの文書は見つからなかったため、その4つの数値は二次資料に基づいています。レコードはそれに`verified: false`を付けており、[OPEN-QUESTIONS.md](OPEN-QUESTIONS.md)に何があれば決着するかを記しています。
 
 各チップは、NECが販売したときの型番で指定できます。大文字小文字、ハイフン、アンダースコアは区別しないため、`Cpu("uPD-77C25")`はuPD7725を構築します。
 
-| 構築方法 | 別名 |
-|:--|:--|
-| `Cpu("upd7725")` | `7725`, `upd77c25`, `77c25`, `necupd7725` |
-| `Cpu("upd96050")` | `96050`, `upd96050gf`, `necupd96050` |
+| 構築方法          | 別名                                      |
+| :---------------- | :---------------------------------------- |
+| `Cpu("upd7725")`  | `7725`, `upd77c25`, `77c25`, `necupd7725` |
+| `Cpu("upd96050")` | `96050`, `upd96050gf`, `necupd96050`      |
 
 ```python
 import upd7725
@@ -403,6 +405,7 @@ upd7726 is not a processor this package covers; it has upd7725, upd96050
 ここで実装していない型番は、最も近いものに解決されることなく拒否されます。
 
 <a id="reading-without-running"></a>
+
 ## 実行せずに読む
 
 `decode(word, address=0)`はプログラムワードを1つ読み、`disassemble(words, address=0)`はワードごとに1つの`Instruction`を、`address`から番号を振って生成します。`Instruction`は`address`、`raw`、`text`を持ちます。
@@ -475,13 +478,13 @@ python3 conformance/alu_flags.test.py
 
 ## 開発に参加する
 
-| 必要なもの | 場所 |
-|:--|:--|
-| すべてのゲートと実行順序 | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| コーディングエージェント向けの同じ内容 | [AGENTS.md](AGENTS.md) |
-| このリポジトリがファミリーの他のリポジトリと共有する基準 | [FAMILY.md](FAMILY.md) |
-| バグ報告 | [GitHub Issues](https://github.com/gufranco/nec-upd7725-96050-python/issues) |
-| セキュリティ報告 | [SECURITY.md](SECURITY.md) |
+| 必要なもの                                               | 場所                                                                         |
+| :------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| すべてのゲートと実行順序                                 | [CONTRIBUTING.md](CONTRIBUTING.md)                                           |
+| コーディングエージェント向けの同じ内容                   | [AGENTS.md](AGENTS.md)                                                       |
+| このリポジトリがファミリーの他のリポジトリと共有する基準 | [FAMILY.md](FAMILY.md)                                                       |
+| バグ報告                                                 | [GitHub Issues](https://github.com/gufranco/nec-upd7725-96050-python/issues) |
+| セキュリティ報告                                         | [SECURITY.md](SECURITY.md)                                                   |
 
 ```bash
 uvx ruff@0.16.3 format --check .
@@ -497,8 +500,8 @@ python3 -m coverage report
 
 ## 参考文献
 
-- NEC Electronics, *uPD77C25/uPD77P25 Digital Signal Processor Data Sheet*, Advance Product Information, August 1987。36ページ、1,299,452バイト、SHA-256 `d043be18d5cd21d90960ffb7e068e3b9a81647c8534a142f29eb11015733d042`。取得元：https://www.cryptomuseum.com/df/telefunken/e2000/files/uPD77C25.pdf
-- NEC Electronics, *Digital Signal Processor and Speech Processor Products Data Book*, document 50052, 1989。388ページ、14,316,524バイト、SHA-256 `2f0190523de99938cc1da1c138f2c5b7f71573eb11bcb3b0dcdd1da1267e85ce`。取得元：https://bitsavers.trailing-edge.com/components/nec/_dataBooks/1989_DSP_and_Speech_Products_Data_Book.pdf
+- NEC Electronics, _uPD77C25/uPD77P25 Digital Signal Processor Data Sheet_, Advance Product Information, August 1987。36ページ、1,299,452バイト、SHA-256 `d043be18d5cd21d90960ffb7e068e3b9a81647c8534a142f29eb11015733d042`。取得元：https://www.cryptomuseum.com/df/telefunken/e2000/files/uPD77C25.pdf
+- NEC Electronics, _Digital Signal Processor and Speech Processor Products Data Book_, document 50052, 1989。388ページ、14,316,524バイト、SHA-256 `2f0190523de99938cc1da1c138f2c5b7f71573eb11bcb3b0dcdd1da1267e85ce`。取得元：https://bitsavers.trailing-edge.com/components/nec/_dataBooks/1989_DSP_and_Speech_Products_Data_Book.pdf
 - ares、[`conformance/pinned.json`](conformance/pinned.json)が指定するコミット時点のもの。文書に記載のない命令レベルの動作を調べるために参照しました。コードは一切取り込んでいません。取得元：https://github.com/ares-emulator/ares
 
 どちらの文書も再配布できず、このリポジトリには含まれていません。[`conformance/documents.json`](conformance/documents.json)にそれぞれのダイジェスト、サイズ、アドレスが記載されています。`python3 -m conformance.documents`は両方をgitが無視する`docs/`にダウンロードし、ダイジェストが一致しないファイルは拒否します。その後、`python3 -m conformance.quotes`がそれらの中から引用されたすべての文を探します。

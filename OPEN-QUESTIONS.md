@@ -54,7 +54,7 @@ three bytes plus 2048 table words of two bytes, so a wrong size would fail to
 load. That is the artifact corroborating itself. The stack depth has no such
 witness and rests on the secondary source alone.
 
-**Where that data sheet is not.** NEC's *DSP and Speech Processor Products*,
+**Where that data sheet is not.** NEC's _DSP and Speech Processor Products_,
 1992, 482 pages, is the later edition of the book this project already carries
 from 1989. Read on 2026-08-24: it covers the uPD77C20A, 7720A and 77P20, the
 uPD77C25 and 77P25, and the uPD77810, and the string 96050 appears on none of
@@ -64,7 +64,6 @@ than that one has not been located.
 **What would settle it.** An NEC data sheet for the uPD96050, or a measurement:
 push past eight levels on a real part and see where the return address comes
 from.
-
 
 ## Where the source is a recording rather than a part
 
