@@ -1,0 +1,194 @@
+{
+  "externalNote": "Every file this repository reads and may not ship. Each lives under external/, which git and Dropbox both ignore. python3 -m conformance.external reports which are here, which are missing and which are not the file named; SHA-256 alone decides.",
+  "external": {
+    "images-upd7725-03ef4ef2-bin": {
+      "required": false,
+      "purpose": "One of the seven program images the census reads, kept under the id conformance/testroms.json gives it.",
+      "usedBy": ["conformance/testroms.py"],
+      "canonical_form": {
+        "container": "raw",
+        "header": "none",
+        "notes": "The image as the image library holds it; conformance/testroms.json pins the same SHA-256."
+      },
+      "accepted": [
+        {
+          "label": "upd7725-03ef4ef2",
+          "path": "images/upd7725-03ef4ef2.bin",
+          "common_filename": "upd7725-03ef4ef2.bin",
+          "size": 8192,
+          "crc32": "9a984974",
+          "md5": "9ebbdcec67c0c01d5a0593d3cf167c9e",
+          "sha1": "198c4b1c3bfc6d69e734c5957af3dbfa26238dfb",
+          "sha256": "03ef4ef26c9f701346708cb5d07847b5203cf1b0818bf2930acd34510ffdd717",
+          "preferred": true,
+          "provenance": {
+            "db": "the image library's 5 Tools & Service Test Carts/CPU folder",
+            "dat_version": "copied 2026-10-27"
+          }
+        }
+      ]
+    },
+    "images-upd7725-0971b08f-bin": {
+      "required": false,
+      "purpose": "One of the seven program images the census reads, kept under the id conformance/testroms.json gives it.",
+      "usedBy": ["conformance/testroms.py"],
+      "canonical_form": {
+        "container": "raw",
+        "header": "none",
+        "notes": "The image as the image library holds it; conformance/testroms.json pins the same SHA-256."
+      },
+      "accepted": [
+        {
+          "label": "upd7725-0971b08f",
+          "path": "images/upd7725-0971b08f.bin",
+          "common_filename": "upd7725-0971b08f.bin",
+          "size": 8192,
+          "crc32": "d4a38ee7",
+          "md5": "484908d68405d44e2be757b4e1e75d15",
+          "sha1": "558da7cb3bd3876a6ca693661ffc6c110e948cf9",
+          "sha256": "0971b08f396c32e61989d1067dddf8e4b14649d548b2188f7c541b03d7c69e4e",
+          "preferred": true,
+          "provenance": {
+            "db": "the image library's 5 Tools & Service Test Carts/CPU folder",
+            "dat_version": "copied 2026-10-27"
+          }
+        }
+      ]
+    },
+    "images-upd7725-752d03b2-bin": {
+      "required": false,
+      "purpose": "One of the seven program images the census reads, kept under the id conformance/testroms.json gives it.",
+      "usedBy": ["conformance/testroms.py"],
+      "canonical_form": {
+        "container": "raw",
+        "header": "none",
+        "notes": "The image as the image library holds it; conformance/testroms.json pins the same SHA-256."
+      },
+      "accepted": [
+        {
+          "label": "upd7725-752d03b2",
+          "path": "images/upd7725-752d03b2.bin",
+          "common_filename": "upd7725-752d03b2.bin",
+          "size": 8192,
+          "crc32": "e15384c0",
+          "md5": "f229fda2d7b33c5a218cba28147ab9b8",
+          "sha1": "af6478aecb6f1b67177e79c82ca04c56250a8c72",
+          "sha256": "752d03b2d74441e430b7f713001fa241f8bbcfc1a0d890ed4143f174dbe031da",
+          "preferred": true,
+          "provenance": {
+            "db": "the image library's 5 Tools & Service Test Carts/CPU folder",
+            "dat_version": "copied 2026-10-27"
+          }
+        }
+      ]
+    },
+    "images-upd7725-91e87d11-bin": {
+      "required": false,
+      "purpose": "One of the seven program images the census reads, kept under the id conformance/testroms.json gives it.",
+      "usedBy": ["conformance/testroms.py"],
+      "canonical_form": {
+        "container": "raw",
+        "header": "none",
+        "notes": "The image as the image library holds it; conformance/testroms.json pins the same SHA-256."
+      },
+      "accepted": [
+        {
+          "label": "upd7725-91e87d11",
+          "path": "images/upd7725-91e87d11.bin",
+          "common_filename": "upd7725-91e87d11.bin",
+          "size": 8192,
+          "crc32": "e359f184",
+          "md5": "428fdb968d54353d9c9eced1b0586671",
+          "sha1": "188d471fefea71eb53f0ee7064697ff0971b1014",
+          "sha256": "91e87d11e1c30d172556bed2211cce2efa94ba595f58c5d264809ef4d363a97b",
+          "preferred": true,
+          "provenance": {
+            "db": "the image library's 5 Tools & Service Test Carts/CPU folder",
+            "dat_version": "copied 2026-10-27"
+          }
+        }
+      ]
+    },
+    "images-upd7725-d789cb3c-bin": {
+      "required": false,
+      "purpose": "One of the seven program images the census reads, kept under the id conformance/testroms.json gives it.",
+      "usedBy": ["conformance/testroms.py"],
+      "canonical_form": {
+        "container": "raw",
+        "header": "none",
+        "notes": "The image as the image library holds it; conformance/testroms.json pins the same SHA-256."
+      },
+      "accepted": [
+        {
+          "label": "upd7725-d789cb3c",
+          "path": "images/upd7725-d789cb3c.bin",
+          "common_filename": "upd7725-d789cb3c.bin",
+          "size": 8192,
+          "crc32": "465c4e1c",
+          "md5": "332273cc0df5775d3803f2fd88e95d18",
+          "sha1": "78b724811f5f18d8c67669d9390397eb1a47a5e2",
+          "sha256": "d789cb3c36b05c0b23b6c6f23be7aa37c6e78b6ee9ceac8d2d2aa9d8c4d35fa9",
+          "preferred": true,
+          "provenance": {
+            "db": "the image library's 5 Tools & Service Test Carts/CPU folder",
+            "dat_version": "copied 2026-10-27"
+          }
+        }
+      ]
+    },
+    "images-upd96050-8b2b3f3f-bin": {
+      "required": false,
+      "purpose": "One of the seven program images the census reads, kept under the id conformance/testroms.json gives it.",
+      "usedBy": ["conformance/testroms.py"],
+      "canonical_form": {
+        "container": "raw",
+        "header": "none",
+        "notes": "The image as the image library holds it; conformance/testroms.json pins the same SHA-256."
+      },
+      "accepted": [
+        {
+          "label": "upd96050-8b2b3f3f",
+          "path": "images/upd96050-8b2b3f3f.bin",
+          "common_filename": "upd96050-8b2b3f3f.bin",
+          "size": 53248,
+          "crc32": "84aab2ae",
+          "md5": "5c209ce0283632b6574ad835bf862bee",
+          "sha1": "fecbae2cec76c710422486baa186ffa7ca1cf925",
+          "sha256": "8b2b3f3f3e6e29f4d21d8bc736b400bc988b7d2214ebee15643f01c1fee2f364",
+          "preferred": true,
+          "provenance": {
+            "db": "the image library's 5 Tools & Service Test Carts/CPU folder",
+            "dat_version": "copied 2026-10-27"
+          }
+        }
+      ]
+    },
+    "images-upd96050-fa9bced8-bin": {
+      "required": false,
+      "purpose": "One of the seven program images the census reads, kept under the id conformance/testroms.json gives it.",
+      "usedBy": ["conformance/testroms.py"],
+      "canonical_form": {
+        "container": "raw",
+        "header": "none",
+        "notes": "The image as the image library holds it; conformance/testroms.json pins the same SHA-256."
+      },
+      "accepted": [
+        {
+          "label": "upd96050-fa9bced8",
+          "path": "images/upd96050-fa9bced8.bin",
+          "common_filename": "upd96050-fa9bced8.bin",
+          "size": 53248,
+          "crc32": "8fc29d4c",
+          "md5": "636093910fbaff60c8b327be00aefbd9",
+          "sha1": "6472828403de3589433a906e2c3f3d274c0ff008",
+          "sha256": "fa9bced838fedea11c6f6ace33d1878024bdd0d02cc9485899d0bdd4015ec24c",
+          "preferred": true,
+          "provenance": {
+            "db": "the image library's 5 Tools & Service Test Carts/CPU folder",
+            "dat_version": "copied 2026-10-27"
+          }
+        }
+      ]
+    }
+  }
+}

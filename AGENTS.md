@@ -115,14 +115,15 @@ never exercises it.
 
 [`conformance/testroms.json`](conformance/testroms.json) lists seven program
 images, five for the smaller part and two for the larger, each keyed by the
-SHA-256 of the file on disk and never committed. They live in
-`snes-roms/5 Tools & Service Test Carts/CPU/` in the local library. None of
+SHA-256 of the file on disk and never committed. Copies sit in
+`external/images/`, named by their record ids and taken from the
+`5 Tools & Service Test Carts/CPU/` folder of the image library. None of
 them is a test program and none reports a verdict, and no exchange with an
 answer taken from a source outside this member is pinned here, so nothing is
 `run`. Every one is `read`:
 
 ```bash
-python3 -m conformance.testroms "../snes-roms/5 Tools & Service Test Carts/CPU"
+python3 -m conformance.testroms external/images
 python3 -m conformance.testroms --record FOLDER   # only after a census change
 ```
 
@@ -145,6 +146,29 @@ key their manifests on. That is why none of the seven matches those manifests by
 Running a program, with a host writing commands and reading answers, belongs to
 `snes-dsp-python` and `snes-st-python`, which drive these images.
 
+## Files kept in `external/`
+
+Everything this member reads and may not ship sits in `external/`, which git
+ignores and Dropbox is told to leave alone, per FAMILY.md's "Where the files a
+member reads are kept". [`artifacts.manifest.json`](artifacts.manifest.json)
+names all 7 by size, CRC32, MD5, SHA-1 and SHA-256:
+
+- `external/images/`, the seven program images
+  [`conformance/testroms.json`](conformance/testroms.json) pins, copied from the
+  image library and named by their record ids.
+
+The old `firmware/` folder is read by nothing since the image identification
+layer left the package, and nothing from it was kept.
+
+```bash
+python3 -m conformance.external
+python3 -m conformance.external --describe external/<file>
+```
+
+The first says which are here, verified, missing or wrong. The second prints
+the manifest entry for a file being added, which gets its entry in the same
+change.
+
 ## Every gate, in the order to run them
 
 ```bash
@@ -159,8 +183,8 @@ for f in upd7725/*.test.py conformance/*.test.py; do "${cov[@]}" run -a "$f"; do
 "${cov[@]}" report                                     # fails below 100%
 python3 -m conformance.instructions                    # the gate
 python3 -m conformance.differential                    # unbounded, optional locally
-python3 -m conformance.stack IMAGE [IMAGE ...]         # images for the larger part, held locally
-python3 -m conformance.testroms FOLDER                 # the test images, held locally
+python3 -m conformance.stack external/images/upd96050-*.bin  # images for the larger part
+python3 -m conformance.testroms external/images        # the test images
 ```
 
 Coverage is collected by running each test file under `coverage run -a`, not by a
@@ -259,6 +283,9 @@ conformance/
   testroms_measured.json  what that census found, replayed with no image present
   corpus.json         22,240 recorded states
   pinned.json         which implementation, at which commit
+  external.py       which files in external/ are here, verified, missing or wrong
+external/           the seven program images, never committed
+artifacts.manifest.json  every file in external/, by size and every digest
 ```
 
 ## Things that will bite you
