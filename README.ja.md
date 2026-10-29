@@ -4,9 +4,11 @@ NECのデジタルシグナルプロセッサuPD7725とuPD96050をPythonで実�
 
 [English](README.md) | 日本語 | [简体中文](README.zh-Hans.md) | [繁體中文（香港）](README.zh-HK.md)
 
-[![CI](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml/badge.svg)](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python)](https://github.com/gufranco/nec-upd7725-96050-python/releases)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![ci](https://img.shields.io/github/actions/workflow/status/gufranco/nec-upd7725-96050-python/ci.yml?branch=main&style=flat-square&label=ci)](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/gufranco/nec-upd7725-96050-python?style=flat-square&label=release)](https://github.com/gufranco/nec-upd7725-96050-python/releases/latest)
+[![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=flat-square)](https://github.com/gufranco/nec-upd7725-96050-python/actions/workflows/ci.yml)
+[![openssf scorecard](https://img.shields.io/ossf-scorecard/github.com/gufranco/nec-upd7725-96050-python?style=flat-square&label=openssf%20scorecard)](https://scorecard.dev/viewer/?uri=github.com/gufranco/nec-upd7725-96050-python)
+[![license](https://img.shields.io/github/license/gufranco/nec-upd7725-96050-python?style=flat-square&label=license)](LICENSE)
 
 **2**種類のチップ、フィールドごとに網羅した**1,120**通りのエンコーディング、比較した**22,240**命令、不一致**0**件、**1,204**件のテスト、ステートメントとブランチの**100%**カバレッジ、依存パッケージなし
 
