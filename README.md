@@ -10,7 +10,7 @@ English | [日本語](README.ja.md) | [简体中文](README.zh-Hans.md) | [繁�
 [![openssf scorecard](https://img.shields.io/ossf-scorecard/github.com/gufranco/nec-upd7725-96050-python?style=flat-square&label=openssf%20scorecard)](https://scorecard.dev/viewer/?uri=github.com/gufranco/nec-upd7725-96050-python)
 [![license](https://img.shields.io/github/license/gufranco/nec-upd7725-96050-python?style=flat-square&label=license)](LICENSE)
 
-**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **1,204** tests, **100%** statement and branch coverage, no dependencies
+**2** parts, **1,120** encodings walked field by field, **22,240** instructions compared, **0** disagreements, **1,205** tests, **100%** statement and branch coverage, no dependencies
 
 ```python
 from upd7725 import Cpu
