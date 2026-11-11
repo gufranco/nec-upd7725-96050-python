@@ -10,7 +10,7 @@ NECのデジタルシグナルプロセッサuPD7725とuPD96050をPythonで実�
 [![openssf scorecard](https://img.shields.io/ossf-scorecard/github.com/gufranco/nec-upd7725-96050-python?style=flat-square&label=openssf%20scorecard)](https://scorecard.dev/viewer/?uri=github.com/gufranco/nec-upd7725-96050-python)
 [![license](https://img.shields.io/github/license/gufranco/nec-upd7725-96050-python?style=flat-square&label=license)](LICENSE)
 
-**2**種類のチップ、フィールドごとに網羅した**1,120**通りのエンコーディング、比較した**22,240**命令、不一致**0**件、**1,204**件のテスト、ステートメントとブランチの**100%**カバレッジ、依存パッケージなし
+**2**種類のチップ、フィールドごとに網羅した**1,120**通りのエンコーディング、比較した**22,240**命令、不一致**0**件、**1,205**件のテスト、ステートメントとブランチの**100%**カバレッジ、依存パッケージなし
 
 ```python
 from upd7725 import Cpu

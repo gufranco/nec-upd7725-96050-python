@@ -10,7 +10,7 @@
 [![openssf scorecard](https://img.shields.io/ossf-scorecard/github.com/gufranco/nec-upd7725-96050-python?style=flat-square&label=openssf%20scorecard)](https://scorecard.dev/viewer/?uri=github.com/gufranco/nec-upd7725-96050-python)
 [![license](https://img.shields.io/github/license/gufranco/nec-upd7725-96050-python?style=flat-square&label=license)](LICENSE)
 
-**2** 个器件，**1,120** 种编码逐字段遍历，**22,240** 条指令比对，**0** 处不一致，**1,204** 个测试，**100%** 语句与分支覆盖率，无任何依赖
+**2** 个器件，**1,120** 种编码逐字段遍历，**22,240** 条指令比对，**0** 处不一致，**1,205** 个测试，**100%** 语句与分支覆盖率，无任何依赖
 
 ```python
 from upd7725 import Cpu
